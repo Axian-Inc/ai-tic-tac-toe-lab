@@ -16,3 +16,8 @@ Steps Taken -
 
 /new
 
+- Have Codex update agents.md to add rule to ignore all files in agent-ignore/ directory.
+
+/new
+
+- Have Codex generate context structure
