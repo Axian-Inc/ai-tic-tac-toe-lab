@@ -29,7 +29,7 @@
 - [ ] Works on desktop and mobile layouts.
 
 ## Dependencies
-- Story 001 (schemas), Story 003 (API), Story 004 (AI).
+- Story 011 (schemas), Story 003 (API), Story 004 (AI).
 
 ## Notes
 - Keep UI minimal and focus on clarity over polish.

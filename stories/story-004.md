@@ -27,7 +27,7 @@
 - [ ] AI response is never logged in full (only redacted summaries).
 
 ## Dependencies
-- Story 001 (schemas), Story 002 (rules), Story 003 (API).
+- Story 011 (schemas), Story 002 (rules), Story 003 (API).
 
 ## Notes
 - Start with a single model and vary prompt instructions per profile.

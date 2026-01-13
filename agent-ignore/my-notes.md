@@ -51,3 +51,5 @@ Steps Taken -
 - Generate testing strategy (see chat-history/101 - 110)
 
 /new
+
+-Review stories and testing strategy (see chat-history/111 - 120)

@@ -26,7 +26,7 @@
 - [ ] CLI tests cover argument parsing, one happy-path flow, and one error case using mocked API responses.
 
 ## Dependencies
-- Story 001 (schemas), Story 003 (API), Story 004 (AI).
+- Story 011 (schemas), Story 003 (API), Story 004 (AI).
 
 ## Notes
 - Keep output plain text; no rich TUI.

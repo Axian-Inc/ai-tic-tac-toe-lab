@@ -1,7 +1,7 @@
-# Story 001
+# Story 001 (Deprecated)
 
 ## Title
-- Define shared game state schema and validation
+- Define shared game state schema and validation (deprecated)
 
 ## Context
 - The API, web UI, and CLI must share a single source of truth for request/response shapes and game state.
@@ -29,5 +29,9 @@
 ## Dependencies
 - None.
 
+## Status
+- Completed (deprecated in favor of Story 009-012).
+
 ## Notes
+- This story is split into Story 009-012 with a test-first approach; implement those instead.
 - Keep schema minimal but extensible for POC needs.

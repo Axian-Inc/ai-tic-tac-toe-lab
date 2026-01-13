@@ -26,7 +26,7 @@
 - [ ] Logic is independent of transport (no Fastify or UI imports).
 
 ## Dependencies
-- Story 001 (shared schema/types).
+- Story 009 (GameState schema).
 
 ## Notes
 - Prefer immutable state updates for easy testing.

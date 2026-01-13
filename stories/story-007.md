@@ -26,7 +26,7 @@
 - [ ] Tests are isolated and do not require Bedrock network calls.
 
 ## Dependencies
-- Story 001 (schemas), Story 002 (rules), Story 004 (AI integration).
+- Story 011 (schemas), Story 002 (rules), Story 004 (AI integration).
 
 ## Notes
 - Use fixtures for deterministic scenarios.

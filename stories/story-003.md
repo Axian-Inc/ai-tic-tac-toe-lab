@@ -29,7 +29,7 @@
 - [ ] Unit tests cover new-game success, move success, invalid move, missing fields, and terminal-state move cases.
 
 ## Dependencies
-- Story 001 (schemas), Story 002 (game rules).
+- Story 011 (schemas), Story 002 (game rules).
 
 ## Notes
 - Keep routes thin; business logic lives in services.
