@@ -53,3 +53,11 @@ Steps Taken -
 /new
 
 -Review stories and testing strategy (see chat-history/111 - 120)
+
+/new 
+
+- Begin revising story-001.md to be more granular (see chat-history/121 - 130)
+
+/new 
+
+- Add story process to coding-standards.md (see chat-history/131 - 140)

@@ -56,3 +56,13 @@
 - Inputs/outputs validated with `zod` where crossing boundaries.
 - Errors return the standard JSON shape and log with request context.
 - Tests added or updated for logic, parsing, and UI behavior.
+
+## Story Workflow
+- Review the story to ensure it is granular enough and does not need to be decomposed into smaller stories.
+- Review the story for completeness; resolve any clarifications before continuing.
+- Capture clarifications in an "Assumptions/Questions" section in the story when needed.
+- Once a story is ready to begin, create a test-first plan and append the planning steps to a "Plan" section in the story.
+- Use checkbox format for plan steps (e.g., `- [ ] Step description`).
+- As each step is completed, verify it (tests run, manual checks, or both) and update the story accordingly.
+- Append any additional development or testing notes to a "Notes" section in the story.
+- Mark completion in a "Done" section when all steps are verified.
