@@ -1,6 +1,6 @@
-import { z } from "zod";
+import { z } from 'zod';
 
-const playerSymbol = z.enum(["X", "O"]);
+const playerSymbol = z.enum(['X', 'O']);
 const cellValue = z.union([playerSymbol, z.null()]);
 
 const moveHistoryEntry = z.object({
@@ -11,7 +11,7 @@ const moveHistoryEntry = z.object({
 export const GameStateSchema = z.object({
   board: z.array(cellValue).length(9),
   nextPlayer: playerSymbol,
-  gameStatus: z.enum(["in_progress", "win", "draw"]),
+  gameStatus: z.enum(['in_progress', 'win', 'draw']),
   winner: z.union([playerSymbol, z.null()]),
   opponentId: z.string(),
   sessionId: z.string(),

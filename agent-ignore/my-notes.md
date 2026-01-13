@@ -64,3 +64,15 @@ Steps Taken -
 
 /new
 
+- Begin woring on story-009, will keep working each story in a new context
+
+.....
+
+- Added next-story prompt to ~/codex/prompts
+
+....
+
+- Used next-story prompt to begin working on story-010
+
+- Linting and prettier added to coding-standards.md (see chat-history/141 - 150)
+

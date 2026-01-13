@@ -12,7 +12,7 @@ module.exports = {
       jsx: true,
     },
   },
-  plugins: ["@typescript-eslint", "react", "react-hooks", "import"],
+  plugins: ["@typescript-eslint", "react", "react-hooks", "import", "vitest"],
   extends: [
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
@@ -24,6 +24,11 @@ module.exports = {
   settings: {
     react: {
       version: "detect",
+    },
+    "import/resolver": {
+      typescript: {
+        project: "./tsconfig.json",
+      },
     },
   },
   rules: {
@@ -42,7 +47,7 @@ module.exports = {
     {
       files: ["**/*.test.*", "**/*.spec.*"],
       env: {
-        vitest: true,
+        "vitest/env": true,
       },
     },
     {

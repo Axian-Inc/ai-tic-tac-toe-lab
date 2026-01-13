@@ -5,4 +5,4 @@
 - Use the same structure as the existing files (for example, `# Prompt` and `# Response` headings).
 - Create `chat-history/` if it does not exist.
 - Keep planning context in `context/` and update those files as decisions change.
-- Ignore all files in the `agent-ignore/` directory; these files are for humans only.
+- Ignore all files in the `agent-ignore/` directory for context; do not read them, but include them in commits when changed.
