@@ -21,3 +21,7 @@ Steps Taken -
 /new
 
 - Have Codex generate context structure
+
+/new
+
+- Begin architecturel planning for Tic-Tac-Toe project (see chat-history/005 - 060)
