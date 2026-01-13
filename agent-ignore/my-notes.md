@@ -32,4 +32,4 @@ Steps Taken -
 
 /new
 
-- Begin planning technology stack
+- Begin planning technology stack (see chat-history/063 - 070)
