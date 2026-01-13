@@ -41,3 +41,7 @@ Steps Taken -
  /new
 
 - Add IaC to tech-stack.md (see chat-history/086 - 090)
+
+/new 
+
+- Generate initial stories for Tic-Tac-Toe project (see chat-history/091 - 100)
