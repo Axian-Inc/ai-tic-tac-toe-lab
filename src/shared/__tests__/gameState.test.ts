@@ -74,6 +74,45 @@ describe('GameStateSchema', () => {
     expect(() => GameStateSchema.parse(payload)).toThrow();
   });
 
+  it('rejects winner set during in-progress status', () => {
+    const payload = {
+      board: emptyBoard,
+      nextPlayer: 'X',
+      gameStatus: 'in_progress',
+      winner: 'X',
+      opponentId: 'balanced',
+      sessionId: 'session-005b',
+    };
+
+    expect(() => GameStateSchema.parse(payload)).toThrow();
+  });
+
+  it('rejects winner set during draw status', () => {
+    const payload = {
+      board: ['X', 'O', 'X', 'X', 'O', 'O', 'O', 'X', 'X'],
+      nextPlayer: 'O',
+      gameStatus: 'draw',
+      winner: 'O',
+      opponentId: 'defensive',
+      sessionId: 'session-005c',
+    };
+
+    expect(() => GameStateSchema.parse(payload)).toThrow();
+  });
+
+  it('rejects win status without a winner', () => {
+    const payload = {
+      board: ['X', 'X', 'X', null, 'O', null, null, null, 'O'],
+      nextPlayer: 'O',
+      gameStatus: 'win',
+      winner: null,
+      opponentId: 'balanced',
+      sessionId: 'session-005d',
+    };
+
+    expect(() => GameStateSchema.parse(payload)).toThrow();
+  });
+
   it('rejects missing nextPlayer', () => {
     const payload = {
       board: emptyBoard,
@@ -95,6 +134,20 @@ describe('GameStateSchema', () => {
       opponentId: 'aggressive',
       sessionId: 'session-007',
       moveHistory: [{ player: 'X', index: 9 }],
+    };
+
+    expect(() => GameStateSchema.parse(payload)).toThrow();
+  });
+
+  it('rejects invalid move history player symbols', () => {
+    const payload = {
+      board: ['X', null, null, null, 'O', null, null, null, null],
+      nextPlayer: 'X',
+      gameStatus: 'in_progress',
+      winner: null,
+      opponentId: 'aggressive',
+      sessionId: 'session-008',
+      moveHistory: [{ player: 'Z', index: 4 }],
     };
 
     expect(() => GameStateSchema.parse(payload)).toThrow();
