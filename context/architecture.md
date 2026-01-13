@@ -26,6 +26,14 @@
 - moveHistory: optional list of {player, index} for audit/debug and AI context.
 - Optional metadata: rulesVersion, requestId/sessionId for tracing.
 
+## State Consistency Rules
+- Board length must be 9; values are X, O, or null only.
+- Move counts must satisfy: count(X) == count(O) or count(X) == count(O) + 1.
+- nextPlayer must be X when count(X) == count(O); O when count(X) == count(O) + 1.
+- gameStatus == win requires winner in {X,O} and a valid win line for winner.
+- gameStatus == draw requires winner == null and a full board (no nulls).
+- gameStatus == in_progress requires winner == null and no win lines exist.
+
 ## Data Flow
 - Player makes a move in the UI.
 - UI sends full game state to backend (stateless API).
@@ -57,3 +65,30 @@
 - `/new-game` returns initialized state only; AI-first move is triggered via `/move`.
 - Stateless flow includes a lightweight sessionId for logging/trace correlation.
 - Opponent profiles embedded in code for the POC.
+
+## Error Contract
+- INVALID_INPUT -> HTTP 400 (schema/body shape errors).
+- INVALID_MOVE -> HTTP 400 (occupied cell, out of range, wrong turn).
+- TERMINAL_STATE -> HTTP 409 (move after win/draw).
+- INCONSISTENT_STATE -> HTTP 400 (move counts/nextPlayer/winner mismatch).
+- AI_INVALID_OUTPUT -> HTTP 502 (invalid model output after retries).
+- AI_TIMEOUT -> HTTP 504 (model timeout after retries).
+- AI_UNAVAILABLE -> HTTP 503 (Bedrock errors).
+
+## /v1/new-game Behavior
+- Returns empty board, gameStatus=in_progress, winner=null.
+- nextPlayer = startingPlayer from request.
+- sessionId generated server-side.
+- moveHistory omitted until the first move is recorded.
+- No automatic AI move on new game; AI move only happens via /v1/move.
+
+## AI Output Parsing
+- Require strict JSON with only {moveIndex, rationale}.
+- moveIndex must be an integer 0..8 and point to an empty cell.
+- rationale is optional; accept empty string.
+- Reject extra keys or invalid shape; retry up to 2 times then error.
+
+## Opponent Profiles
+- balanced
+- aggressive
+- defensive

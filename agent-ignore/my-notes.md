@@ -45,3 +45,9 @@ Steps Taken -
 /new 
 
 - Generate initial stories for Tic-Tac-Toe project (see chat-history/091 - 100)
+
+/new
+
+- Generate testing strategy (see chat-history/101 - 110)
+
+/new
