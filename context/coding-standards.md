@@ -66,3 +66,4 @@
 - As each step is completed, verify it (tests run, lint and format checks, manual checks, or both) and update the story accordingly.
 - Append any additional development or testing notes to a "Notes" section in the story.
 - Mark completion in a "Done" section when all steps are verified.
+- Move completed stories into `stories/done/` as the final step before committing.

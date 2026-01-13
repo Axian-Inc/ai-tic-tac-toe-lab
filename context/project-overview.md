@@ -36,3 +36,6 @@
 - AI opponents are prompt-profile variants on a single Bedrock model.
 - Non-functional targets are best-effort POC (no formal SLA).
 - POC is "done" when web UI, API, and Bedrock integration are deployable with basic logs.
+
+## Story Management
+- Move completed stories into `stories/done/` after finishing verification and before committing.
