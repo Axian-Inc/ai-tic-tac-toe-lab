@@ -62,6 +62,8 @@
 - Target: AWS.
 - API: single stateless Lambda with Function URL (lowest cost/simplest path).
 - Logging: basic request logging and Bedrock error traces.
+- IaC: AWS CDK (TypeScript) for defining Lambda, Function URL, IAM, and logs.
+- Web UI: static hosting in S3 (public bucket) for the POC.
 
 ## Minimal AWS Pieces (POC)
 - Lambda function: Node.js 18 runtime, handler for `/v1/new-game` and `/v1/move`.
@@ -72,6 +74,19 @@
 - CloudWatch logs: default log group for the function.
 - Env vars: `BEDROCK_REGION`, `BEDROCK_MODEL_ID`, `LOG_LEVEL`.
 - Optional: request ID/session ID propagated in logs for traceability.
+
+## IaC Structure (POC)
+- Tooling: AWS CDK (TypeScript).
+- Location: `/infra` workspace package.
+- Stacks: `ApiStack` for Lambda + Function URL + IAM + logs; `WebStack` for S3 static hosting.
+- Environments: `dev` and `prod` via CDK context or env vars (no multi-account).
+- Deployment: `pnpm -C infra cdk deploy` (same for `destroy` when needed).
+
+## Web UI Hosting (POC)
+- S3 bucket configured for static website hosting (public read).
+- Bucket policy allows `s3:GetObject` for `*` on the site bucket.
+- Build + upload: `pnpm -C src/web build` then `aws s3 sync dist/ s3://<bucket> --delete`.
+- API base URL configured via env at build time (e.g., `VITE_API_BASE_URL`).
 
 ## Repo Layout
 - Monorepo with all source under `/src`:

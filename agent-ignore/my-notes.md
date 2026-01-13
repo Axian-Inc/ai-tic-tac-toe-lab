@@ -33,3 +33,11 @@ Steps Taken -
 /new
 
 - Begin planning technology stack (see chat-history/063 - 070)
+
+/new
+
+ - Populate coding-standards.md (see chat-history/071 - 085)
+
+ /new
+
+- Add IaC to tech-stack.md (see chat-history/086 - 090)

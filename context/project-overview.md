@@ -29,3 +29,10 @@
 - Planning and architecture definition.
 - Hosting: AWS (simplest approach).
 - Region: us-west-2.
+
+## Planning Assumptions
+- Primary audience is an internal demo/POC; polish over scalability.
+- Web UI is primary; CLI is functional but minimal.
+- AI opponents are prompt-profile variants on a single Bedrock model.
+- Non-functional targets are best-effort POC (no formal SLA).
+- POC is "done" when web UI, API, and Bedrock integration are deployable with basic logs.
