@@ -9,3 +9,10 @@ Steps Taken -
 - Use local codex instance in a blank directory to create a devcontainer that installs Node.js 20, Codex CLI, and AWS CLI v2. (See chat-history/001-prompt.md for the prompt and chat-history/001-response.md for the response.)
 
 - Open VS Code and launch devcontainer.
+
+- Only use Codex in the container moving forward.
+
+- Have Codex generate initial agents.md file with rule about capturing chat prompts and responses into chat-history folder as md files. (We will see if this works)
+
+/new
+
