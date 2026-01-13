@@ -1,0 +1,17 @@
+{
+  "name": "tic-tac-toe-poc",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.30",
+    "typescript": "^5.4.5",
+    "vitest": "^1.4.0"
+  },
+  "dependencies": {
+    "zod": "^4.3.5"
+  }
+}

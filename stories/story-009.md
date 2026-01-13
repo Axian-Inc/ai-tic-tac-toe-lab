@@ -21,12 +21,24 @@
 - [ ] At least 3 valid and 3 invalid `GameState` payloads are covered in tests (e.g., board length != 9, invalid symbol, missing `nextPlayer`).
 - [ ] Types are derived from the schema and exported from `src/shared`.
 
+## Assumptions/Questions
+- None.
+
+## Plan
+- [x] Write failing `GameState` schema tests for valid and invalid payloads.
+- [x] Implement `GameState` schema and exports in `src/shared`.
+- [x] Run tests to verify schema validation behavior.
+
 ## Definition of Done
-- [ ] `GameState` schema compiles with TypeScript.
-- [ ] Tests pass locally without requiring API or UI code.
+- [x] `GameState` schema compiles with TypeScript.
+- [x] Tests pass locally without requiring API or UI code.
 
 ## Dependencies
 - None.
 
 ## Notes
 - Keep the schema minimal but extensible for POC needs.
+- Tests run: `npm test`.
+
+## Done
+- Verified `GameState` schema and tests.
