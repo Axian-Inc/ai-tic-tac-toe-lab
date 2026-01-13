@@ -25,3 +25,11 @@ Steps Taken -
 /new
 
 - Begin architecturel planning for Tic-Tac-Toe project (see chat-history/005 - 060)
+
+/new
+
+- Review the architecture plan
+
+/new
+
+- Begin planning technology stack

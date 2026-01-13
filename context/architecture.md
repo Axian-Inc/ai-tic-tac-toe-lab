@@ -1,11 +1,11 @@
 # Architecture
 
 ## High-Level Overview
-- Frontend UI (CLI or lightweight web UI) connects to a backend game engine.
+- Frontend UI (web UI + CLI, with web UI as primary) connects to a backend game engine.
 - Backend exposes AI move service that calls AWS Bedrock for move selection.
 
 ## Components
-- Frontend: React UI recommended (Loveable suggestion), or CLI alternative.
+- Frontend: React web UI (primary) plus CLI.
 - Game engine: board state, rules, win/draw detection, move validation.
 - AI move service: prompt construction + Bedrock inference + move parsing.
 - Testing: unit tests for game logic and AI behavior validation.
@@ -34,14 +34,14 @@
 - AI move is parsed and applied; updated state returned to UI.
 
 ## Integrations
-- AWS Bedrock for LLM inference.
+- AWS Bedrock for LLM inference (region: us-west-2; model: cheap/fast TBD).
 
 ## Deployment
-- TBD; expected lightweight backend with optional web UI hosting.
+- AWS hosting; simplest approach possible for the POC.
 - Stateless backend for POC; stateful mode may be added later.
 - UI and API remain separately deployable for the POC.
 - No auth or rate limiting for the POC (open and simple).
-- Basic request logging and Bedrock error tracing required.
+- Basic request logging and Bedrock error tracing required (simple, easily accessible logs).
 - Bedrock model selection configurable via environment/config.
 - LLM prompt enforces a strict JSON response schema for parsing.
 - Configuration details documented in this architecture context.
