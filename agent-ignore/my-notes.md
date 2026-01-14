@@ -76,3 +76,12 @@ Steps Taken -
 
 - Linting and prettier added to coding-standards.md (see chat-history/141 - 150)
 
+/new
+
+- story organization
+
+/new
+
+- Used ClaudeCode to review and imporove agents.md and next-story prompt
+
+/new
