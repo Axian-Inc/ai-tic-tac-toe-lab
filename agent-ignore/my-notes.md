@@ -85,3 +85,5 @@ Steps Taken -
 - Used ClaudeCode to review and imporove agents.md and next-story prompt
 
 /new
+
+- Setup Github for this projects repo, add gh to devcontainer for easier authentication
