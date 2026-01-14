@@ -3,8 +3,9 @@
   "build": {
     "dockerfile": "Dockerfile"
   },
-  "postCreateCommand": "copy-codex-auth",
+  "postCreateCommand": "copy-codex-auth && copy-gh-auth",
   "mounts": [
-    "source=${localEnv:USERPROFILE}/.codex,target=/tmp/host-codex,type=bind,consistency=cached"
+    "source=${localEnv:USERPROFILE}/.codex,target=/tmp/host-codex,type=bind,consistency=cached",
+    "source=${localEnv:USERPROFILE}/.config/gh,target=/tmp/host-gh,type=bind,consistency=cached"
   ]
 }

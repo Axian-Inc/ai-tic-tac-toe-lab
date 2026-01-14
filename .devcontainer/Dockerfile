@@ -25,3 +25,6 @@ RUN apt-get update \
 
 COPY copy-codex-auth.sh /usr/local/bin/copy-codex-auth
 RUN chmod +x /usr/local/bin/copy-codex-auth
+
+COPY copy-gh-auth.sh /usr/local/bin/copy-gh-auth
+RUN chmod +x /usr/local/bin/copy-gh-auth
