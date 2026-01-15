@@ -174,12 +174,14 @@ const buildUnavailableError = (): AiMoveError => ({
 const isAbortError = (error: unknown) =>
   error instanceof Error && (error.name === 'AbortError' || error.message.includes('aborted'));
 
-export const createAiMoveService = (deps: {
-  bedrockClient?: BedrockRuntimeClient;
-  modelId?: string;
-  region?: string;
-  timeoutMs?: number;
-} = {}): AiMoveService => {
+export const createAiMoveService = (
+  deps: {
+    bedrockClient?: BedrockRuntimeClient;
+    modelId?: string;
+    region?: string;
+    timeoutMs?: number;
+  } = {},
+): AiMoveService => {
   const region = deps.region ?? process.env.BEDROCK_REGION;
   const modelId = deps.modelId ?? process.env.BEDROCK_MODEL_ID;
   const timeoutMs = deps.timeoutMs ?? 10_000;

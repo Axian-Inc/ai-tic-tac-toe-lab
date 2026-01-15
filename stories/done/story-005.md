@@ -31,5 +31,17 @@
 ## Dependencies
 - Story 011 (schemas), Story 003 (API), Story 004 (AI).
 
+## Plan
+- [x] Add failing UI tests for initial render, new game flow, move flow, and error rendering.
+- [x] Build minimal React UI with board, controls, status, and rationale display.
+- [x] Add shared API client usage for new-game and move requests.
+- [x] Style layout for desktop and mobile.
+- [x] Verify tests pass and update story notes.
+
 ## Notes
 - Keep UI minimal and focus on clarity over polish.
+- Tests run: `npm test`.
+
+## Done
+- Web UI added with AI opponent controls, board, and status/rationale display.
+- Shared API client introduced for web requests.

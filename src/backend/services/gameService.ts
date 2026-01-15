@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import type { FastifyBaseLogger } from 'fastify';
 
 import { applyMove, type GameState, type NewGameRequest } from '../../shared';
+
 import {
   createAiMoveService,
   getOpponentProfile,

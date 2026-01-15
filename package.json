@@ -3,30 +3,42 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "build:web": "vite build",
+    "dev:web": "vite",
     "lint": "eslint src --ext .ts,.tsx",
+    "preview:web": "vite preview",
     "format": "prettier --write src",
     "format:check": "prettier --check src",
     "test": "vitest run",
     "test:watch": "vitest"
   },
   "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
     "@types/node": "^20.11.30",
+    "@types/react": "^18.2.79",
+    "@types/react-dom": "^18.2.25",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
+    "@testing-library/react": "^14.2.2",
+    "@testing-library/user-event": "^14.5.2",
     "eslint": "^8.57.0",
     "eslint-import-resolver-typescript": "^3.6.1",
     "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-react": "^7.35.0",
     "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-vitest": "^0.4.1",
+    "jsdom": "^24.0.0",
     "prettier": "^3.3.2",
     "typescript": "^5.4.5",
+    "vite": "^5.4.0",
     "vitest": "^1.4.0"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.969.0",
     "@fastify/cors": "^8.4.0",
     "fastify": "^4.28.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "zod": "^4.3.5"
   }
 }

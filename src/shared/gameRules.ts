@@ -59,9 +59,7 @@ const findWinner = (board: GameState['board']) => {
   return null;
 };
 
-export const computeStatus = (
-  state: GameState,
-): Pick<GameState, 'gameStatus' | 'winner'> => {
+export const computeStatus = (state: GameState): Pick<GameState, 'gameStatus' | 'winner'> => {
   const winner = findWinner(state.board);
 
   if (winner) {

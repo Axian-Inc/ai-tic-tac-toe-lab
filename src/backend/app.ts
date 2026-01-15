@@ -8,6 +8,7 @@ import {
   MoveResponseSchema,
   NewGameRequestSchema,
 } from '../shared';
+
 import type { AiMoveService } from './services/aiMoveService';
 import { createGameService } from './services/gameService';
 
@@ -58,10 +59,7 @@ export const buildApp = (deps: { aiMoveService?: AiMoveService } = {}) => {
     }
 
     const state = GameStateSchema.parse(gameService.newGame(parsed.data));
-    request.log.info(
-      { requestId: request.id, sessionId: state.sessionId },
-      'new game created',
-    );
+    request.log.info({ requestId: request.id, sessionId: state.sessionId }, 'new game created');
     return reply.status(200).send(state);
   });
 
