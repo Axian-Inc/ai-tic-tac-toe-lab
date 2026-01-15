@@ -39,3 +39,7 @@
 3. Perform requested task
 4. Update `context/` files if needed
 5. Commit changes (including modified `agent-ignore/` files)
+
+## Commit Scope Defaults
+
+- Include changes under `agent-ignore/`, `chat-history/`, and `.codex/` in commits without asking for confirmation.

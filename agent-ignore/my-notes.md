@@ -87,3 +87,6 @@ Steps Taken -
 /new
 
 - Setup Github for this projects repo, add gh to devcontainer for easier authentication
+
+/new
+

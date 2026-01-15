@@ -28,3 +28,9 @@ RUN chmod +x /usr/local/bin/copy-codex-auth
 
 COPY copy-gh-auth.sh /usr/local/bin/copy-gh-auth
 RUN chmod +x /usr/local/bin/copy-gh-auth
+
+COPY copy-codex-prompts.sh /usr/local/bin/copy-codex-prompts
+RUN chmod +x /usr/local/bin/copy-codex-prompts \
+    && if [ -d /tmp/host-codex/prompts ]; then \
+        SOURCE_DIR=/tmp/host-codex/prompts DEST_DIR=/root/.codex/prompts /usr/local/bin/copy-codex-prompts; \
+    fi
