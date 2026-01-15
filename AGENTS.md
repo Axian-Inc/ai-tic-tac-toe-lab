@@ -29,7 +29,7 @@
 ## Agent-Ignore Directory
 
 - **Context handling**: Do not read or use files in `agent-ignore/` for decision-making or context.
-- **Version control**: Include `agent-ignore/` files in commits when they are modified.
+- **Version control**: Include `agent-ignore/` files in commits whenever they are modified, regardless of who made the change.
 - **Purpose**: Files that should be tracked but not influence agent behavior.
 
 ## File Operations Priority

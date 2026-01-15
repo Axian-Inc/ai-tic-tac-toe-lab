@@ -1,6 +1,14 @@
 import { randomUUID } from 'node:crypto';
 
+import type { FastifyBaseLogger } from 'fastify';
+
 import { applyMove, type GameState, type NewGameRequest } from '../../shared';
+import {
+  createAiMoveService,
+  getOpponentProfile,
+  type AiMoveResult,
+  type AiMoveService,
+} from './aiMoveService';
 
 type MoveError = {
   errorCode: string;
@@ -9,26 +17,15 @@ type MoveError = {
 
 type MoveResult = { state: GameState; aiRationale?: string } | MoveError;
 
-type AiMove = {
-  moveIndex: number;
-  rationale: string;
-};
-
 const createEmptyBoard = () => Array(9).fill(null) as GameState['board'];
 
-const pickStubAiMove = (state: GameState): AiMove | null => {
-  const moveIndex = state.board.findIndex((cell) => cell === null);
-  if (moveIndex === -1) {
-    return null;
-  }
+const buildAiMoveError = (result: AiMoveResult): MoveError => ({
+  errorCode: result.errorCode,
+  message: result.message,
+});
 
-  return {
-    moveIndex,
-    rationale: 'Picked the first available move (stub AI).',
-  };
-};
-
-export const createGameService = () => {
+export const createGameService = (deps: { aiMoveService?: AiMoveService } = {}) => {
+  const aiMoveService = deps.aiMoveService ?? createAiMoveService();
   const newGame = (input: NewGameRequest): GameState => ({
     board: createEmptyBoard(),
     nextPlayer: input.startingPlayer,
@@ -38,7 +35,11 @@ export const createGameService = () => {
     sessionId: randomUUID(),
   });
 
-  const applyPlayerMove = (state: GameState, playerMoveIndex: number): MoveResult => {
+  const applyPlayerMove = async (
+    state: GameState,
+    playerMoveIndex: number,
+    context: { requestId: string; sessionId?: string; logger: FastifyBaseLogger },
+  ): Promise<MoveResult> => {
     const playerMove = applyMove(state, playerMoveIndex);
     if ('errorCode' in playerMove) {
       return playerMove;
@@ -48,9 +49,14 @@ export const createGameService = () => {
       return { state: playerMove.state };
     }
 
-    const aiMove = pickStubAiMove(playerMove.state);
-    if (!aiMove) {
-      return { errorCode: 'TERMINAL_STATE', message: 'game is already complete' };
+    const profile = getOpponentProfile(playerMove.state.opponentId);
+    if (!profile) {
+      return { errorCode: 'INVALID_INPUT', message: 'Unknown opponent profile' };
+    }
+
+    const aiMove = await aiMoveService.getAiMove(playerMove.state, context);
+    if ('errorCode' in aiMove) {
+      return buildAiMoveError(aiMove);
     }
 
     const aiMoveResult = applyMove(playerMove.state, aiMove.moveIndex);

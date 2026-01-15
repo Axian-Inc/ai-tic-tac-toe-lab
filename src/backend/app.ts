@@ -8,6 +8,7 @@ import {
   MoveResponseSchema,
   NewGameRequestSchema,
 } from '../shared';
+import type { AiMoveService } from './services/aiMoveService';
 import { createGameService } from './services/gameService';
 
 type ErrorPayload = {
@@ -21,9 +22,24 @@ const sendError = (reply: FastifyReply, status: number, payload: ErrorPayload) =
   return reply.status(status).send(response);
 };
 
-export const buildApp = () => {
+const statusForErrorCode = (errorCode: string) => {
+  switch (errorCode) {
+    case 'TERMINAL_STATE':
+      return 409;
+    case 'AI_INVALID_OUTPUT':
+      return 502;
+    case 'AI_TIMEOUT':
+      return 504;
+    case 'AI_UNAVAILABLE':
+      return 503;
+    default:
+      return 400;
+  }
+};
+
+export const buildApp = (deps: { aiMoveService?: AiMoveService } = {}) => {
   const app = Fastify({ logger: true });
-  const gameService = createGameService();
+  const gameService = createGameService({ aiMoveService: deps.aiMoveService });
 
   app.register(cors, { origin: true });
 
@@ -63,9 +79,17 @@ export const buildApp = () => {
       });
     }
 
-    const result = gameService.applyPlayerMove(parsed.data.state, parsed.data.playerMoveIndex);
+    const result = await gameService.applyPlayerMove(
+      parsed.data.state,
+      parsed.data.playerMoveIndex,
+      {
+        requestId: request.id,
+        sessionId: parsed.data.state.sessionId,
+        logger: request.log,
+      },
+    );
     if ('errorCode' in result) {
-      const statusCode = result.errorCode === 'TERMINAL_STATE' ? 409 : 400;
+      const statusCode = statusForErrorCode(result.errorCode);
       request.log.error(
         { requestId: request.id, sessionId: parsed.data.state.sessionId, error: result },
         'move rejected',

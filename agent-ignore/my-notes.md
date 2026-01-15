@@ -90,3 +90,9 @@ Steps Taken -
 
 /new
 
+- Rebuilt docker container and prompts were lost, add then and a script to copy them into the container on build
+
+/new 
+
+- Start in on next tasks
+

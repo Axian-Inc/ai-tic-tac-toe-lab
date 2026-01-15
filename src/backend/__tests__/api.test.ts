@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { ErrorResponseSchema, GameStateSchema, MoveResponseSchema } from '../../shared';
+import type { AiMoveService } from '../services/aiMoveService';
 import { buildApp } from '../app';
 
 const createWinningState = () => ({
@@ -14,9 +15,19 @@ const createWinningState = () => ({
 
 describe('API', () => {
   let app: ReturnType<typeof buildApp>;
+  let aiMoveService: AiMoveService;
 
   beforeEach(async () => {
-    app = buildApp();
+    aiMoveService = {
+      getAiMove: async (state) => {
+        const moveIndex = state.board.findIndex((cell) => cell === null);
+        if (moveIndex === -1) {
+          return { errorCode: 'AI_INVALID_OUTPUT', message: 'no moves available' };
+        }
+        return { moveIndex, rationale: 'stubbed AI move' };
+      },
+    };
+    app = buildApp({ aiMoveService });
     await app.ready();
   });
 
