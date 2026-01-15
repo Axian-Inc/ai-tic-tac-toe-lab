@@ -79,6 +79,63 @@ describe('AI must-do scenarios', () => {
   }
 });
 
+describe('AI parsing validation', () => {
+  it('accepts a valid move without rationale', async () => {
+    const bedrockClient = createBedrockClient([JSON.stringify({ moveIndex: 4 })]);
+    const service = createAiMoveService({ bedrockClient, modelId: 'test-model', timeoutMs: 5000 });
+    const result = await service.getAiMove(createState({}), {
+      logger: createLogger(),
+      requestId: 'req-parse-1',
+      sessionId: 'session-parse-1',
+    });
+
+    expect(result).toEqual({ moveIndex: 4, rationale: '' });
+    expect(bedrockClient.send).toHaveBeenCalledTimes(1);
+  });
+
+  it('rejects invalid schema responses with extra keys', async () => {
+    const bedrockClient = createBedrockClient([
+      JSON.stringify({ moveIndex: 4, rationale: 'Extra', extra: 'nope' }),
+    ]);
+    const service = createAiMoveService({ bedrockClient, modelId: 'test-model', timeoutMs: 5000 });
+    const result = await service.getAiMove(createState({}), {
+      logger: createLogger(),
+      requestId: 'req-parse-2',
+      sessionId: 'session-parse-2',
+    });
+
+    expect(result).toEqual({
+      errorCode: 'AI_INVALID_OUTPUT',
+      message: 'AI returned invalid output',
+    });
+    expect(bedrockClient.send).toHaveBeenCalledTimes(3);
+  });
+
+  it('rejects illegal moves even with valid schema', async () => {
+    const bedrockClient = createBedrockClient([
+      JSON.stringify({ moveIndex: 0, rationale: 'Top left.' }),
+    ]);
+    const service = createAiMoveService({ bedrockClient, modelId: 'test-model', timeoutMs: 5000 });
+    const result = await service.getAiMove(
+      createState({
+        board: ['X', null, null, null, null, null, null, null, null],
+        nextPlayer: 'O',
+      }),
+      {
+        logger: createLogger(),
+        requestId: 'req-parse-3',
+        sessionId: 'session-parse-3',
+      },
+    );
+
+    expect(result).toEqual({
+      errorCode: 'AI_INVALID_OUTPUT',
+      message: 'AI returned invalid output',
+    });
+    expect(bedrockClient.send).toHaveBeenCalledTimes(3);
+  });
+});
+
 describe('AI move service retries', () => {
   it('retries invalid output and succeeds on a later attempt', async () => {
     const bedrockClient = createBedrockClient([

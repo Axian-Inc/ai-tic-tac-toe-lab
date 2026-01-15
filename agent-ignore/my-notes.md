@@ -101,3 +101,7 @@ Steps Taken -
 
 - added visualize-docs prompt to ~/.codex/prompts
 - run prompt to generate diagrams for architecture and tech-stack docs
+
+/new
+
+- Start in on next tasks
