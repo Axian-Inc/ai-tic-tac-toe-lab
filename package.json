@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "build:web": "vite build",
+    "cli": "tsx src/cli/index.ts",
     "dev:web": "vite",
     "lint": "eslint src --ext .ts,.tsx",
     "preview:web": "vite preview",
@@ -14,14 +15,14 @@
     "test:watch": "vitest"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.3.1",
+    "@testing-library/react": "^14.2.2",
+    "@testing-library/user-event": "^14.5.2",
     "@types/node": "^20.11.30",
     "@types/react": "^18.2.79",
     "@types/react-dom": "^18.2.25",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
-    "@testing-library/react": "^14.2.2",
-    "@testing-library/user-event": "^14.5.2",
+    "@vitejs/plugin-react": "^4.3.1",
     "eslint": "^8.57.0",
     "eslint-import-resolver-typescript": "^3.6.1",
     "eslint-plugin-import": "^2.29.1",
@@ -31,6 +32,7 @@
     "jsdom": "^24.0.0",
     "mermaid": "^11.12.0",
     "prettier": "^3.3.2",
+    "tsx": "^4.21.0",
     "typescript": "^5.4.5",
     "vite": "^5.4.0",
     "vitest": "^1.4.0"
