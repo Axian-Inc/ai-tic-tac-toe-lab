@@ -1,0 +1,43 @@
+sequenceDiagram
+  autonumber
+  participant User as Player
+  participant Web as Web UI
+  participant CLI as CLI Client
+  participant API as Backend API (Fastify)
+  participant Game as GameService
+  participant AI as AiMoveService
+  participant Bedrock as AWS Bedrock Runtime
+
+  Note over API: No auth or webhooks for the POC
+
+  rect rgb(227,242,253)
+    User->>Web: Start new game
+    Web->>API: POST /v1/new-game
+    API->>Game: newGame(startingPlayer, opponentId)
+    Game-->>API: GameState
+    API-->>Web: GameState
+  end
+
+  rect rgb(255,243,224)
+    User->>Web: Click cell
+    Web->>API: POST /v1/move {state, playerMoveIndex}
+    API->>Game: applyPlayerMove(state, playerMoveIndex)
+    Game->>AI: getAiMove(state)
+    loop retry up to 3 on invalid output
+      AI->>Bedrock: InvokeModel(prompt)
+      Bedrock-->>AI: JSON {moveIndex, rationale}
+    end
+    AI-->>Game: moveIndex + rationale
+    Game-->>API: MoveResponse
+    API-->>Web: MoveResponse
+  end
+
+  alt CLI usage
+    User->>CLI: Start/move
+    CLI->>API: POST /v1/new-game or /v1/move
+    API-->>CLI: GameState/MoveResponse or ErrorResponse
+  end
+
+  alt Invalid input or invalid move
+    API-->>Web: ErrorResponse (400/409/5xx)
+  end

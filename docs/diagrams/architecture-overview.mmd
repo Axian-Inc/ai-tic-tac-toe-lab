@@ -1,0 +1,34 @@
+C4Context
+  title Tic-Tac-Toe POC - System Context
+
+  Person(player, "Player", "Human user")
+
+  System_Boundary(poc, "Tic-Tac-Toe POC") {
+    System(web, "Web UI [React/Vite]", "Browser-based interface")
+    System(cli, "CLI Client [Node.js]", "Terminal-based interface")
+    System(api, "Backend API [Fastify/Node.js]", "Stateless game engine + AI orchestration")
+    System(shared, "Shared Types/Schemas [TypeScript + Zod]", "Validation + API client")
+  }
+
+  System_Ext(bedrock, "AWS Bedrock Runtime [Claude 3 Haiku]", "LLM inference")
+  System_Ext(logs, "Logging Sink [stdout/CloudWatch]", "Structured request/AI logs")
+  System_Ext(nodb, "No Persistent Database", "Game state carried in requests/responses")
+
+  Rel(player, web, "Plays game via HTTP")
+  Rel(player, cli, "Plays game via HTTP")
+  Rel(web, api, "POST /v1/new-game, /v1/move (JSON)")
+  Rel(cli, api, "POST /v1/new-game, /v1/move (JSON)")
+  Rel(api, bedrock, "InvokeModel (AWS SDK)")
+  Rel(api, logs, "Emit structured logs")
+  Rel(api, nodb, "Stateless; no writes")
+  Rel(shared, web, "Shared schemas and API client")
+  Rel(shared, cli, "Shared schemas and API client")
+  Rel(shared, api, "Shared schemas and validation")
+
+  UpdateElementStyle(web, $bgColor="#E3F2FD", $borderColor="#1565C0", $textColor="#0D47A1")
+  UpdateElementStyle(cli, $bgColor="#E3F2FD", $borderColor="#1565C0", $textColor="#0D47A1")
+  UpdateElementStyle(api, $bgColor="#FFF3E0", $borderColor="#EF6C00", $textColor="#E65100")
+  UpdateElementStyle(shared, $bgColor="#E8F5E9", $borderColor="#2E7D32", $textColor="#1B5E20")
+  UpdateElementStyle(bedrock, $bgColor="#F3E5F5", $borderColor="#6A1B9A", $textColor="#4A148C")
+  UpdateElementStyle(logs, $bgColor="#ECEFF1", $borderColor="#546E7A", $textColor="#263238")
+  UpdateElementStyle(nodb, $bgColor="#FAFAFA", $borderColor="#9E9E9E", $textColor="#424242")

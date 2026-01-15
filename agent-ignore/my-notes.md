@@ -96,3 +96,8 @@ Steps Taken -
 
 - Start in on next tasks
 
+
+/new - switched to high model thinking
+
+- added visualize-docs prompt to ~/.codex/prompts
+- run prompt to generate diagrams for architecture and tech-stack docs

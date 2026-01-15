@@ -1,0 +1,48 @@
+flowchart TB
+  developer[Developer Workstation]
+  buildWeb["npm run build:web - Vite"]
+  buildApi["Build Fastify API - Node.js"]
+  manualDeploy["Manual deploy scripts - no CI/CD in repo"]
+
+  subgraph Dev
+    devWeb[Vite dev server]
+    devApi["Fastify app - local"]
+    devBedrock[AWS Bedrock Runtime]
+  end
+
+  subgraph Staging
+    stagingNote["Staging environment - not defined in repo"]
+  end
+
+  subgraph Prod
+    prodS3["S3 Static Site - planned"]
+    prodLambda["Lambda + Function URL - planned"]
+    prodLogs[CloudWatch Logs]
+    prodBedrock[AWS Bedrock Runtime]
+  end
+
+  developer --> devWeb
+  developer --> devApi
+  developer --> buildWeb
+  developer --> buildApi
+
+  buildWeb --> manualDeploy
+  buildApi --> manualDeploy
+
+  manualDeploy --> prodS3
+  manualDeploy --> prodLambda
+
+  prodLambda --> prodLogs
+  prodLambda --> prodBedrock
+
+  devApi --> devBedrock
+
+  classDef local fill:#E3F2FD,stroke:#1565C0,color:#0D47A1
+  classDef prod fill:#FFF3E0,stroke:#EF6C00,color:#E65100
+  classDef external fill:#F3E5F5,stroke:#6A1B9A,color:#4A148C
+  classDef note fill:#FAFAFA,stroke:#9E9E9E,color:#424242
+
+  class developer,devWeb,devApi,buildWeb,buildApi local
+  class prodS3,prodLambda,prodLogs prod
+  class devBedrock,prodBedrock external
+  class manualDeploy,stagingNote note

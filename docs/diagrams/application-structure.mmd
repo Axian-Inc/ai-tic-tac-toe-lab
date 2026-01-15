@@ -1,0 +1,81 @@
+flowchart TB
+  subgraph Presentation
+    webEntry[src/web/main.tsx]
+    webApp[src/web/App.tsx]
+    cliClient[src/cli/client.ts]
+  end
+
+  subgraph Backend
+    apiApp[src/backend/app.ts]
+    gameService[src/backend/services/gameService.ts]
+    aiService[src/backend/services/aiMoveService.ts]
+  end
+
+  subgraph Shared
+    gameState[src/shared/gameState.ts]
+    gameRules[src/shared/gameRules.ts]
+    moveSchemas[src/shared/moveSchemas.ts]
+    newGameSchemas[src/shared/newGameSchemas.ts]
+    apiClient[src/shared/apiClient.ts]
+  end
+
+  subgraph Tests
+    backendTests[src/backend/__tests__]
+    webTests[src/web/__tests__]
+    sharedTests[src/shared/__tests__]
+    cliTests[src/cli/__tests__]
+  end
+
+  subgraph Config
+    pkg[package.json]
+    tsconfig[tsconfig.json]
+    vite[vite.config.ts]
+    vitest[vitest.config.ts]
+    eslint[.eslintrc.cjs]
+    prettier[.prettierrc.json]
+    envWeb[VITE_API_BASE_URL]
+    envBedrock[BEDROCK_REGION/BEDROCK_MODEL_ID]
+  end
+
+  webEntry --> webApp
+  webApp --> apiClient
+  cliClient --> apiClient
+
+  apiApp --> gameService
+  apiApp --> moveSchemas
+  apiApp --> newGameSchemas
+  apiApp --> gameState
+
+  gameService --> aiService
+  gameService --> gameRules
+  gameService --> gameState
+
+  aiService --> gameRules
+  aiService --> gameState
+
+  apiClient --> moveSchemas
+  apiClient --> newGameSchemas
+  apiClient --> gameState
+
+  envWeb --> webEntry
+  envBedrock --> aiService
+
+  backendTests -.-> apiApp
+  backendTests -.-> gameService
+  backendTests -.-> aiService
+  webTests -.-> webApp
+  sharedTests -.-> gameRules
+  sharedTests -.-> moveSchemas
+  cliTests -.-> cliClient
+
+  classDef presentation fill:#E3F2FD,stroke:#1565C0,color:#0D47A1
+  classDef backend fill:#FFF3E0,stroke:#EF6C00,color:#E65100
+  classDef shared fill:#E8F5E9,stroke:#2E7D32,color:#1B5E20
+  classDef tests fill:#F3E5F5,stroke:#6A1B9A,color:#4A148C
+  classDef config fill:#ECEFF1,stroke:#546E7A,color:#263238
+
+  class webEntry,webApp,cliClient presentation
+  class apiApp,gameService,aiService backend
+  class gameState,gameRules,moveSchemas,newGameSchemas,apiClient shared
+  class backendTests,webTests,sharedTests,cliTests tests
+  class pkg,tsconfig,vite,vitest,eslint,prettier,envWeb,envBedrock config

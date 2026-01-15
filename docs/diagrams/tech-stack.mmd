@@ -1,0 +1,58 @@
+flowchart TB
+  subgraph Frontend
+    react[React 18]
+    vite[Vite 5]
+    ts[TypeScript]
+    css["CSS App.css"]
+  end
+
+  subgraph Backend
+    node[Node.js 18+]
+    fastify[Fastify 4]
+    cors["@fastify/cors"]
+    zod[Zod 4]
+    awsSdk["@aws-sdk/client-bedrock-runtime"]
+  end
+
+  subgraph Shared
+    schemas[Zod Schemas]
+    apiClient[Shared API Client]
+  end
+
+  subgraph Testing
+    vitest[Vitest]
+    testingLib["@testing-library/react"]
+    jsdom[jsdom]
+  end
+
+  subgraph Tooling
+    eslint[ESLint]
+    prettier[Prettier]
+    tsconfig[tsconfig.json]
+  end
+
+  subgraph Infra_Planned
+    lambda["AWS Lambda - planned"]
+    functionUrl["Lambda Function URL - planned"]
+    s3["S3 Static Hosting - planned"]
+    logs[CloudWatch Logs]
+    bedrock[AWS Bedrock Runtime]
+  end
+
+  react --> vite
+  fastify --> awsSdk
+  schemas --> apiClient
+
+  classDef frontend fill:#E3F2FD,stroke:#1565C0,color:#0D47A1
+  classDef backend fill:#FFF3E0,stroke:#EF6C00,color:#E65100
+  classDef shared fill:#E8F5E9,stroke:#2E7D32,color:#1B5E20
+  classDef testing fill:#F3E5F5,stroke:#6A1B9A,color:#4A148C
+  classDef tooling fill:#ECEFF1,stroke:#546E7A,color:#263238
+  classDef infra fill:#FFFDE7,stroke:#F9A825,color:#F57F17
+
+  class react,vite,ts,css frontend
+  class node,fastify,cors,zod,awsSdk backend
+  class schemas,apiClient shared
+  class vitest,testingLib,jsdom testing
+  class eslint,prettier,tsconfig tooling
+  class lambda,functionUrl,s3,logs,bedrock infra

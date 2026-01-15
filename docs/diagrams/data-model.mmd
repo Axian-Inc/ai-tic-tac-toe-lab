@@ -1,0 +1,62 @@
+erDiagram
+  GAME_STATE {
+    string sessionId
+    string opponentId
+    string nextPlayer
+    string gameStatus
+    string winner
+    array board
+  }
+
+  MOVE_HISTORY_ENTRY {
+    string player
+    int index
+  }
+
+  MOVE_REQUEST {
+    int playerMoveIndex
+  }
+
+  MOVE_RESPONSE {
+    string aiRationale
+  }
+
+  API_LAYER {
+    string name
+  }
+
+  GAME_SERVICE {
+    string name
+  }
+
+  AI_SERVICE {
+    string name
+  }
+
+  BEDROCK_RUNTIME {
+    string modelId
+  }
+
+  DATABASE_NONE {
+    string note
+  }
+
+  CACHE_NONE {
+    string note
+  }
+
+  QUEUE_NONE {
+    string note
+  }
+
+  GAME_STATE ||--o{ MOVE_HISTORY_ENTRY : has
+  MOVE_REQUEST }o--|| GAME_STATE : carries
+  MOVE_RESPONSE ||--|| GAME_STATE : returns
+  API_LAYER ||--|| MOVE_REQUEST : accepts
+  API_LAYER ||--|| MOVE_RESPONSE : returns
+  API_LAYER ||--|| GAME_SERVICE : calls
+  GAME_SERVICE ||--|| AI_SERVICE : invokes
+  AI_SERVICE ||--|| BEDROCK_RUNTIME : InvokeModel
+  API_LAYER ||--|| DATABASE_NONE : stateless
+  AI_SERVICE ||--|| CACHE_NONE : no-cache
+  AI_SERVICE ||--|| QUEUE_NONE : no-queue

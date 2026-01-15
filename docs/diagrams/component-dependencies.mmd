@@ -1,0 +1,66 @@
+flowchart LR
+  subgraph Web
+    webMain[src/web/main.tsx]
+    webApp[src/web/App.tsx]
+  end
+
+  subgraph CLI
+    cliClient[src/cli/client.ts]
+  end
+
+  subgraph Backend
+    apiApp[src/backend/app.ts]
+    gameService[src/backend/services/gameService.ts]
+    aiService[src/backend/services/aiMoveService.ts]
+    opponentProfiles["Opponent Profiles<br/>balanced, aggressive, defensive"]
+  end
+
+  subgraph Shared
+    apiClient[src/shared/apiClient.ts]
+    gameState[src/shared/gameState.ts]
+    gameRules[src/shared/gameRules.ts]
+    moveSchemas[src/shared/moveSchemas.ts]
+    newGameSchemas[src/shared/newGameSchemas.ts]
+  end
+
+  subgraph External
+    bedrockSdk["AWS SDK Bedrock Runtime<br/>@aws-sdk/client-bedrock-runtime"]
+  end
+
+  webMain --> webApp
+  webApp --> apiClient
+  webApp --> gameState
+
+  cliClient --> apiClient
+
+  apiApp --> gameService
+  apiApp --> moveSchemas
+  apiApp --> newGameSchemas
+  apiApp --> gameState
+
+  gameService --> aiService
+  gameService --> gameRules
+  gameService --> gameState
+
+  aiService --> gameRules
+  aiService --> gameState
+  aiService --> opponentProfiles
+  aiService --> bedrockSdk
+
+  apiClient --> moveSchemas
+  apiClient --> newGameSchemas
+  apiClient --> gameState
+
+  noCycles[No circular dependencies detected]
+
+  classDef presentation fill:#E3F2FD,stroke:#1565C0,color:#0D47A1
+  classDef backend fill:#FFF3E0,stroke:#EF6C00,color:#E65100
+  classDef shared fill:#E8F5E9,stroke:#2E7D32,color:#1B5E20
+  classDef external fill:#F3E5F5,stroke:#6A1B9A,color:#4A148C
+  classDef note fill:#FAFAFA,stroke:#9E9E9E,color:#424242
+
+  class webMain,webApp,cliClient presentation
+  class apiApp,gameService,aiService,opponentProfiles backend
+  class apiClient,gameState,gameRules,moveSchemas,newGameSchemas shared
+  class bedrockSdk external
+  class noCycles note

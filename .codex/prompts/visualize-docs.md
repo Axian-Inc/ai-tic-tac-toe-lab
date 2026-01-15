@@ -98,4 +98,7 @@ Create `docs/PROJECT_OVERVIEW.md` with:
 - Color code by layer: style A fill:#f9f,stroke:#333
 - Add notes: note right of A: This is critical
 
+## Validation
+After creating or updating the `.mmd` files, run Mermaid syntax validation and fix any errors (use `npm run validate:mermaid` when available).
+
 Generate all diagrams now based on analyzing the full project structure.
