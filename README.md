@@ -12,12 +12,14 @@ As you work through the planning phase with the agent the context files will be 
 
 ### Example Prompts to Get Started
 
+Simple Starting Prompt:
 ```
 We are going to start the planning phase for a new POC of a single player vs AI tic-tac-toe game.  
 Starting from the basic concept walk me though step by step creating an implemenation plan.  
 Build up the context directory files as we make decisions.
 ```
 
+More Detailed Starting Prompt:
 ```
 I want to create the following, lets focus on planning for now, no implementation:
 Participants will build a single-player Tic-Tac-Toe game, where:
