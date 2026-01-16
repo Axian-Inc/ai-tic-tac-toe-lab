@@ -24,6 +24,19 @@ This script will run when the container is created.
 It is recommended when working in a devcontainer to use this type of process to store the Codex prompts in the repository, then copy them to the user's local .codex directory when the container is created.  Otherwise, all prompts will be removed when the container is deleted or recreated.
 
 
+## Using the Prompts
+When the prompts have been copied to the user's local .codex/prompts directory, they can be used in Codex with the following command:
+```
+/prompts:[prompt-file-name]
+```
+Available prompts will be listed in the Codex prompt picker.
+
+If you do not see the prompts, verify they have been copied to the correct location:
+```
+~/.codex/prompts/
+```
+
+
 ## Example Prompts
 - `story-creation.md`: A prompt for creating technical user stories from initial ideas.
 - `story-evaluate.md`: A prompt for evaluating and decomposing user stories based on size and complexity.
