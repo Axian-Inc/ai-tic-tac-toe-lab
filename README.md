@@ -10,7 +10,7 @@ This lab will takes place INSIDE a docker container using the Dev Containers Ext
 - LOCAL (host OS) install of OpenAI Codex CLI (npm / brew are easiest)
 <br/>Example: brew install codex or  npm install -g @openai/codex
 <br/>NOTE: We’ll only be running codex to enable auth, you won’t need many of its features on the Host OS.
-- Github account
+- Axian Github account access
 - Axian AWS L&D Access Key (for AWS CLI work) 
 
 ### Prep:
