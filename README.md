@@ -29,3 +29,15 @@ It is recommended when working in a devcontainer to use this type of process to 
 - `story-evaluate.md`: A prompt for evaluating and decomposing user stories based on size and complexity.
 - `next-steps.md`: A prompt for determining logical next steps in a project based on current progress and goals.
 - `visualize-docs.md`: A prompt for generating visual diagrams from project documentation.
+- `test-analyzer.md`: A prompt for analyzing code modules to identify test coverage gaps and quality issues.
+
+## Prompt Creation
+AI is a great way to generate initial versions of custom prompts.  Users can create their own custom prompts by using AI to generate an initial version, then iteratively refining the prompt until it meets their needs.
+
+Claude was used to generate the initial versions of the example prompts in this repository. 
+
+Example prompt used to generate the `test-analyzer.md` prompt:
+
+```
+Generate a simple concise reusable custom ai prompt that is less than 100 lines.  This prompt should focus on examaning existing test coverage and test design.  Looking for validity of tests, completness, edge-cases, missing code branches, etc.  It will start by generating a list of all top level code modules, then working one module at a time to review the tests, or breaking the module into smaller sub modules if needed before reviewing the tests. For each module/submodule a md file report will be generatated with findings and recommendations.  this prompt will not attempt to fix, add or remove any tests or code.
+```
