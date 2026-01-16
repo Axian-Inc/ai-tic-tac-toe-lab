@@ -43,7 +43,27 @@ git checkout -b <firstname-last initial>-<whatever you want>
 - Open the folder in VS Code
 - When prompted, open in Dev Container
 - Wait for the container to build and start (this may take a few minutes the first time)
+- The build will run the `copy-codex-auth.sh` script to copy your local codex auth into the container
 
 ## Verify Codex Auth Copied
 - Open a terminal in the Dev Container
-- Run `codex whoami` to verify you are logged in (it should show your
+- Run `codex` and verify you are logged in (it should not prompt you to login again)
+- You can use `/status` to verify the account info
+
+## AWS Setup
+- In the Dev Container terminal, run `aws configure`
+- Enter your Axian AWS L&D Access Key ID and Secret Access Key when prompted
+- For default region, enter `us-west-2`
+- For default output format, enter `json` or leave blank
+- Verify AWS CLI is working by running `aws s3 ls` (you should see a list of S3 buckets)
+
+## Github Setup
+- In the Dev Container terminal, set your git user name and email
+```
+git config --global user.name "Your Name"
+git config --global user.email "your.email@example.com"
+```
+- Verify git is working by running `git status` (you should see the status of your personal branch)
+
+
+
