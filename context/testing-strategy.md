@@ -10,6 +10,7 @@
 - Use deterministic fixtures (board states, move histories, opponent IDs).
 - Implement logic to pass tests, then refactor while keeping tests green.
 - Add AI behavior tests only when they can be deterministic or rule-based.
+- Generate a coverage report on every test run (default output: `coverage/`).
 
 ## Test Categories
 ### Unit
