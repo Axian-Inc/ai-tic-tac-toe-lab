@@ -23,5 +23,4 @@ RUN apt-get update \
     && /tmp/aws/install \
     && rm -rf /var/lib/apt/lists/* /tmp/aws /tmp/awscliv2.zip
 
-COPY copy-codex-auth.sh /usr/local/bin/copy-codex-auth
-RUN chmod +x /usr/local/bin/copy-codex-auth
+COPY --chmod=755 copy-codex-auth.sh /usr/local/bin/copy-codex-auth
