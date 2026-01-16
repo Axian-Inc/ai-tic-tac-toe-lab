@@ -177,6 +177,13 @@ body {
   background: #f1f1f1;
 }
 
+.board__cell--winning,
+.board__cell--winning:disabled {
+  background: var(--surface-strong);
+  border-color: var(--accent-dark);
+  box-shadow: 0 0 0 3px rgba(255, 138, 61, 0.35);
+}
+
 .panel__rationale {
   padding: 12px 14px;
   border-radius: 14px;

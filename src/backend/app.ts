@@ -1,5 +1,5 @@
 import cors from '@fastify/cors';
-import Fastify, { type FastifyReply } from 'fastify';
+import Fastify, { type FastifyLoggerOptions, type FastifyReply } from 'fastify';
 
 import {
   ErrorResponseSchema,
@@ -38,11 +38,19 @@ const statusForErrorCode = (errorCode: string) => {
   }
 };
 
-export const buildApp = (deps: { aiMoveService?: AiMoveService } = {}) => {
-  const app = Fastify({ logger: true });
+export const buildApp = (
+  deps: {
+    aiMoveService?: AiMoveService;
+    logger?: FastifyLoggerOptions;
+    enableCors?: boolean;
+  } = {},
+) => {
+  const app = Fastify({ logger: deps.logger ?? true });
   const gameService = createGameService({ aiMoveService: deps.aiMoveService });
 
-  app.register(cors, { origin: true });
+  if (deps.enableCors ?? true) {
+    app.register(cors, { origin: true });
+  }
 
   app.post('/v1/new-game', async (request, reply) => {
     const parsed = NewGameRequestSchema.safeParse(request.body);

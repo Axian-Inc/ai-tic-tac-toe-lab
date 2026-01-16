@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import type { ApiClient, ApiError } from '../shared/apiClient';
 import { createApiClient } from '../shared/apiClient';
 import type { GameState } from '../shared/gameState';
+import { findWinningLine } from '../shared/gameRules';
 
 import './App.css';
 
@@ -52,6 +53,8 @@ export const App = ({ apiBaseUrl = '', apiClient }: AppProps) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const board = gameState?.board ?? emptyBoard;
+  const winningLine =
+    gameState?.gameStatus === 'win' ? findWinningLine(gameState.board) : null;
   const statusText = formatStatus(gameState);
 
   const handleNewGame = async () => {
@@ -162,7 +165,9 @@ export const App = ({ apiBaseUrl = '', apiClient }: AppProps) => {
               <button
                 key={`cell-${index}`}
                 type="button"
-                className="board__cell"
+                className={`board__cell${
+                  winningLine?.includes(index) ? ' board__cell--winning' : ''
+                }`}
                 aria-label={`Cell ${index}`}
                 onClick={() => handleCellClick(index)}
                 disabled={isLoading || cell !== null || gameState?.gameStatus !== 'in_progress'}

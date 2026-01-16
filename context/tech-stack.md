@@ -30,7 +30,7 @@
 - Lambda adapter: `@fastify/aws-lambda` for Function URL integration.
 
 ## Bedrock Model (POC)
-- `anthropic.claude-3-haiku-20240307-v1:0` (lowest cost/fast response for a POC).
+- `us.anthropic.claude-3-5-haiku-20241022-v1:0` (fast response for a POC, no Marketplace subscription required).
 
 ## Web Options Considered
 - React + Vite + TypeScript.
@@ -67,7 +67,7 @@
 
 ## Minimal AWS Pieces (POC)
 - Lambda function: Node.js 18 runtime, handler for `/v1/new-game` and `/v1/move`.
-- Function URL: public access, CORS allow `*`, allow `POST, OPTIONS`.
+- Function URL: public access, CORS allow `*`, allow `POST` (preflight handled by Function URL).
 - IAM role for Lambda:
   - Basic execution (CloudWatch Logs).
   - Bedrock invoke permission for chosen model(s).
@@ -80,12 +80,12 @@
 - Location: `/infra` workspace package.
 - Stacks: `ApiStack` for Lambda + Function URL + IAM + logs; `WebStack` for S3 static hosting.
 - Environments: `dev` and `prod` via CDK context or env vars (no multi-account).
-- Deployment: `pnpm -C infra cdk deploy` (same for `destroy` when needed).
+- Deployment: `cd infra && npm run deploy:dev` (use `deploy:prod` for production).
 
 ## Web UI Hosting (POC)
 - S3 bucket configured for static website hosting (public read).
 - Bucket policy allows `s3:GetObject` for `*` on the site bucket.
-- Build + upload: `pnpm -C src/web build` then `aws s3 sync dist/ s3://<bucket> --delete`.
+- Build + upload: `npm run build:web` then `aws s3 sync dist/ s3://<bucket> --delete`.
 - API base URL configured via env at build time (e.g., `VITE_API_BASE_URL`).
 
 ## Repo Layout
@@ -96,7 +96,7 @@
   - `src/shared` (schemas/types/API client)
 
 ## Package Manager
-- `pnpm` with workspaces for faster installs and shared deps.
+- `npm` with `package-lock.json` (single workspace).
 
 ## Shared Types and Validation
 - `zod` schemas live in `src/shared` and are reused by backend, web, and CLI.

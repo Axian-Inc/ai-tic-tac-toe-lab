@@ -1,0 +1,22 @@
+{
+  "name": "tic-tac-toe-infra",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "cdk": "cdk",
+    "synth": "cdk synth -c env=dev",
+    "deploy:dev": "cdk deploy -c env=dev",
+    "deploy:prod": "cdk deploy -c env=prod"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.161.1",
+    "constructs": "^10.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.30",
+    "aws-cdk": "^2.161.1",
+    "esbuild": "^0.21.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  }
+}

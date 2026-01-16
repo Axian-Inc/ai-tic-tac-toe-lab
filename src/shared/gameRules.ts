@@ -48,15 +48,21 @@ const expectedNextPlayer = (board: GameState['board']) => {
   return xCount === oCount ? 'X' : 'O';
 };
 
-const findWinner = (board: GameState['board']) => {
+export const findWinningLine = (board: GameState['board']): number[] | null => {
   for (const [a, b, c] of winningLines) {
     const value = board[a];
     if (value && value === board[b] && value === board[c]) {
-      return value;
+      return [a, b, c];
     }
   }
 
   return null;
+};
+
+const findWinner = (board: GameState['board']) => {
+  const winningLine = findWinningLine(board);
+
+  return winningLine ? board[winningLine[0]] : null;
 };
 
 export const computeStatus = (state: GameState): Pick<GameState, 'gameStatus' | 'winner'> => {

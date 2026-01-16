@@ -93,6 +93,28 @@ describe('AI parsing validation', () => {
     expect(bedrockClient.send).toHaveBeenCalledTimes(1);
   });
 
+  it('returns a must-do move without calling Bedrock', async () => {
+    const bedrockClient = createBedrockClient(['{"moveIndex":4}']);
+    const service = createAiMoveService({ bedrockClient, modelId: 'test-model', timeoutMs: 5000 });
+    const result = await service.getAiMove(
+      createState({
+        board: ['X', 'X', null, null, 'O', null, 'O', null, null],
+        nextPlayer: 'X',
+      }),
+      {
+        logger: createLogger(),
+        requestId: 'req-must-do-1',
+        sessionId: 'session-must-do-1',
+      },
+    );
+
+    expect(result).toEqual({
+      moveIndex: 2,
+      rationale: 'Forced move to take a win or block an immediate loss.',
+    });
+    expect(bedrockClient.send).toHaveBeenCalledTimes(0);
+  });
+
   it('rejects invalid schema responses with extra keys', async () => {
     const bedrockClient = createBedrockClient([
       JSON.stringify({ moveIndex: 4, rationale: 'Extra', extra: 'nope' }),

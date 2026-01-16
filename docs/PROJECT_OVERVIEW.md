@@ -22,7 +22,7 @@ Build a POC single-player Tic-Tac-Toe game with an AI opponent. The web UI is pr
 ## Known Technical Debt Areas
 - **No persistence**: game state is not stored server-side; replay/auditing is limited to the client payload.
 - **No authentication or rate limiting**: POC assumes open access.
-- **No IaC in repo**: deployment steps (Lambda/S3) are described in context docs but not codified here.
+- **Manual IaC deployment**: CDK stacks live in `infra/`, but deployment remains manual.
 - **No CI/CD pipeline**: deployment appears manual via local scripts.
 - **Limited observability**: structured logs exist, but no tracing/metrics pipeline is defined.
 

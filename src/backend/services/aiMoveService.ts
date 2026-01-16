@@ -201,6 +201,21 @@ export const createAiMoveService = (
 
       const prompt = buildPrompt(state, profile);
       const mustDoMove = getMustDoMove(profile.id, state);
+      if (mustDoMove !== null) {
+        context.logger.info(
+          {
+            requestId: context.requestId,
+            sessionId: context.sessionId,
+            opponentId: state.opponentId,
+            moveIndex: mustDoMove,
+          },
+          'AI move forced by must-do rule',
+        );
+        return {
+          moveIndex: mustDoMove,
+          rationale: 'Forced move to take a win or block an immediate loss.',
+        };
+      }
 
       for (let attempt = 1; attempt <= 3; attempt += 1) {
         const abortController = new AbortController();

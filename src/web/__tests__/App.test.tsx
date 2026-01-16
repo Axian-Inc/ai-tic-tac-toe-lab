@@ -107,4 +107,43 @@ describe('App', () => {
       expect(screen.getByText('Bad request.')).toBeTruthy();
     });
   });
+
+  it('highlights the winning line when the game is won', async () => {
+    const user = userEvent.setup();
+    const initialState = createState({
+      board: ['X', 'X', null, null, 'O', null, null, 'O', null],
+      nextPlayer: 'X',
+    });
+    const winningState = createState({
+      board: ['X', 'X', 'X', null, 'O', null, null, 'O', null],
+      nextPlayer: 'O',
+      gameStatus: 'win',
+      winner: 'X',
+    });
+
+    client.newGame = vi.fn().mockResolvedValue({ ok: true, data: initialState });
+    client.move = vi.fn().mockResolvedValue({
+      ok: true,
+      data: { state: winningState, aiRationale: 'Took the win.' },
+    });
+
+    render(<App apiClient={client} />);
+
+    await user.click(screen.getByRole('button', { name: 'Start New Game' }));
+    await user.click(screen.getByRole('button', { name: 'Cell 2' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Winner: X')).toBeTruthy();
+    });
+
+    [0, 1, 2].forEach((index) => {
+      expect(screen.getByRole('button', { name: `Cell ${index}` }).className).toContain(
+        'board__cell--winning',
+      );
+    });
+
+    expect(screen.getByRole('button', { name: 'Cell 4' }).className).not.toContain(
+      'board__cell--winning',
+    );
+  });
 });
