@@ -25,3 +25,9 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* /tmp/aws /tmp/awscliv2.zip
 
 COPY --chmod=755 copy-codex-auth.sh /usr/local/bin/copy-codex-auth
+
+COPY copy-codex-prompts.sh /usr/local/bin/copy-codex-prompts
+RUN chmod +x /usr/local/bin/copy-codex-prompts \
+    && if [ -d /tmp/host-codex/prompts ]; then \
+        SOURCE_DIR=/tmp/host-codex/prompts DEST_DIR=/root/.codex/prompts /usr/local/bin/copy-codex-prompts; \
+    fi
