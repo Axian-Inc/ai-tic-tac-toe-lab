@@ -105,3 +105,13 @@ Steps Taken -
 /new
 
 - Start in on next tasks
+
+/new
+
+- Begin deployment to AWS, testing, and bug fixing
+
+/new
+
+- highlight winner
+
+-- Fully deployed Tic-Tac-Toe project to AWS and manually verified functionality
