@@ -21,6 +21,7 @@
 - API handlers: `/v1/new-game` and `/v1/move` with full request validation.
 - Backend wiring: game engine + AI adapter (LLM calls stubbed).
 - Error shaping and retries (invalid AI response, timeout, terminal state).
+- Optional live Bedrock prompt validation tests (opt-in via `RUN_BEDROCK_INTEGRATION=1` and `BEDROCK_MODEL_ID`).
 
 ### AI Behavior (Deterministic Subset)
 - Legal move selection (no occupied cell, no moves after terminal state).

@@ -1,0 +1,2 @@
+# Prompt
+I would like to add some tests, not unit tests, but some type of integration test, that can validate the llm is handling the prompts correctly and returns valid results for various game states
