@@ -10,6 +10,7 @@ This repository contains multiple branches that serve as examples or starters fo
 - `00-devcontainer-starter`: A starter branch that includes a development container setup for easy environment configuration.
 - `01-agents-md-with-context-management`: An example branch that showcases how to use AI Agents with context management through markdown files.
 - `02-agents-md-with-extended-context-management`: An advanced example branch that extends the context management capabilities demonstrated in the previous branch. (May or may not be better)
+- `03-codex-custom-prompts`: An example branch that illustrates the use of custom prompts for Codex
 
 ## Thoughts on the README.md
 When working with AI Agents, the README.md file serves as a crucial guide for users to understand the purpose, setup, and usage of the project.  The Agent will generally read the README.md to gather context about the project, even if not specifically given instructions to do so. Therefore, it is important to ensure that the README.md is clear, concise, and informative.
