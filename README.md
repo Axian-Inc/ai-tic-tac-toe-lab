@@ -55,8 +55,12 @@ git checkout -b <firstname-last initial>-<whatever you want>
 ### Github Setup
 - In the Dev Container terminal, verify git is working by running `git ls-remote origin` 
 - If prompted, enter your Github credentials (you may need to set up a personal access token)
+- Set GitHub account identity
+   - `git config --global user.email "you@example.com"`
+   - `git config --global user.name "Your Name"`
 
 ### You are now ready to begin the lab!
+
 
 
 
