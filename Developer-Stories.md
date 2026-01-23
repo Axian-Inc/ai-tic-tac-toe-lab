@@ -256,3 +256,213 @@
 - Test covers starting a game and making moves.
 - Test covers finishing a game and rematching.
 - Tests are deterministic and repeatable.
+
+## Epic I — AWS provisioning and deployment (Terraform + S3 + CloudFront)
+
+--
+
+### Story I1 — Terraform baseline for static site infrastructure
+**As a developer,** I want Terraform to provision AWS infrastructure so the app can be hosted repeatably and safely.
+
+**Acceptance criteria**
+- A dedicated infrastructure directory exists (e.g., `terraform/`).
+- Terraform provisions:
+  - An S3 bucket for static site assets
+  - A CloudFront distribution in front of the bucket
+- Terraform configuration supports variables for:
+  - AWS region
+  - Project name
+  - Environment (e.g., `dev`, `prod`)
+  - Resource-name suffix, with default value of `-tg`.
+- Terraform outputs include the CloudFront distribution domain name.
+- `terraform fmt` and `terraform validate` pass successfully.
+
+---
+
+### Story I2 — Private S3 bucket with CloudFront-only access
+**As a security-conscious developer,** I want the S3 bucket to be private and accessible only through CloudFront.
+
+**Acceptance criteria**
+- S3 bucket blocks all public access.
+- CloudFront uses Origin Access Control (OAC) or Origin Access Identity (OAI).
+- S3 bucket policy allows `s3:GetObject` only from the CloudFront distribution.
+- Direct access to S3 object URLs is not possible.
+
+---
+
+### Story I3 — CloudFront configuration for SPA routing
+**As a user,** I want deep links and page refreshes to work without errors.
+
+**Acceptance criteria**
+- CloudFront default root object is set to `index.html`.
+- Unknown routes return `index.html` with HTTP 200 via:
+  - Custom error response mapping (403/404 → `/index.html`), or equivalent.
+- Behavior is documented for future maintainers.
+
+---
+
+### Story I4 — Static asset caching and performance defaults
+**As a user,** I want the app to load quickly and efficiently.
+
+**Acceptance criteria**
+- CloudFront caching is enabled for static assets.
+- Reasonable default TTLs are configured and documented.
+- Cache behavior does not break application updates.
+
+---
+
+### Story I5 — Build and deploy workflow to AWS
+**As a developer,** I want a repeatable way to deploy the built app to AWS.
+
+**Acceptance criteria**
+- Build output directory is clearly defined (e.g., `dist/` or `build/`).
+- Deployment process:
+  - Uploads build artifacts to S3
+  - Sets correct `Content-Type` metadata
+- CloudFront invalidation is triggered after deployment (e.g., `/*`).
+- No manual AWS Console steps are required beyond credentials.
+
+---
+
+### Story I6 — Optional custom domain and TLS support
+**As a user,** I want to access the app over HTTPS using a friendly domain (if available).
+
+**Acceptance criteria**
+- Terraform optionally supports:
+  - ACM certificate in `us-east-1` for CloudFront
+  - Route53 DNS records pointing to CloudFront
+- Custom domain support is controlled via variables.
+- App remains accessible via default CloudFront domain if custom domain is not configured.
+
+---
+### Story I7 — Deployment documentation and teardown
+**As a developer,** I want clear instructions to deploy and remove infrastructure.
+
+**Acceptance criteria**
+
+- README includes a Deployment section describing:
+  - Prerequisites (AWS credentials, Terraform installed)
+  - Terraform workflow (`init`, `plan`, `apply`)
+  - Application deployment steps
+  - CloudFront invalidation process
+  - Teardown via `terraform destroy`
+- Common pitfalls are documented (e.g., ACM region for CloudFront).
+
+# Epic J — Playwright end-to-end testing (CI-friendly)
+
+## Goal
+
+Create Playwright end-to-end coverage that can play a full game of Tic Tac Toe in the browser UI, including verifying **winning conditions**, and ensure both **unit tests** and **Playwright tests** are runnable from the command line for CI automation. Update the README “Testing approach” section to include Playwright.
+
+---
+
+## Epic J — Stories
+
+### Story J1 — Add Playwright test framework and base configuration
+**As a developer,** I want Playwright installed and configured so I can run deterministic browser-based tests locally and in CI.
+
+**Acceptance criteria**
+- Playwright is added as a dev dependency and initialized for the project.
+- A Playwright config exists (e.g., `playwright.config.ts`) with:
+  - Deterministic settings suitable for CI (headless by default)
+  - A base URL matching the local dev server or preview server
+- A dedicated E2E folder exists (e.g., `e2e/` or `tests/e2e/`).
+- A standard command runs Playwright tests from CLI (e.g., `npm run test:e2e`).
+
+---
+
+### Story J2 — Provide a CI-friendly app runner for E2E tests
+**As a developer,** I want E2E tests to run against a predictable server so CI can automate them.
+
+**Acceptance criteria**
+- There is a documented approach to run E2E tests against the built app or a preview server (choose one and standardize):
+  - Option A: `npm run build` + `npm run preview` (recommended for Vite)
+  - Option B: start dev server for tests
+- Playwright config (or scripts) automatically starts/stops the server for tests (e.g., Playwright `webServer` config), OR scripts do so deterministically.
+- Running `npm run test:e2e` works from a clean checkout with no manual steps besides installing dependencies.
+
+---
+
+### Story J3 — Implement stable selectors for the UI under test
+**As a developer,** I want stable element selectors so Playwright tests don’t break on styling/layout changes.
+
+**Acceptance criteria**
+- Key UI elements include stable selectors (e.g., `data-testid`):
+  - Landing page “Play vs CPU” button
+  - Game status/turn label
+  - Board cells (all 9)
+  - Rematch button
+  - Quit button
+  - Winner message / “Try again” message
+- Selectors are documented briefly in the test file header or README.
+
+---
+
+### Story J4 — Playwright script: start game and play a full deterministic game
+**As a developer,** I want a Playwright test that starts from the landing page and plays a full game to completion.
+
+**Acceptance criteria**
+- A Playwright test:
+  - Navigates to `/`
+  - Clicks “Play vs CPU”
+  - Plays moves via the UI until the game ends (win/loss/draw)
+  - Asserts that the UI indicates game over
+- The test is deterministic and does not rely on timing hacks (uses locators + expectations).
+- The test does not attempt illegal moves.
+
+--
+
+### Story J5 — Playwright test: verify **human win** condition end-to-end
+**As a user,** I want confidence that a human win is detected and reflected in the UI.
+
+**Acceptance criteria**
+- A Playwright test drives the UI to reach a **human winning state**.
+- The test asserts:
+  - UI shows “winner” (human) and game over
+  - The winning state is consistent with a valid 3-in-a-row
+- The test remains deterministic despite CPU behavior.
+
+**Implementation notes (non-binding)**
+- Prefer one of these approaches for determinism:
+  - Use the deterministic CPU and pick a known sequence of human moves that guarantees a win
+  - Or expose a test-only mode (e.g., query param) that sets the CPU strategy to a predictable stub for E2E
+
+---
+
+### Story J6 — Playwright test: validate win state invariants and “no further moves”
+**As a developer,** I want to ensure that once a win occurs, the board is locked and status doesn’t regress.
+
+**Acceptance criteria**
+- After game over (win):
+  - Clicking any empty cell does not change the board state
+  - Status remains “Game Over”
+  - Winner label remains correct
+- If “Rematch” is pressed:
+  - Board clears
+  - Status resets to in-progress
+
+---
+
+### Story J7 — Command-line test entrypoints for unit + E2E
+**As a developer,** I want consistent CLI commands so CI can run both unit and E2E tests.
+
+**Acceptance criteria**
+- Package scripts include:
+  - `npm run test:unit` (or equivalent) to run unit tests
+  - `npm run test:e2e` to run Playwright tests
+  - `npm test` runs at least unit tests (optionally both)
+- Commands exit non-zero on failure.
+- Commands are documented in README.
+
+---
+
+## Story J8 — Update README “Testing approach” to include Playwright
+**As a developer,** I want the README to explain the full testing strategy, including Playwright, so contributors know what to run.
+
+**Acceptance criteria**
+- README “Testing approach” section includes:
+  - Unit test scope (Game module logic)
+  - Playwright E2E scope (full user flows and winning condition verification)
+  - How to run each from CLI
+  - CI guidance (headless, server startup strategy)
+- Notes about determinism are included (deterministic CPU and/or test mode).

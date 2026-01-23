@@ -9,7 +9,11 @@ export default function LandingPage() {
         <span className="role-chip">You: X</span>
         <span className="role-chip">CPU: O</span>
       </div>
-      <Link className="primary-button" to="/game?human=X&cpu=O">
+      <Link
+        className="primary-button"
+        to="/game?human=X&cpu=O"
+        data-testid="play-vs-cpu"
+      >
         Play vs CPU
       </Link>
     </section>

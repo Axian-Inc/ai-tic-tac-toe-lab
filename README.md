@@ -2,6 +2,8 @@
 
 ## Setup and run
 
+Requires Node.js 22+ (see `.nvmrc`).
+
 ```bash
 npm install
 npm run dev -- --host
@@ -13,6 +15,10 @@ Other useful scripts:
 npm run build
 npm run lint
 npm run test:game
+npm run test:unit
+npm run test:e2e
+npm test
+npm run deploy:aws
 ```
 
 ## Architecture overview
@@ -30,8 +36,52 @@ Strategy order: win > block > center > corner > side. Implemented in
 
 ## Testing approach
 
-- Pure unit-style tests in `scripts/test-game.ts`.
-- Run via `npm run test:game` (uses `tsx`).
+- Unit tests cover the pure Game module logic (state, move legality, wins/draws).
+  Run via `npm run test:game` or `npm run test:unit` (uses `tsx`).
+- Playwright E2E tests cover full user flows including game completion and
+  human win verification. Run via `npm run test:e2e`.
+- CI guidance: Playwright runs headless and starts a Vite preview server via
+  the Playwright `webServer` config (build + `npm run preview`).
+- Determinism: CPU strategy is deterministic, and tests can opt into
+  `cpu=off` query param to drive both players when needed.
+- Deploy uses `scripts/deploy-aws.sh` to sync to S3 with metadata and invalidate
+  CloudFront.
+
+## Deployment
+
+Prerequisites:
+- Node.js 22+ (see `.nvmrc`).
+- AWS credentials configured (env vars or `aws configure`).
+- Terraform installed (>= 1.5).
+
+Terraform workflow:
+```bash
+cd terraform
+terraform init
+terraform plan
+terraform apply
+```
+
+Application deployment:
+```bash
+npm run build
+npm run deploy:aws
+```
+
+CloudFront invalidation:
+```bash
+aws cloudfront create-invalidation --distribution-id E2OIVQ7L1EG91H --paths '/*'
+```
+
+Teardown:
+```bash
+cd terraform
+terraform destroy
+```
+
+Common pitfalls:
+- CloudFront requires ACM certificates in `us-east-1` if you add a custom domain.
+- Bucket and distribution names must be globally unique; adjust `terraform/terraform.tfvars` if needed.
 
 ## Key design decisions
 
@@ -40,3 +90,8 @@ Strategy order: win > block > center > corner > side. Implemented in
 - Encode player roles via query params (`/game?human=X&cpu=O`) so navigation
   communicates intent without global state.
 - Provide lightweight audio/confetti effects without external dependencies.
+- CloudFront is configured to serve `/index.html` for 403/404 errors so SPA
+  deep links and refreshes work as expected.
+- CloudFront caching: HTML defaults to a short TTL (60s, max 300s) to prevent
+  stale app shells, while hashed assets under `/assets/*` use a long TTL
+  (1 year) for performance.

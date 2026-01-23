@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { CpuGame } from "../game/CpuGame";
-import type { Player } from "../game/Game";
+import { Game, type Player } from "../game/Game";
 import { triggerConfetti } from "../game/confetti";
 import { playLose, playThud, playWin } from "../game/sounds";
 
@@ -23,7 +23,14 @@ export default function GamePage() {
     return parsed === humanPlayer ? fallback : parsed;
   }, [searchParams, humanPlayer]);
 
-  const [game] = useState(() => new CpuGame({ humanPlayer, cpuPlayer }));
+  const cpuEnabled = useMemo(
+    () => searchParams.get("cpu") !== "off",
+    [searchParams]
+  );
+
+  const [game] = useState(() =>
+    cpuEnabled ? new CpuGame({ humanPlayer, cpuPlayer }) : new Game()
+  );
   const [state, setState] = useState(game.getState());
   const previousMoves = useRef(state.moves.length);
   const previousStatus = useRef(state.status);
@@ -38,16 +45,27 @@ export default function GamePage() {
         : null;
 
   const lossMessage =
-    state.status === "over" && state.winner === cpuPlayer ? "Try again?" : null;
+    state.status === "over" && cpuEnabled && state.winner === cpuPlayer
+      ? "Try again?"
+      : null;
   const turnMessage =
     state.status === "in_progress"
       ? state.currentTurn === humanPlayer
         ? "Your turn."
-        : "CPU turn."
+        : cpuEnabled
+          ? "CPU turn."
+          : `${state.currentTurn}'s turn.`
       : null;
 
   const handleCellClick = (index: number) => {
-    if (game.makeHumanMove(index)) {
+    if (game instanceof CpuGame) {
+      if (game.makeHumanMove(index)) {
+        setState(game.getState());
+      }
+      return;
+    }
+
+    if (game.makeMove(index)) {
       setState(game.getState());
     }
   };
@@ -96,19 +114,30 @@ export default function GamePage() {
         role="status"
         aria-live="polite"
         aria-atomic="true"
+        data-testid="game-status"
       >
         <span>Status: {state.status.replace("_", " ")}</span>
-        <span>Current turn: {state.currentTurn}</span>
-        <span className="game-outcome">{outcomeMessage ?? "Game in progress."}</span>
-        {turnMessage ? <span className="game-turn">{turnMessage}</span> : null}
-        {lossMessage ? <span className="game-loss">{lossMessage}</span> : null}
+        <span data-testid="game-turn">Current turn: {state.currentTurn}</span>
+        <span className="game-outcome" data-testid="game-outcome">
+          {outcomeMessage ?? "Game in progress."}
+        </span>
+        {turnMessage ? (
+          <span className="game-turn" data-testid="game-turn-message">
+            {turnMessage}
+          </span>
+        ) : null}
+        {lossMessage ? (
+          <span className="game-loss" data-testid="game-loss-message">
+            {lossMessage}
+          </span>
+        ) : null}
       </div>
-      <div className="board">
+      <div className="board" data-testid="game-board">
         {state.board.map((cell, index) => {
           const isDisabled =
             cell !== null ||
             state.status !== "in_progress" ||
-            state.currentTurn !== humanPlayer;
+            (cpuEnabled && state.currentTurn !== humanPlayer);
           const row = Math.floor(index / 3) + 1;
           const col = (index % 3) + 1;
           const cellLabel = cell
@@ -123,6 +152,7 @@ export default function GamePage() {
               onClick={() => handleCellClick(index)}
               disabled={isDisabled}
               data-disabled={isDisabled ? "true" : "false"}
+              data-testid={`board-cell-${index}`}
               aria-label={cellLabel}
             >
               <span className="cell-value" aria-hidden="true">
@@ -134,10 +164,20 @@ export default function GamePage() {
         })}
       </div>
       <div className="game-actions">
-        <button className="secondary-button" type="button" onClick={handleReset}>
+        <button
+          className="secondary-button"
+          type="button"
+          onClick={handleReset}
+          data-testid="rematch"
+        >
           {state.status === "over" ? "Rematch" : "Start new game"}
         </button>
-        <button className="secondary-button" type="button" onClick={handleQuit}>
+        <button
+          className="secondary-button"
+          type="button"
+          onClick={handleQuit}
+          data-testid="quit"
+        >
           Quit
         </button>
       </div>

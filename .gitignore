@@ -7,4 +7,15 @@ dist/
 .env.*
 .vscode/
 .idea/
+
 *.tsbuildinfo
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc

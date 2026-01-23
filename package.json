@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -10,7 +13,11 @@
     "lint": "eslint . --ext ts,tsx",
     "format": "prettier --write .",
     "test:game": "tsx scripts/test-game.ts",
-    "test:integration": "tsx scripts/test-integration.tsx"
+    "test:integration": "tsx scripts/test-integration.tsx",
+    "deploy:aws": "bash scripts/deploy-aws.sh",
+    "test:e2e": "npm run build && playwright test",
+    "test:unit": "npm run test:game",
+    "test": "npm run test:unit"
   },
   "dependencies": {
     "react": "^18.2.0",
@@ -18,20 +25,21 @@
     "react-router-dom": "^6.22.3"
   },
   "devDependencies": {
-    "@types/react": "^18.2.66",
-    "@types/react-dom": "^18.2.22",
+    "@playwright/test": "^1.58.0",
     "@testing-library/react": "^14.2.1",
     "@testing-library/user-event": "^14.5.2",
-    "@typescript-eslint/eslint-plugin": "^6.21.0",
-    "@typescript-eslint/parser": "^6.21.0",
-    "@vitejs/plugin-react": "^4.2.1",
+    "@types/react": "^18.2.66",
+    "@types/react-dom": "^18.2.22",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "@vitejs/plugin-react": "^4.3.1",
     "eslint": "^8.56.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.6",
     "jsdom": "^22.1.0",
     "prettier": "^3.2.5",
-    "tsx": "^3.12.7",
+    "tsx": "^4.19.2",
     "typescript": "^5.4.5",
-    "vite": "^4.5.3"
+    "vite": "^5.4.10"
   }
 }
