@@ -13,11 +13,14 @@
     "lint": "eslint . --ext ts,tsx",
     "format": "prettier --write .",
     "test:game": "tsx scripts/test-game.ts",
+    "test:multiplayer-smoke": "tsx scripts/test-multiplayer-smoke.tsx",
     "test:integration": "tsx scripts/test-integration.tsx",
     "deploy:aws": "bash scripts/deploy-aws.sh",
     "test:e2e": "npm run build && playwright test",
     "test:unit": "npm run test:game",
-    "test": "npm run test:unit"
+    "test": "npm run test:unit",
+    "dev:server": "npm --prefix server run dev",
+    "test:server": "npm --prefix server test"
   },
   "dependencies": {
     "react": "^18.2.0",

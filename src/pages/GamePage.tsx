@@ -181,6 +181,24 @@ export default function GamePage() {
           Quit
         </button>
       </div>
+      <div className="move-history" data-testid="move-history">
+        <h2>Move history</h2>
+        {state.moves.length === 0 ? (
+          <p className="move-history-empty">No moves yet.</p>
+        ) : (
+          <ol className="move-history-list">
+            {state.moves.map((move) => {
+              const row = Math.floor(move.index / 3) + 1;
+              const col = (move.index % 3) + 1;
+              return (
+                <li key={`${move.turn}-${move.index}`}>
+                  Turn {move.turn}: {move.player} → Row {row}, Column {col}
+                </li>
+              );
+            })}
+          </ol>
+        )}
+      </div>
     </section>
   );
 }

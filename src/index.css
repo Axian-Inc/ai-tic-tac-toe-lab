@@ -82,6 +82,8 @@ body {
   color: #f7f7f2;
   text-decoration: none;
   font-weight: 600;
+  border: none;
+  cursor: pointer;
 }
 
 .secondary-button {
@@ -92,6 +94,10 @@ body {
   border-radius: 999px;
   font-weight: 600;
   cursor: pointer;
+}
+
+.secondary-button.is-active {
+  background: rgba(31, 35, 40, 0.12);
 }
 
 .role-list {
@@ -106,6 +112,73 @@ body {
   border-radius: 999px;
   background: rgba(31, 35, 40, 0.1);
   font-weight: 600;
+}
+
+.multiplayer-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(31, 35, 40, 0.45);
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  z-index: 10;
+}
+
+.modal {
+  background: #fdfdf9;
+  color: #1f2328;
+  border-radius: 20px;
+  padding: 1.5rem;
+  width: min(480px, 100%);
+  box-shadow: 0 20px 50px rgba(31, 35, 40, 0.2);
+  display: grid;
+  gap: 1rem;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.modal-body {
+  display: grid;
+  gap: 1rem;
+}
+
+.multiplayer-mode {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.multiplayer-panel {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.input-label {
+  font-weight: 600;
+}
+
+.text-input {
+  padding: 0.6rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid rgba(31, 35, 40, 0.2);
+  font-size: 1rem;
+}
+
+.modal-hint {
+  margin: 0;
+  color: rgba(31, 35, 40, 0.7);
 }
 
 .game-page {
@@ -189,6 +262,190 @@ body {
 
 .game-actions {
   display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.move-history {
+  padding: 0.75rem 1rem;
+  border-radius: 16px;
+  background: rgba(31, 35, 40, 0.06);
+}
+
+.move-history h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+}
+
+.move-history-empty {
+  margin: 0;
+  color: rgba(31, 35, 40, 0.7);
+}
+
+.move-history-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.multiplayer-page {
+  display: grid;
+  gap: 1rem;
+}
+
+.multiplayer-card {
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
+  background: #ffffff;
+  border: 1px solid rgba(31, 35, 40, 0.12);
+  display: grid;
+  gap: 0.75rem;
+}
+
+.multiplayer-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.multiplayer-row .label {
+  font-weight: 600;
+}
+
+.multiplayer-row .value {
+  font-family: "Courier New", Courier, monospace;
+}
+
+.multiplayer-board {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.multiplayer-history {
+  padding: 0.75rem 1rem;
+  border-radius: 16px;
+  background: rgba(31, 35, 40, 0.06);
+  display: grid;
+  gap: 0.5rem;
+}
+
+.multiplayer-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.multiplayer-history h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.multiplayer-history ol {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.multiplayer-outcome {
+  padding: 0.75rem 1rem;
+  border-radius: 16px;
+  background: rgba(31, 35, 40, 0.08);
+  font-weight: 600;
+}
+
+.multiplayer-outcome p {
+  margin: 0;
+}
+
+.rematch-invite {
+  padding: 0.75rem 1rem;
+  border-radius: 16px;
+  background: rgba(31, 35, 40, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.hint {
+  color: rgba(31, 35, 40, 0.7);
+  margin: 0;
+}
+
+.error-text {
+  color: #9a2f1f;
+  font-weight: 600;
+  margin: 0;
+}
+
+.error-banner {
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(154, 47, 31, 0.4);
+  background: rgba(154, 47, 31, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.waiting-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.waiting-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.waiting-list-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.waiting-games {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.waiting-game {
+  border-radius: 14px;
+  border: 1px solid rgba(31, 35, 40, 0.12);
+  padding: 0.75rem 1rem;
+  background: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.waiting-game .game-id {
+  font-weight: 700;
+}
+
+.waiting-game .game-meta-row {
+  color: rgba(31, 35, 40, 0.7);
+  font-size: 0.9rem;
+}
+
+.waiting-room {
+  padding: 0.75rem 1rem;
+  border-radius: 16px;
+  background: rgba(31, 35, 40, 0.06);
+  display: grid;
+  gap: 0.5rem;
+}
+
+.waiting-room-actions {
+  display: flex;
+  align-items: center;
   gap: 0.75rem;
   flex-wrap: wrap;
 }

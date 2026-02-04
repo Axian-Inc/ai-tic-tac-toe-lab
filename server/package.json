@@ -1,0 +1,22 @@
+{
+  "name": "tic-tac-toe-server",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "NODE_ENV=test tsx scripts/test-health.ts && NODE_ENV=test tsx scripts/test-reset.ts && NODE_ENV=test tsx scripts/test-games-list.ts && NODE_ENV=test tsx scripts/test-game-get.ts && NODE_ENV=test tsx scripts/test-last-move.ts && NODE_ENV=test tsx scripts/test-sweeper.ts && NODE_ENV=test tsx scripts/test-games-join.ts && NODE_ENV=test tsx scripts/test-ws.ts && NODE_ENV=test tsx scripts/test-spectator.ts && NODE_ENV=test tsx scripts/test-moves.ts && NODE_ENV=test tsx scripts/test-resign.ts && NODE_ENV=test tsx scripts/test-abandonment.ts && NODE_ENV=test tsx scripts/test-game-over.ts && NODE_ENV=test tsx scripts/test-games-create.ts"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/ws": "^8.5.10",
+    "tsx": "^4.19.2",
+    "typescript": "^5.4.5"
+  }
+}

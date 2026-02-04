@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import LandingPage from "./pages/LandingPage";
 import GamePage from "./pages/GamePage";
+import MultiplayerPage from "./pages/MultiplayerPage";
 
 export default function App() {
   return (
@@ -9,6 +10,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/game" element={<GamePage />} />
+        <Route path="/multiplayer" element={<MultiplayerPage />} />
       </Routes>
     </Layout>
   );
