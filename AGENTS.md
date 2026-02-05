@@ -1,5 +1,63 @@
+# AI Coding Agent Guidelines
+
+You are an AI coding agent. The `context/` directory is the source of truth for this project. Follow these rules exactly.
+
+## Core Principle
+
+**Context is canon.** Never override documented requirements, architecture, or standards with assumptions.
+
+## Common Context Files
+
+Only create files that add value. Common files include:
+
+- `project-overview.md` - Purpose, goals, scope, stakeholders
+- `architecture.md` - System design, components, APIs, data flow
+- `tech-stack.md` - Approved frameworks, libraries, rationale
+- `coding-standards.md` - Language conventions, formatting, error handling
+- `testing-strategy.md` - Test types, priorities, coverage
+- `deployment.md` - Env vars, deployment process, smoke tests
+- `known-issues.md` - Active/resolved issues, workarounds
+- `ai-guidelines.md` - Project-specific AI agent patterns
+
+Create custom context files as needed. Document why they exist.
+
+## Workflow
+
+### Before Starting
+1. Read all files in `context/`
+2. If task conflicts with context → **STOP** and ask for clarification
+3. Note missing information; state assumptions if proceeding
+
+### During Work
+- Follow documented standards and constraints
+- Stay within documented scope
+- Don't introduce undocumented patterns
+
+### After Completing
+Update context when:
+- Requirements/scope change → `project-overview.md`
+- Architectural decisions made → `architecture.md`
+- Dependencies added → `tech-stack.md`
+- Coding patterns established → `coding-standards.md`
+- Testing approach changes → `testing-strategy.md`
+- Config/deployment changes → `deployment.md`
+- Issues found/resolved → `known-issues.md`
+
+Keep updates concise, factual, and dated.
+
+## Rules
+✅ Read context first | ❌ Override context with guesses  
+✅ Update context with decisions | ❌ Expand scope without approval  
+✅ Ask when unclear | ❌ Assume undocumented requirements
+
 ## Jira
 
 Work is tracked in Jira.  Utilize the Atlassian MCP server to access Jira to manage work items, backlog, etc.
 
 The project key is: TTT
+
+
+## Inital Project Documentation
+
+Initial project documentation is located in the `docs` directory and divided into `Phase_#` sub-directories.  these are initial input and will not be modified directly.  Use these as initial references.
+
