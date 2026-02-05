@@ -65,3 +65,27 @@ Both the Playwright and the unit tests can be exercised from the command line (C
 Project has a README.MD and is well documented.
 
 You’ve gone through Codex CLI getting started docs.
+
+Do Focus On
+
+A high quality dev environment with strong AI support
+
+A configured Codex (logged into Axian’s Open AI instance) and AWS CLI (logged into Axian’s L&D account)
+
+A high quality Read Me/Getting Started for humans
+
+Managing project context in a intentional way, like this example memory bank technique.
+
+Turning requirements into actionable stories.
+
+Test setups (unit and playwright).
+
+Work patterns (what am I spending my time on?).
+
+Learning Codex
+
+Get to know Codex as a tool/CLI
+
+Watch a Codex Getting Started
+
+…and have a look at some example custom prompts that your peers have created for your use.

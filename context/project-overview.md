@@ -25,6 +25,9 @@ Build a local-only single-player Tic-Tac-Toe game and use Generative AI througho
 - Project is well documented, README included.
 - IaC and deployment to Axian’s LnD AWS account.
 
+## References
+- Phase 1 work items: docs/Phase_1_Work_Items.md
+
 ## Decisions
 - Audio assets will be sourced from free/licensed sources or generated if needed.
 - No confetti library preference; select an appropriate option during implementation.
