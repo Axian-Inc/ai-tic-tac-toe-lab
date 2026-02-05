@@ -1,0 +1,5 @@
+# Atlassian’s docs commonly use a localhost callback on 3334 for desktop OAuth flows.
+mcp_oauth_callback_port = 3334
+
+[mcp_servers.atlassian]
+url = "https://mcp.atlassian.com/v1/mcp"
