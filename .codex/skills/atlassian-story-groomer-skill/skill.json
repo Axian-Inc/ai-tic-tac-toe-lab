@@ -1,0 +1,17 @@
+{
+  "name": "atlassian-interactive-story-grooming",
+  "version": "1.0.0",
+  "description": "Interactive story grooming via Codex CLI + Atlassian MCP: asks questions, enforces DoR, updates Jira Description with AC + testing specs, transitions TODO->Groomed when Ready.",
+  "entrypoint": "prompt.md",
+  "author": "Chad Riddle (Axian) + ChatGPT",
+  "tags": [
+    "jira",
+    "atlassian",
+    "mcp",
+    "grooming",
+    "agile",
+    "acceptance-criteria",
+    "testing"
+  ],
+  "license": "MIT"
+}

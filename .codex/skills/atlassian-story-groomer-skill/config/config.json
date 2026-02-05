@@ -1,0 +1,51 @@
+{
+  "mcp": {
+    "tool_get_cloud": "mcp__atlassian__getAccessibleAtlassianResources",
+    "tool_get_issue": "mcp__atlassian__getJiraIssue",
+    "tool_update_issue": "mcp__atlassian__editJiraIssue",
+    "tool_get_transitions": "mcp__atlassian__getTransitionsForJiraIssue",
+    "tool_transition_issue": "mcp__atlassian__transitionJiraIssue",
+    "tool_add_comment": "mcp__atlassian__addCommentToJiraIssue",
+    "cloud_id_param": "cloudId",
+    "issue_key_param": "issueIdOrKey"
+  },
+  "workflow": {
+    "enabled": true,
+    "from_status": "TODO",
+    "to_status": "Groomed",
+    "require_ready_to_transition": true
+  },
+  "writing_rules": {
+    "acceptance_criteria_location": "description",
+    "description_section_headings": [
+      "Context",
+      "Problem / Goal",
+      "Proposed Solution (High Level)",
+      "In Scope",
+      "Out of Scope",
+      "Dependencies",
+      "Risks / Unknowns",
+      "Acceptance Criteria",
+      "Testing Specs",
+      "Grooming Notes"
+    ],
+    "ac_format": "gherkin",
+    "max_questions_per_round": 6,
+    "min_questions_per_round": 3
+  },
+  "definition_of_ready": {
+    "required": [
+      "Goal/value is clear",
+      "Scope boundaries are explicit (in/out)",
+      "Dependencies identified (systems/teams/issues)",
+      "Risks/unknowns documented with follow-ups",
+      "Acceptance criteria are testable and unambiguous",
+      "Edge cases / error handling covered (where relevant)",
+      "Testing specs include at least unit+integration guidance (or explicit waiver)",
+      "Non-functional requirements captured where relevant (perf/accessibility/security/observability)",
+      "Enough detail to estimate OR explicitly marked as Spike needed"
+    ],
+    "allow_waivers": true,
+    "waiver_format": "Explicit waiver with reason + owner"
+  }
+}
