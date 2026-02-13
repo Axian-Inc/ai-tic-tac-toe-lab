@@ -580,7 +580,7 @@ test("multiplayer reconnects and shows status", async ({ page }) => {
   await expect(page.getByText("Connected")).toBeVisible();
 });
 
-test("multiplayer shows pending move state", async ({ page }) => {
+test("multiplayer disables moves while pending", async ({ page }) => {
   await page.addInitScript(() => {
     // @ts-expect-error - override in test environment
     crypto.randomUUID = () => "12345678-uuid";
@@ -664,7 +664,299 @@ test("multiplayer shows pending move state", async ({ page }) => {
 
   await page.goto("/multiplayer?mode=create");
   await page.getByTestId("multiplayer-cell-0").click();
-  await expect(page.getByText("Submitting move…")).toBeVisible();
+  await expect(page.getByTestId("multiplayer-cell-1")).toBeDisabled();
+});
+
+test("multiplayer realtime win across two contexts", async ({ browser }) => {
+  const gameId = "game-e2e";
+  const createdAt = "2024-01-01T00:00:00.000Z";
+  const creatorUuid = "creator12345678-uuid";
+  const joinerUuid = "joiner12345678-uuid";
+  const creatorId = "player-creator1";
+  const joinerId = "player-joiner12";
+  const winningLines = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6],
+  ];
+
+  const state = {
+    id: gameId,
+    status: "waiting",
+    createdAt,
+    updatedAt: createdAt,
+    lastMoveAt: createdAt,
+    moveCount: 0,
+    currentTurn: "X",
+    players: [{ id: creatorId, mark: "X" }],
+    moves: [] as { index: number; mark: string; turn: number; at: string }[],
+    board: Array.from({ length: 9 }, () => null) as (string | null)[],
+    winner: null as string | null,
+  };
+
+  const applyMove = (playerId: string, index: number) => {
+    const player = state.players.find((entry) => entry.id === playerId);
+    if (!player) {
+      return { status: 403, body: { code: "PLAYER_NOT_IN_GAME" } };
+    }
+    if (state.status !== "active") {
+      return { status: 409, body: { code: "GAME_NOT_ACTIVE" } };
+    }
+    if (player.mark !== state.currentTurn) {
+      return { status: 409, body: { code: "NOT_YOUR_TURN" } };
+    }
+    if (state.board[index] !== null) {
+      return { status: 409, body: { code: "CELL_OCCUPIED" } };
+    }
+    state.board[index] = player.mark;
+    state.moveCount += 1;
+    state.moves.push({
+      index,
+      mark: player.mark,
+      turn: state.moveCount,
+      at: new Date().toISOString(),
+    });
+    const winner = winningLines.find((line) =>
+      line.every((idx) => state.board[idx] === player.mark)
+    )
+      ? player.mark
+      : null;
+    const isDraw = !winner && state.moveCount >= 9;
+    state.status = winner || isDraw ? "over" : "active";
+    state.winner = winner;
+    state.currentTurn = player.mark === "X" ? "O" : "X";
+    state.updatedAt = new Date().toISOString();
+    state.lastMoveAt = state.updatedAt;
+    return {
+      status: 200,
+      body: {
+        type: "move_accepted",
+        payload: {
+          roomId: state.id,
+          state: {
+            status: state.status,
+            board: [...state.board],
+            moves: [...state.moves],
+            moveCount: state.moveCount,
+            currentTurn: state.currentTurn,
+            winner: state.winner,
+          },
+        },
+      },
+    };
+  };
+
+  const createContext = async (uuid: string) => {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    await page.addInitScript(({ id }) => {
+      // @ts-expect-error - override in test environment
+      crypto.randomUUID = () => id;
+
+      class MockWebSocket {
+        url: string;
+        onmessage: ((event: { data: string }) => void) | null = null;
+        onopen: (() => void) | null = null;
+        onclose: (() => void) | null = null;
+        onerror: (() => void) | null = null;
+        constructor(url: string) {
+          this.url = url;
+          (window as { __wsInstance?: MockWebSocket }).__wsInstance = this;
+          setTimeout(() => this.onopen?.(), 0);
+        }
+        close() {
+          this.onclose?.();
+        }
+        send() {
+          return;
+        }
+      }
+
+      // @ts-expect-error - override in test environment
+      window.WebSocket = MockWebSocket;
+      (window as { __emitWsMessage?: (payload: unknown) => void }).__emitWsMessage = (
+        payload
+      ) => {
+        const ws = (window as { __wsInstance?: MockWebSocket }).__wsInstance;
+        ws?.onmessage?.({ data: JSON.stringify(payload) });
+      };
+    }, { id: uuid });
+    return { context, page };
+  };
+
+  const { context: creatorContext, page: creatorPage } = await createContext(creatorUuid);
+  const { context: joinerContext, page: joinerPage } = await createContext(joinerUuid);
+
+  await creatorPage.route("**/games", async (route) => {
+    if (route.request().method() === "POST") {
+      await route.fulfill({
+        status: 201,
+        contentType: "application/json",
+        body: JSON.stringify({ id: gameId, status: "waiting", createdAt }),
+      });
+      return;
+    }
+    await route.fallback();
+  });
+
+  const routeMoves = async (page: typeof creatorPage, otherPage: typeof joinerPage) => {
+    await page.route(`**/games/${gameId}/moves`, async (route) => {
+      const payload = JSON.parse(route.request().postData() ?? "{}") as {
+        index?: number;
+        playerId?: string;
+      };
+      const result = applyMove(payload.playerId ?? "", payload.index ?? -1);
+      await route.fulfill({
+        status: result.status,
+        contentType: "application/json",
+        body: JSON.stringify(result.body),
+      });
+      if (result.status === 200) {
+        await otherPage.evaluate((message) => {
+          (window as { __emitWsMessage?: (payload: unknown) => void }).__emitWsMessage?.(
+            message
+          );
+        }, result.body);
+      }
+    });
+  };
+
+  await routeMoves(creatorPage, joinerPage);
+  await routeMoves(joinerPage, creatorPage);
+
+  await joinerPage.route(`**/games/${gameId}`, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        id: state.id,
+        status: state.status,
+        createdAt: state.createdAt,
+        updatedAt: state.updatedAt,
+        lastMoveAt: state.lastMoveAt,
+        moveCount: state.moveCount,
+        currentTurn: state.currentTurn,
+        players: state.players,
+        moves: state.moves,
+        board: state.board,
+        winner: state.winner,
+      }),
+    });
+  });
+
+  await joinerPage.route(`**/games/${gameId}/join`, async (route) => {
+    state.status = "active";
+    state.players = [
+      { id: creatorId, mark: "X" },
+      { id: joinerId, mark: "O" },
+    ];
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        event: "player_joined",
+        game: {
+          id: state.id,
+          status: state.status,
+          createdAt: state.createdAt,
+          updatedAt: state.updatedAt,
+          lastMoveAt: state.lastMoveAt,
+          moveCount: state.moveCount,
+          currentTurn: state.currentTurn,
+          players: state.players,
+          moves: state.moves,
+          board: state.board,
+          winner: state.winner,
+        },
+      }),
+    });
+    await creatorPage.evaluate((message) => {
+      (window as { __emitWsMessage?: (payload: unknown) => void }).__emitWsMessage?.(message);
+    }, {
+      type: "player_joined",
+      payload: {
+        roomId: state.id,
+        state: {
+          status: state.status,
+          board: state.board,
+          moves: state.moves,
+          moveCount: state.moveCount,
+          currentTurn: state.currentTurn,
+        },
+        players: state.players,
+      },
+    });
+  });
+
+  await creatorPage.goto("/multiplayer?mode=create");
+  await creatorPage.waitForFunction(() => typeof (window as any).__emitWsMessage === "function");
+  await creatorPage.evaluate((payload) => {
+    (window as { __emitWsMessage?: (message: unknown) => void }).__emitWsMessage?.(payload);
+  }, {
+    type: "state_catchup",
+    payload: {
+      id: state.id,
+      status: state.status,
+      createdAt: state.createdAt,
+      updatedAt: state.updatedAt,
+      lastMoveAt: state.lastMoveAt,
+      moveCount: state.moveCount,
+      currentTurn: state.currentTurn,
+      players: state.players,
+      board: state.board,
+      moves: state.moves,
+    },
+  });
+
+  await joinerPage.goto(`/multiplayer?mode=join&room=${gameId}`);
+  await joinerPage.waitForFunction(() => typeof (window as any).__emitWsMessage === "function");
+  await joinerPage.evaluate((payload) => {
+    (window as { __emitWsMessage?: (message: unknown) => void }).__emitWsMessage?.(payload);
+  }, {
+    type: "state_catchup",
+    payload: {
+      id: state.id,
+      status: state.status,
+      createdAt: state.createdAt,
+      updatedAt: state.updatedAt,
+      lastMoveAt: state.lastMoveAt,
+      moveCount: state.moveCount,
+      currentTurn: state.currentTurn,
+      players: state.players,
+      board: state.board,
+      moves: state.moves,
+    },
+  });
+
+  await expect(creatorPage.getByTestId("multiplayer-status")).toHaveText("active");
+  await expect(joinerPage.getByTestId("multiplayer-status")).toHaveText("active");
+  await expect(creatorPage.getByText("You are")).toBeVisible();
+  await expect(creatorPage.getByText("Player X")).toBeVisible();
+  await expect(joinerPage.getByText("Player O")).toBeVisible();
+
+  await creatorPage.getByTestId("multiplayer-cell-0").click();
+  await expect(joinerPage.getByTestId("multiplayer-cell-0")).toContainText("X");
+
+  await joinerPage.getByTestId("multiplayer-cell-3").click();
+  await expect(creatorPage.getByTestId("multiplayer-cell-3")).toContainText("O");
+
+  await creatorPage.getByTestId("multiplayer-cell-1").click();
+  await expect(joinerPage.getByTestId("multiplayer-cell-1")).toContainText("X");
+
+  await joinerPage.getByTestId("multiplayer-cell-4").click();
+  await expect(creatorPage.getByTestId("multiplayer-cell-4")).toContainText("O");
+
+  await creatorPage.getByTestId("multiplayer-cell-2").click();
+  await expect(creatorPage.getByTestId("multiplayer-outcome")).toContainText("Player X wins");
+  await expect(joinerPage.getByTestId("multiplayer-outcome")).toContainText("Player X wins");
+
+  await creatorContext.close();
+  await joinerContext.close();
 });
 
 test("multiplayer resign ends the game", async ({ page }) => {

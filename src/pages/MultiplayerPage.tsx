@@ -767,7 +767,6 @@ export default function MultiplayerPage() {
           <div className="multiplayer-board" data-testid="multiplayer-board">
             {moveError ? <p className="error-text">{moveError}</p> : null}
             {abandonmentMessage ? <p className="hint">{abandonmentMessage}</p> : null}
-            {pendingMove ? <p className="hint">Submitting move…</p> : null}
             <div className="board">
               {board.map((cell, index) => {
                 const isDisabled =

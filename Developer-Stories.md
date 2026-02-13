@@ -938,3 +938,86 @@ Add a **multiplayer mode** backed by an **HTTP API server** that brokers games a
 - Tests runnable from CLI.
 
 ---
+
+## Epic Q — Persistence and low-cost AWS infrastructure (IaC update)
+
+### Story Q1 — Update IaC to provision multiplayer server infrastructure
+**As a developer,** I want Terraform to provision the new backend footprint in AWS at low cost.
+
+**Acceptance criteria**
+- Terraform adds resources needed to run the server (choose one and document):
+  - ECS Fargate (recommended) **or**
+  - Lambda + API Gateway (WS supported) **or**
+  - EC2 (only if justified)
+- **If ECS Fargate is chosen:**
+  - A container image is built for the multiplayer server (Dockerfile included in repo)
+  - Image is published to a container registry (e.g., ECR)
+  - Terraform provisions:
+    - ECR repository
+    - ECS task definition referencing the image
+    - ECS service (desired count, CPU/memory sized for low cost)
+- Server is reachable by the client (API base URL configurable).
+- Costs are explicitly considered (smallest viable sizing).
+
+--
+
+### Story Q2 — Add data store for game records (replay/catch-up)
+**As a developer,** I want persistent storage so game history survives restarts.
+
+**Acceptance criteria**
+- Choose a low-cost store (documented), e.g. DynamoDB.
+- Server reads/writes game state + move history.
+- Server can reconstruct state for `GET /games/{id}` and WS catch-up.
+- Tests cover persistence boundaries (happy path + not found).
+
+---
+
+### Story Q3 — Deploy client + server together
+**As a developer,** I want a repeatable deploy so CI can ship both frontend and backend.
+
+**Acceptance criteria**
+- README documents deploy for:
+  - Frontend (S3 + CloudFront)
+  - Backend (chosen compute) + config
+- Client can be configured with backend base URL (env var).
+- No manual console steps beyond credentials.
+
+---
+
+## Epic R — Testing (server + client + CI)
+
+### Story R1 — Server unit/integration tests for key behaviors
+**As a developer,** I want test coverage for server behaviors so changes are safe.
+
+**Acceptance criteria**
+- Tests cover at minimum:
+  - create game limit (25 → 429)
+  - join transitions and join lockout
+  - move validation
+  - win/draw detection
+  - resignation
+  - abandonment check (3 minutes)
+- Tests runnable from CLI in CI (non-zero exit on failure).
+
+---
+
+### Story R2 — Playwright E2E tests for multiplayer flows
+**As a developer,** I want E2E tests to verify multiplayer create/join and realtime moves.
+
+**Acceptance criteria**
+- Playwright test(s) cover:
+  - create game in one browser context
+  - join from a second context
+  - make moves and observe updates in both
+  - reach game over (win) deterministically
+- Tests are CI-friendly (headless, stable selectors).
+
+---
+
+### Story R3 — CI pipeline commands and documentation
+**As a developer,** I want one place to understand how CI runs tests for Phase 2.
+
+**Acceptance criteria**
+- `npm run test:unit`, `npm run test:server`, `npm run test:e2e` (or equivalent) exist and are documented.
+- README includes a “CI” section with the minimal pipeline order.
+- Any required environment variables for tests are documented.

@@ -16,6 +16,8 @@
     "test:multiplayer-smoke": "tsx scripts/test-multiplayer-smoke.tsx",
     "test:integration": "tsx scripts/test-integration.tsx",
     "deploy:aws": "bash scripts/deploy-aws.sh",
+    "deploy:server": "bash scripts/deploy-server.sh",
+    "deploy:all": "VITE_API_BASE=https://$(terraform -chdir=terraform output -raw cloudfront_domain_name) npm run build && npm run deploy:aws && npm run deploy:server",
     "test:e2e": "npm run build && playwright test",
     "test:unit": "npm run test:game",
     "test": "npm run test:unit",

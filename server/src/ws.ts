@@ -1,6 +1,6 @@
 import type { IncomingMessage } from "http";
 import { WebSocketServer, type WebSocket } from "ws";
-import type { GameStore } from "./store";
+import type { GameStore } from "./store.js";
 
 export type WsHub = {
   broadcast: (gameId: string, message: unknown) => void;

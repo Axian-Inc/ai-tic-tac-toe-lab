@@ -1,3 +1,5 @@
+import type { GamePersistence } from "./persistence.js";
+
 export type GameStatus = "waiting" | "active" | "over";
 
 export type PlayerMark = "X" | "O";
@@ -42,11 +44,30 @@ function detectWinner(board: Cell[]): PlayerMark | null {
 export class GameStore {
   private games = new Map<string, GameRecord>();
 
+  constructor(private persistence: GamePersistence | null = null) {}
+
+  async hydrate(): Promise<void> {
+    if (!this.persistence) {
+      return;
+    }
+    const games = await this.persistence.listAll();
+    for (const game of games) {
+      this.games.set(game.id, game);
+    }
+  }
+
+  private async persist(game: GameRecord): Promise<void> {
+    if (!this.persistence) {
+      return;
+    }
+    await this.persistence.save(game);
+  }
+
   reset(): void {
     this.games.clear();
   }
 
-  setLastMoveAt(id: string, lastMoveAt: string): void {
+  async setLastMoveAt(id: string, lastMoveAt: string): Promise<void> {
     const game = this.games.get(id);
     if (!game) {
       throw new Error("NOT_FOUND");
@@ -57,6 +78,7 @@ export class GameStore {
       updatedAt: lastMoveAt,
     };
     this.games.set(id, updated);
+    await this.persist(updated);
   }
 
   getActiveCount(): number {
@@ -73,7 +95,7 @@ export class GameStore {
     return this.getActiveCount() < MAX_GAMES;
   }
 
-  createGame(creatorId?: string): GameRecord {
+  async createGame(creatorId?: string): Promise<GameRecord> {
     if (!this.canCreate()) {
       throw new Error("MAX_GAMES_REACHED");
     }
@@ -95,6 +117,7 @@ export class GameStore {
     };
 
     this.games.set(id, game);
+    await this.persist(game);
     return game;
   }
 
@@ -117,7 +140,7 @@ export class GameStore {
     return this.games.get(id) ?? null;
   }
 
-  joinGame(id: string, playerId: string): GameRecord {
+  async joinGame(id: string, playerId: string): Promise<GameRecord> {
     const game = this.games.get(id);
     if (!game) {
       throw new Error("NOT_FOUND");
@@ -148,10 +171,11 @@ export class GameStore {
     };
 
     this.games.set(id, updated);
+    await this.persist(updated);
     return updated;
   }
 
-  applyMove(id: string, playerId: string, index: number): GameRecord {
+  async applyMove(id: string, playerId: string, index: number): Promise<GameRecord> {
     const game = this.games.get(id);
     if (!game) {
       throw new Error("NOT_FOUND");
@@ -204,10 +228,11 @@ export class GameStore {
     };
 
     this.games.set(id, updated);
+    await this.persist(updated);
     return updated;
   }
 
-  resignGame(id: string, playerId: string): GameRecord {
+  async resignGame(id: string, playerId: string): Promise<GameRecord> {
     const game = this.games.get(id);
     if (!game) {
       throw new Error("NOT_FOUND");
@@ -234,14 +259,19 @@ export class GameStore {
     };
 
     this.games.set(id, updated);
+    await this.persist(updated);
     return updated;
   }
 
-  checkAbandonment(id: string, playerId: string, now = new Date()): {
+  async checkAbandonment(
+    id: string,
+    playerId: string,
+    now = new Date()
+  ): Promise<{
     abandoned: boolean;
     reason: "ABANDONED" | "NOT_INACTIVE" | "YOUR_TURN";
     game: GameRecord;
-  } {
+  }> {
     const game = this.games.get(id);
     if (!game) {
       throw new Error("NOT_FOUND");
@@ -282,6 +312,7 @@ export class GameStore {
       lastMoveAt: nowIso,
     };
     this.games.set(id, updated);
+    await this.persist(updated);
 
     return { abandoned: true, reason: "ABANDONED", game: updated };
   }

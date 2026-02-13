@@ -1,5 +1,5 @@
-import { GameStore } from "../src/store";
-import { startAbandonmentSweeper } from "../src/abandonmentSweeper";
+import { GameStore } from "../src/store.js";
+import { startAbandonmentSweeper } from "../src/abandonmentSweeper.js";
 
 type Message = { gameId: string; payload: unknown };
 
@@ -16,11 +16,12 @@ class FakeScheduler {
     this.cleared = true;
   }
 
-  tick() {
+  async tick() {
     if (!this.callback) {
       throw new Error("Expected interval callback");
     }
     this.callback();
+    await new Promise((resolve) => setTimeout(resolve, 0));
   }
 }
 
@@ -33,12 +34,12 @@ async function run() {
     },
   };
 
-  const game = store.createGame("p1");
-  store.joinGame(game.id, "p2");
+  const game = await store.createGame("p1");
+  await store.joinGame(game.id, "p2");
 
   const scheduler = new FakeScheduler();
   let now = new Date("2024-01-01T00:00:00.000Z");
-  store.setLastMoveAt(game.id, now.toISOString());
+  await store.setLastMoveAt(game.id, now.toISOString());
 
   const sweeper = startAbandonmentSweeper(store, hub, {
     intervalMs: 1000,
@@ -47,13 +48,13 @@ async function run() {
     scheduler,
   });
 
-  scheduler.tick();
+  await scheduler.tick();
   if (messages.length !== 0) {
     throw new Error("Did not expect abandonment yet");
   }
 
   now = new Date(now.getTime() + 4 * 60 * 1000);
-  scheduler.tick();
+  await scheduler.tick();
 
   const updated = store.getGame(game.id);
   if (!updated || updated.status !== "over") {

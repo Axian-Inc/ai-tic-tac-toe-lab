@@ -1,5 +1,5 @@
-import type { GameStore } from "./store";
-import type { WsHub } from "./ws";
+import type { GameStore } from "./store.js";
+import type { WsHub } from "./ws.js";
 
 type Scheduler = {
   setInterval: (callback: () => void, intervalMs: number) => unknown;
@@ -16,12 +16,12 @@ type SweepOptions = {
 const DEFAULT_THRESHOLD_MS = 3 * 60 * 1000;
 const DEFAULT_INTERVAL_MS = 60 * 1000;
 
-export function sweepOnce(
+export async function sweepOnce(
   store: GameStore,
   hub: WsHub,
   now: Date,
   thresholdMs = DEFAULT_THRESHOLD_MS
-): number {
+): Promise<number> {
   const active = store.listGames("active");
   let resolved = 0;
 
@@ -36,7 +36,7 @@ export function sweepOnce(
       continue;
     }
 
-    const result = store.checkAbandonment(game.id, opponent.id, now);
+    const result = await store.checkAbandonment(game.id, opponent.id, now);
     if (!result.abandoned) {
       continue;
     }
@@ -78,7 +78,7 @@ export function startAbandonmentSweeper(store: GameStore, hub: WsHub, options: S
   }
 
   const timer = scheduler.setInterval(() => {
-    sweepOnce(store, hub, nowProvider(), thresholdMs);
+    void sweepOnce(store, hub, nowProvider(), thresholdMs);
   }, intervalMs);
 
   return {

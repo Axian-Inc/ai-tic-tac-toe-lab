@@ -42,6 +42,10 @@ npm run dev:server
 - Server tech: Node.js + TypeScript + Express (see `server/`).
 - Leave vs Resign: Leave exits the multiplayer view and disconnects the socket without ending the game. Resign ends the game and declares the other player the winner.
 - Multiplayer rematch: Rematch creates a new room and provides an invite link for the opponent to join.
+- IaC: Terraform provisions a low-cost ECS Fargate service (256 CPU / 512 MB) behind an ALB for the multiplayer server. CloudFront also routes `/games`, `/ws`, and `/health` to the server so the client can use the same HTTPS origin.
+- Container image: `server/Dockerfile` builds the multiplayer server. Terraform creates an ECR repo (`server_ecr_repository_url`) for publishing the image.
+- Persistence: Game records are stored in DynamoDB (`server_games_table_name`) so history survives restarts.
+- CORS: Server accepts origins listed in `CORS_ORIGINS` (set by Terraform to the CloudFront domain + localhost).
 
 ## Architecture overview
 
@@ -61,6 +65,7 @@ Strategy order: win > block > center > corner > side. Implemented in
 - Unit tests cover the pure Game module logic (state, move legality, wins/draws).
   Run via `npm run test:game` or `npm run test:unit` (uses `tsx`).
 - Integration tests: `npm run test:integration`.
+- Server tests: `npm run test:server` (starts the server in test mode and exercises HTTP/WS behaviors).
 - Playwright E2E tests cover full user flows including game completion and
   human win verification. Run via `npm run test:e2e`.
 - CI guidance: Playwright runs headless and starts a Vite preview server via
@@ -69,6 +74,18 @@ Strategy order: win > block > center > corner > side. Implemented in
   `cpu=off` query param to drive both players when needed.
 - Deploy uses `scripts/deploy-aws.sh` to sync to S3 with metadata and invalidate
   CloudFront.
+
+## CI
+
+Minimal pipeline order:
+```bash
+npm run test:unit
+npm run test:server
+npm run test:e2e
+```
+
+Required environment variables for tests:
+- `CI` (optional): When set, Playwright will not reuse an existing preview server.
 
 ## Deployment
 
@@ -89,10 +106,20 @@ Phase 2 (planned):
 - Provision server-side resources (compute + WebSocket endpoint).
 - Extend Terraform to include API + WS resources and deployment steps.
 
-Application deployment:
+Application deployment (frontend):
 ```bash
 npm run build
 npm run deploy:aws
+```
+
+Server deployment (backend):
+```bash
+npm run deploy:server
+```
+
+Combined deploy (frontend + backend):
+```bash
+VITE_API_BASE="https://$(terraform -chdir=terraform output -raw cloudfront_domain_name)" npm run deploy:all
 ```
 
 CloudFront invalidation:
@@ -109,6 +136,7 @@ terraform destroy
 Common pitfalls:
 - CloudFront requires ACM certificates in `us-east-1` if you add a custom domain.
 - Bucket and distribution names must be globally unique; adjust `terraform/terraform.tfvars` if needed.
+- Client needs `VITE_API_BASE` set to the CloudFront HTTPS origin to avoid mixed-content errors.
 
 ## Key design decisions
 
