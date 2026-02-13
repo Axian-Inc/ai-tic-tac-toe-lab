@@ -1021,3 +1021,210 @@ Add a **multiplayer mode** backed by an **HTTP API server** that brokers games a
 - `npm run test:unit`, `npm run test:server`, `npm run test:e2e` (or equivalent) exist and are documented.
 - README includes a “CI” section with the minimal pipeline order.
 - Any required environment variables for tests are documented.
+
+---
+
+# Phase 3 — CI Pipeline and Game Viewer (Epics S+)
+
+## Theme: Tic Tac Toe as a Spectator Sport
+Add a **Spectate** experience that lists in-progress games and lets users watch them live via WebSockets. Introduce **code coverage reporting** and a **GitHub Actions PR pipeline** that builds and tests the project.
+
+## Exit criteria
+- Server can tell the client what games are **in progress**.
+- Client can connect to a game and **spectate in real time**.
+- CI pipeline compiles/bundles, runs tests, and produces a **code coverage** report.
+
+---
+
+## Epic S — Spectate UI entrypoint and navigation
+
+### Story S1 — Add “Spectate” entrypoint on Landing page
+**As a user,** I want a Spectate button so I can watch games in progress.
+
+**Acceptance criteria**
+- Landing page includes a clear **Spectate** button (in addition to CPU + Multiplayer options).
+- Clicking Spectate navigates to a new Spectate view/route (e.g., `/spectate`).
+- Button is visible and accessible (keyboard focus + label).
+
+---
+
+### Story S2 — Create Spectate page layout and routing
+**As a user,** I want a dedicated place to browse in-progress games.
+
+**Acceptance criteria**
+- Route exists (e.g., `/spectate`).
+- Page contains:
+  - A list area for games
+  - A detail area or navigation to game viewer
+  - Back/Home navigation
+- Empty state is handled (“No active games right now”).
+
+---
+
+## Epic T — Server support for listing and spectating in-progress games
+
+### Story T1 — Extend `GET /games` to support in-progress filtering
+**As a client,** I want to list in-progress games so users can spectate.
+
+**Acceptance criteria**
+- `GET /games?status=active` returns games currently in progress.
+- Response includes enough metadata to render a list (id, status, createdAt, updatedAt, moveCount).
+- Games in `waiting` or `over` are excluded when `status=active`.
+
+---
+
+### Story T2 — Ensure spectator join provides full state catch-up
+**As a spectator,** I want current state immediately and then live updates.
+
+**Acceptance criteria**
+- When a spectator connects to `WS /ws?gameId=...`:
+  - server sends a catch-up payload (authoritative state + move history)
+  - then streams future events
+- Catch-up includes:
+  - board state
+  - move history in order
+  - current turn
+  - status
+  - winner (if already over)
+
+---
+
+### Story T3 — Harden server behavior for spectating active games
+**As a server operator,** I want predictable behavior so spectating is reliable.
+
+**Acceptance criteria**
+- Server supports multiple concurrent WS subscribers per game.
+- Server rejects/handles invalid `gameId` gracefully (clear close reason).
+- Server does not allow spectators to submit moves (rejected with clear reason).
+
+---
+
+## Epic U — Game Viewer (real-time spectator experience)
+
+### Story U1 — Implement Active Games list in the client
+**As a user,** I want to see a list of games in progress.
+
+**Acceptance criteria**
+- Spectate page calls `GET /games?status=active`.
+- List renders:
+  - game id
+  - move count
+  - last updated time (or similar)
+  - “Watch” action
+- List supports manual refresh.
+
+---
+
+### Story U2 — Implement Game Viewer screen for spectators
+**As a user,** I want to watch a game with real-time updates.
+
+**Acceptance criteria**
+- Selecting a game opens a viewer (route like `/spectate/:gameId` or a panel).
+- Viewer shows:
+  - Board state (read-only)
+  - Current turn
+  - Move history (ordered)
+  - Game status (active/over)
+- Viewer connects to WS for the game and updates live.
+
+---
+
+### Story U3 — Spectator UX polish (visual clarity)
+**As a user,** I want to understand who is playing and what just happened.
+
+**Acceptance criteria**
+- Viewer clearly labels the game as **Spectating**.
+- Highlights the most recent move (e.g., subtle outline) for a short duration.
+- Shows a small connection indicator (Connected/Reconnecting/Disconnected).
+
+---
+
+## Epic V — Code coverage reporting (terminal-friendly)
+
+### Story V1 — Add coverage output for unit tests
+**As a developer,** I want a code coverage report I can generate from the terminal.
+
+**Acceptance criteria**
+- A CLI command exists (e.g., `npm run coverage`) that produces:
+  - Console summary
+  - HTML report artifact (e.g., `coverage/`)
+- Coverage is generated for unit tests at minimum.
+- README documents how to run coverage locally.
+
+---
+
+### Story V2 — Add coverage thresholds (lightweight guardrails)
+**As a maintainer,** I want basic coverage thresholds to prevent regressions.
+
+**Acceptance criteria**
+- Minimal thresholds are configured (team chooses numbers; documented).
+- CI fails if thresholds are not met.
+- Threshold configuration is easy to update.
+
+---
+
+## Epic W — GitHub Actions PR pipeline (build + test + coverage)
+
+### Story W1 — Add GitHub Actions workflow triggered on PRs
+**As a maintainer,** I want a PR pipeline so every change is validated automatically.
+
+**Acceptance criteria**
+- Workflow runs on pull requests.
+- Workflow checks out code and installs dependencies.
+- Node version is pinned (or matrixed) and documented.
+
+---
+
+### Story W2 — Pipeline runs unit tests and produces coverage
+**As a maintainer,** I want PRs to run unit tests and collect coverage.
+
+**Acceptance criteria**
+- Workflow runs `npm run test:unit` (or equivalent).
+- Workflow runs coverage command and retains summary in logs.
+- Coverage artifacts are uploaded (optional but recommended).
+
+---
+
+### Story W3 — Pipeline builds/packages the application
+**As a maintainer,** I want the app to build successfully on every PR.
+
+**Acceptance criteria**
+- Workflow runs `npm run build` for client.
+- If server exists in repo:
+  - workflow builds/packages server artifact (or container build step is stubbed)
+- Build failures fail the workflow.
+
+---
+
+### Story W4 — Optional: run Playwright in CI (if practical)
+**As a maintainer,** I want confidence the UI still works.
+
+**Acceptance criteria**
+- Workflow optionally runs `npm run test:e2e`.
+- Uses Playwright’s recommended CI setup (install browsers, headless).
+- If flakiness is a concern, this step can be configured as required or nightly (documented).
+
+---
+
+## Epic X — Documentation updates for Phase 3
+
+### Story X1 — Update README for Spectate and CI
+**As a developer,** I want clear docs so I can use the Spectate feature and understand CI.
+
+**Acceptance criteria**
+- README includes:
+  - How to spectate games (route + flow)
+  - New CLI commands (coverage, CI-related)
+  - Summary of GitHub Actions workflow
+
+---
+
+### Story X2 — Add developer notes for test strategy expansion
+**As a developer,** I want guidance on where E2E tests fit versus unit tests.
+
+**Acceptance criteria**
+- Docs explain:
+  - unit tests (Game module)
+  - server tests (API + WS)
+  - E2E tests (Playwright)
+  - coverage scope and limitations

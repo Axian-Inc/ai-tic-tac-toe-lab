@@ -13,6 +13,7 @@ dist/
 terraform.tfstate
 terraform.tfstate.backup
 terraform.tfstate.*
+*.tfstate.backup
 crash.log
 override.tf
 override.tf.json
@@ -21,4 +22,6 @@ override.tf.json
 .terraformrc
 terraform.rc
 
+test-results/.last-run.json
 nohup.out
+coverage/

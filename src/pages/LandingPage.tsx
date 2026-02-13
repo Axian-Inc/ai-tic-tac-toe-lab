@@ -59,6 +59,9 @@ export default function LandingPage() {
         >
           Join Multiplayer
         </button>
+        <Link className="secondary-button" to="/spectate" data-testid="spectate-games">
+          Spectate
+        </Link>
       </div>
       {isMultiplayerOpen ? (
         <div className="modal-backdrop" role="presentation">

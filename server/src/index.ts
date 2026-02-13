@@ -138,30 +138,30 @@ app.post("/games/:id/join", (req, res) => {
         type: "player_joined",
         payload: {
           roomId: game.id,
-        state: {
+          state: {
+            status: game.status,
+            board: game.board,
+            moves: game.moves,
+            moveCount: game.moveCount,
+            currentTurn: game.currentTurn,
+          },
+          players: game.players,
+        },
+        timestamp: new Date().toISOString(),
+      };
+      hub.broadcast(game.id, payload);
+      res.status(200).json({
+        event: "player_joined",
+        game: {
+          id: game.id,
           status: game.status,
-          board: game.board,
-          moves: game.moves,
+          createdAt: game.createdAt,
+          updatedAt: game.updatedAt,
           moveCount: game.moveCount,
           currentTurn: game.currentTurn,
+          players: game.players,
         },
-        players: game.players,
-      },
-      timestamp: new Date().toISOString(),
-    };
-    hub.broadcast(game.id, payload);
-    res.status(200).json({
-      event: "player_joined",
-      game: {
-        id: game.id,
-        status: game.status,
-        createdAt: game.createdAt,
-        updatedAt: game.updatedAt,
-        moveCount: game.moveCount,
-        currentTurn: game.currentTurn,
-        players: game.players,
-      },
-    });
+      });
     } catch (error) {
       if (error instanceof Error && error.message === "NOT_FOUND") {
         res.status(404).json({ code: "NOT_FOUND", message: "Game not found." });
@@ -206,31 +206,9 @@ app.post("/games/:id/moves", (req, res) => {
   (async () => {
     try {
       const game = await store.applyMove(gameId, playerId, Number(index));
-    const move = game.moves[game.moves.length - 1];
-    const payload = {
-      type: "move_accepted",
-      payload: {
-        roomId: game.id,
-        state: {
-          status: game.status,
-          board: game.board,
-          moves: game.moves,
-          moveCount: game.moveCount,
-          currentTurn: game.currentTurn,
-          winner: game.winner,
-        },
-        move,
-        currentTurn: game.currentTurn,
-      },
-      timestamp: new Date().toISOString(),
-    };
-
-    hub.broadcast(game.id, payload);
-    res.status(200).json(payload);
-
-    if (game.status === "over") {
-      const gameOver = {
-        type: "game_over",
+      const move = game.moves[game.moves.length - 1];
+      const payload = {
+        type: "move_accepted",
         payload: {
           roomId: game.id,
           state: {
@@ -238,14 +216,36 @@ app.post("/games/:id/moves", (req, res) => {
             board: game.board,
             moves: game.moves,
             moveCount: game.moveCount,
+            currentTurn: game.currentTurn,
+            winner: game.winner,
           },
-          winner: game.winner,
-          reason: game.winner ? "win" : "draw",
+          move,
+          currentTurn: game.currentTurn,
         },
         timestamp: new Date().toISOString(),
       };
-      hub.broadcast(game.id, gameOver);
-    }
+
+      hub.broadcast(game.id, payload);
+      res.status(200).json(payload);
+
+      if (game.status === "over") {
+        const gameOver = {
+          type: "game_over",
+          payload: {
+            roomId: game.id,
+            state: {
+              status: game.status,
+              board: game.board,
+              moves: game.moves,
+              moveCount: game.moveCount,
+            },
+            winner: game.winner,
+            reason: game.winner ? "win" : "draw",
+          },
+          timestamp: new Date().toISOString(),
+        };
+        hub.broadcast(game.id, gameOver);
+      }
     } catch (error) {
       const reason = error instanceof Error ? error.message : "SERVER_ERROR";
       const errorMap: Record<string, { status: number; code: string; message: string }> = {
@@ -294,24 +294,24 @@ app.post("/games/:id/resign", (req, res) => {
   (async () => {
     try {
       const game = await store.resignGame(gameId, playerId);
-    const payload = {
-      type: "game_over",
-      payload: {
-        roomId: game.id,
-        state: {
-          status: game.status,
-          board: game.board,
-          moves: game.moves,
-          moveCount: game.moveCount,
+      const payload = {
+        type: "game_over",
+        payload: {
+          roomId: game.id,
+          state: {
+            status: game.status,
+            board: game.board,
+            moves: game.moves,
+            moveCount: game.moveCount,
+          },
+          winner: game.winner,
+          reason: "resign",
         },
-        winner: game.winner,
-        reason: "resign",
-      },
-      timestamp: new Date().toISOString(),
-    };
+        timestamp: new Date().toISOString(),
+      };
 
-    hub.broadcast(game.id, payload);
-    res.status(200).json(payload);
+      hub.broadcast(game.id, payload);
+      res.status(200).json(payload);
     } catch (error) {
       const reason = error instanceof Error ? error.message : "SERVER_ERROR";
       const errorMap: Record<string, { status: number; code: string; message: string }> = {
@@ -353,20 +353,20 @@ app.post("/games/:id/rematch", (req, res) => {
   (async () => {
     try {
       const newGame = await store.createGame(playerId);
-    const payload = {
-      type: "rematch_invite",
-      payload: {
-        roomId: gameId,
-        newGameId: newGame.id,
-      },
-      timestamp: new Date().toISOString(),
-    };
-    hub.broadcast(gameId, payload);
-    res.status(201).json({
-      id: newGame.id,
-      status: newGame.status,
-      createdAt: newGame.createdAt,
-    });
+      const payload = {
+        type: "rematch_invite",
+        payload: {
+          roomId: gameId,
+          newGameId: newGame.id,
+        },
+        timestamp: new Date().toISOString(),
+      };
+      hub.broadcast(gameId, payload);
+      res.status(201).json({
+        id: newGame.id,
+        status: newGame.status,
+        createdAt: newGame.createdAt,
+      });
     } catch (error) {
       if (error instanceof Error && error.message === "MAX_GAMES_REACHED") {
         res.status(429).json({ code: "MAX_GAMES_REACHED", message: "Too many games." });
@@ -389,34 +389,34 @@ app.post("/games/:id/abandonment-check", (req, res) => {
   (async () => {
     try {
       const result = await store.checkAbandonment(gameId, playerId);
-    if (!result.abandoned) {
-      res.status(200).json({
-        abandoned: false,
-        reason: result.reason,
-        lastMoveAt: result.game.lastMoveAt,
-        thresholdSeconds: 180,
-      });
-      return;
-    }
+      if (!result.abandoned) {
+        res.status(200).json({
+          abandoned: false,
+          reason: result.reason,
+          lastMoveAt: result.game.lastMoveAt,
+          thresholdSeconds: 180,
+        });
+        return;
+      }
 
-    const payload = {
-      type: "abandoned",
-      payload: {
-        roomId: result.game.id,
-        state: {
-          status: result.game.status,
-          board: result.game.board,
-          moves: result.game.moves,
-          moveCount: result.game.moveCount,
+      const payload = {
+        type: "abandoned",
+        payload: {
+          roomId: result.game.id,
+          state: {
+            status: result.game.status,
+            board: result.game.board,
+            moves: result.game.moves,
+            moveCount: result.game.moveCount,
+          },
+          winner: result.game.winner,
+          reason: "abandon",
         },
-        winner: result.game.winner,
-        reason: "abandon",
-      },
-      timestamp: new Date().toISOString(),
-    };
+        timestamp: new Date().toISOString(),
+      };
 
-    hub.broadcast(result.game.id, payload);
-    res.status(200).json(payload);
+      hub.broadcast(result.game.id, payload);
+      res.status(200).json(payload);
     } catch (error) {
       const reason = error instanceof Error ? error.message : "SERVER_ERROR";
       const errorMap: Record<string, { status: number; code: string; message: string }> = {

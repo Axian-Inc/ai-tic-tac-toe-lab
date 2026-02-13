@@ -16,6 +16,7 @@ npm run build
 npm run lint
 npm run test:game
 npm run test:unit
+npm run coverage
 npm run test:e2e
 npm test
 npm run deploy:aws
@@ -53,6 +54,7 @@ npm run dev:server
 - Domain: Pure game logic lives under `src/game` (no React imports).
 - Gameplay: `CpuGame` wraps the `Game` domain to auto-apply CPU moves.
 - Pages: `src/pages/LandingPage.tsx` and `src/pages/GamePage.tsx`.
+- Spectate: visit `/spectate` to browse active games, then `/spectate/:gameId` to watch a live game.
 
 ## CPU strategy
 
@@ -64,10 +66,14 @@ Strategy order: win > block > center > corner > side. Implemented in
 
 - Unit tests cover the pure Game module logic (state, move legality, wins/draws).
   Run via `npm run test:game` or `npm run test:unit` (uses `tsx`).
+- Coverage: `npm run coverage` generates a console summary and HTML report in
+  `coverage/`. Thresholds are defined in `.c8rc.json` (currently 85% statements/lines,
+  70% branches, 70% functions).
 - Integration tests: `npm run test:integration`.
 - Server tests: `npm run test:server` (starts the server in test mode and exercises HTTP/WS behaviors).
 - Playwright E2E tests cover full user flows including game completion and
   human win verification. Run via `npm run test:e2e`.
+  Note: running `npx playwright test` directly expects `npm run build` to have been run.
 - CI guidance: Playwright runs headless and starts a Vite preview server via
   the Playwright `webServer` config (build + `npm run preview`).
 - Determinism: CPU strategy is deterministic, and tests can opt into
@@ -75,17 +81,33 @@ Strategy order: win > block > center > corner > side. Implemented in
 - Deploy uses `scripts/deploy-aws.sh` to sync to S3 with metadata and invalidate
   CloudFront.
 
+Test strategy notes:
+- Unit tests: fast, deterministic checks for the `src/game` logic (pure functions and state).
+- Server tests: exercise HTTP + WebSocket behaviors end-to-end against the local server.
+- E2E tests: cover critical UI flows across pages; keep these higher-level and fewer in number.
+- Coverage: only measures the unit-test run (`npm run test:unit`), so coverage numbers do not include server or Playwright tests.
+
 ## CI
 
 Minimal pipeline order:
 ```bash
 npm run test:unit
+npm run coverage
 npm run test:server
 npm run test:e2e
 ```
 
 Required environment variables for tests:
 - `CI` (optional): When set, Playwright will not reuse an existing preview server.
+- PR workflow uses the Node version defined in `.nvmrc`.
+  E2E runs in PRs; if flakiness becomes an issue, move E2E to a nightly workflow.
+
+GitHub Actions PR workflow summary:
+- Triggers on pull requests.
+- Installs dependencies with `npm ci`.
+- Builds client and server.
+- Runs unit tests, coverage, and Playwright E2E.
+- Uploads `coverage/` as a workflow artifact.
 
 ## Deployment
 

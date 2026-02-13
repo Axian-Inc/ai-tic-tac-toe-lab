@@ -81,6 +81,7 @@ export function attachWebSocketServer(
         players: game.players,
         moves: game.moves,
         board: game.board,
+        winner: game.winner,
       },
       timestamp: new Date().toISOString(),
     };

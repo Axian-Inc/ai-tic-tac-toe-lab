@@ -894,7 +894,11 @@ test("multiplayer realtime win across two contexts", async ({ browser }) => {
   });
 
   await creatorPage.goto("/multiplayer?mode=create");
-  await creatorPage.waitForFunction(() => typeof (window as any).__emitWsMessage === "function");
+  await creatorPage.waitForFunction(
+    () =>
+      typeof (window as { __emitWsMessage?: (payload: unknown) => void }).__emitWsMessage ===
+        "function"
+  );
   await creatorPage.evaluate((payload) => {
     (window as { __emitWsMessage?: (message: unknown) => void }).__emitWsMessage?.(payload);
   }, {
@@ -914,7 +918,11 @@ test("multiplayer realtime win across two contexts", async ({ browser }) => {
   });
 
   await joinerPage.goto(`/multiplayer?mode=join&room=${gameId}`);
-  await joinerPage.waitForFunction(() => typeof (window as any).__emitWsMessage === "function");
+  await joinerPage.waitForFunction(
+    () =>
+      typeof (window as { __emitWsMessage?: (payload: unknown) => void }).__emitWsMessage ===
+        "function"
+  );
   await joinerPage.evaluate((payload) => {
     (window as { __emitWsMessage?: (message: unknown) => void }).__emitWsMessage?.(payload);
   }, {

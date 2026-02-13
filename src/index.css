@@ -87,12 +87,18 @@ body {
 }
 
 .secondary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid rgba(31, 35, 40, 0.25);
   background: transparent;
   color: inherit;
   padding: 0.55rem 1rem;
   border-radius: 999px;
   font-weight: 600;
+  font-size: 1rem;
+  font-family: inherit;
+  text-decoration: none;
   cursor: pointer;
 }
 
@@ -319,6 +325,7 @@ body {
 
 .multiplayer-board {
   display: grid;
+  place-items: center;
   gap: 0.75rem;
 }
 
@@ -356,6 +363,242 @@ body {
 
 .multiplayer-outcome p {
   margin: 0;
+}
+
+.spectate-page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.spectate-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.spectate-layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(260px, 1.2fr);
+  gap: 16px;
+}
+
+.spectate-list,
+.spectate-detail {
+  border: 1px solid #e2e2e2;
+  border-radius: 12px;
+  padding: 16px;
+  background: #fff;
+}
+
+.spectate-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.spectate-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.spectate-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.spectate-item {
+  width: 100%;
+  border: 1px solid #dedede;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #f8f8f8;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.spectate-item.is-active {
+  border-color: #1f4cff;
+  background: #eef1ff;
+}
+
+.spectate-select {
+  border: none;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+  flex: 1;
+}
+
+.spectate-watch {
+  font-weight: 600;
+  color: #1f4cff;
+  text-decoration: none;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid #cfd8ff;
+  background: #fff;
+}
+
+.spectate-watch:hover,
+.spectate-watch:focus-visible {
+  background: #eef1ff;
+}
+
+.spectate-id {
+  font-weight: 600;
+}
+
+.spectate-meta {
+  color: #555;
+  font-size: 0.9rem;
+}
+
+.spectate-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.spectate-row .value {
+  text-align: right;
+  word-break: break-all;
+}
+
+.spectate-id-value {
+  max-width: 100%;
+  white-space: normal;
+  word-break: break-all;
+}
+
+.spectate-detail .primary-button {
+  margin-top: 12px;
+}
+
+.spectate-card {
+  border: 1px solid #e2e2e2;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #fff;
+}
+
+.spectate-viewer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.spectate-viewer-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.spectate-panel,
+.spectate-history {
+  border: 1px solid rgba(31, 35, 40, 0.12);
+  border-radius: 16px;
+  padding: 16px;
+  background: #fff;
+}
+
+.spectate-panel {
+  display: grid;
+  gap: 10px;
+}
+
+.spectate-panel .label {
+  font-weight: 600;
+}
+
+.spectate-panel .value {
+  font-family: "Courier New", Courier, monospace;
+}
+
+.spectate-board {
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.spectate-history ol {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.spectate-history {
+  background: rgba(31, 35, 40, 0.06);
+  border: none;
+}
+
+.spectate-label {
+  color: rgba(31, 35, 40, 0.7);
+  margin: 0;
+}
+
+.connection-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: rgba(31, 35, 40, 0.08);
+  text-transform: capitalize;
+}
+
+.connection-pill.connected {
+  background: rgba(13, 148, 76, 0.15);
+  color: #0d7a3c;
+}
+
+.connection-pill.reconnecting {
+  background: rgba(234, 179, 8, 0.2);
+  color: #9a6a00;
+}
+
+.connection-pill.disconnected {
+  background: rgba(185, 28, 28, 0.15);
+  color: #9a2f1f;
+}
+
+.cell.is-highlighted {
+  outline: 2px solid #1f4cff;
+  box-shadow: 0 0 0 2px rgba(31, 76, 255, 0.25);
+}
+
+@media (max-width: 720px) {
+  .spectate-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .spectate-viewer-layout {
+    grid-template-columns: 1fr;
+  }
 }
 
 .rematch-invite {

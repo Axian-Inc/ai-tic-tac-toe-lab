@@ -20,6 +20,7 @@
     "deploy:all": "VITE_API_BASE=https://$(terraform -chdir=terraform output -raw cloudfront_domain_name) npm run build && npm run deploy:aws && npm run deploy:server",
     "test:e2e": "npm run build && playwright test",
     "test:unit": "npm run test:game",
+    "coverage": "c8 npm run test:unit",
     "test": "npm run test:unit",
     "dev:server": "npm --prefix server run dev",
     "test:server": "npm --prefix server test"
@@ -38,6 +39,7 @@
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
     "@vitejs/plugin-react": "^4.3.1",
+    "c8": "^10.1.3",
     "eslint": "^8.56.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.6",
