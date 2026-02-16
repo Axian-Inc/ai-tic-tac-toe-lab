@@ -1,0 +1,5 @@
+interface:
+  display_name: "Playwright UI"
+  short_description: "Create and debug Playwright UI tests"
+  default_prompt: "Use $playwright-ui to create, stabilize, and debug Playwright UI tests in this repository."
+

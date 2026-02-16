@@ -10,3 +10,6 @@ Date: 2026-02-05
 ## Open Questions
 - Code coverage targets?
 - E2E environments (local only vs CI pipeline config)?
+
+## Updates
+- 2026-02-12: Added a Playwright-based deployment acceptance test pattern for Terraform lifecycle verification (`plan` -> `apply` -> HTTP checks -> `destroy`) using environment-gated inputs for AWS-backed checks.
