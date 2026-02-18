@@ -5,5 +5,11 @@
   },
   "postCreateCommand": "copy-codex-auth",
   "mounts": [
-    "source=${localEnv:USERPROFILE}/.codex,target=/tmp/host-codex,type=bind,consistency=cached" ]
+    "source=${localEnv:USERPROFILE}/.codex,target=/tmp/host-codex,type=bind,consistency=cached" ],
+  "mounts": [
+    "source=${localEnv:SSH_AUTH_SOCK},target=/ssh-agent,type=bind" ],
+  "remoteEnv": {
+    "SSH_AUTH_SOCK": "/ssh-agent"
+  }
 }
+
