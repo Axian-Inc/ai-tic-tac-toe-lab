@@ -5,5 +5,6 @@
   },
   "postCreateCommand": "copy-codex-auth",
   "mounts": [
-    "source=${localEnv:USERPROFILE}/.codex,target=/tmp/host-codex,type=bind,consistency=cached" ]
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.codex,target=/tmp/host-codex,type=bind,consistency=cached"
+  ]
 }
