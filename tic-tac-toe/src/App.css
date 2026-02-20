@@ -115,10 +115,14 @@ h1 {
   color: #1b2a4b;
   font-size: 2rem;
   font-weight: 700;
+  cursor: default;
+}
+
+.square.is-available {
   cursor: pointer;
 }
 
-.square:hover {
+.square.is-available:hover {
   background: #e9eef9;
 }
 
@@ -150,6 +154,8 @@ h1 {
   max-width: 420px;
   align-items: center;
   justify-content: center;
+  position: relative;
+  z-index: 2;
 }
 
 .result-message {
@@ -160,6 +166,71 @@ h1 {
 .result-actions {
   justify-content: center;
   align-items: center;
+}
+
+.confetti {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.confetti-piece {
+  position: absolute;
+  top: -12px;
+  width: 8px;
+  height: 14px;
+  opacity: 0.9;
+  border-radius: 3px;
+  animation-name: confetti-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translate3d(0, -10px, 0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(0, 110vh, 0) rotate(320deg);
+    opacity: 0.2;
+  }
+}
+
+.emoji-rain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.emoji-drop {
+  position: absolute;
+  top: -24px;
+  animation-name: emoji-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  opacity: 0.9;
+}
+
+@keyframes emoji-fall {
+  0% {
+    transform: translate3d(0, -12px, 0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.95;
+  }
+  100% {
+    transform: translate3d(0, 110vh, 0);
+    opacity: 0.2;
+  }
 }
 
 .theme-dark .site-header {
@@ -182,7 +253,7 @@ h1 {
   color: #e2e8f0;
 }
 
-.theme-dark .square:hover {
+.theme-dark .square.is-available:hover {
   background: #1e293b;
 }
 

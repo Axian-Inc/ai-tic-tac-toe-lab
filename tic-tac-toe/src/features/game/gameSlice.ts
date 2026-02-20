@@ -38,6 +38,16 @@ export function calculateWinner(board: Cell[]): Player | null {
   return null;
 }
 
+export function chooseCpuMove(board: Cell[], availableMoves: number[]): number | null {
+  const winningMove = availableMoves.find((index) => {
+    const nextBoard = [...board];
+    nextBoard[index] = CPU_PLAYER;
+    return calculateWinner(nextBoard) === CPU_PLAYER;
+  });
+
+  return winningMove ?? availableMoves[0] ?? null;
+}
+
 const gameSlice = createSlice({
   name: 'game',
   initialState,

@@ -6,7 +6,7 @@ type AppState = {
 };
 
 const initialState: AppState = {
-  isDarkMode: false,
+  isDarkMode: true,
 };
 
 const appSlice = createSlice({
