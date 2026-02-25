@@ -90,8 +90,71 @@ h1 {
   font-size: 1.15rem;
 }
 
+.join-input {
+  border: 2px solid #d8e0f2;
+  border-radius: 10px;
+  padding: 0.65rem 0.8rem;
+  font-size: 0.95rem;
+}
+
 .status {
   margin: 0;
+  font-weight: 600;
+}
+
+.session-info {
+  margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+.session-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.copy-id-button {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #cdd6ea;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #1b2a4b;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.copy-id-button:hover {
+  background: #eef3ff;
+}
+
+.copy-message {
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+
+.ws-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+.ws-indicator.connected {
+  background: #16a34a;
+}
+
+.ws-indicator.disconnected {
+  background: #dc2626;
+}
+
+.error-message {
+  margin: 0;
+  color: #b91c1c;
+  font-size: 0.9rem;
   font-weight: 600;
 }
 
@@ -247,10 +310,30 @@ h1 {
   border-color: #334155;
 }
 
+.theme-dark .join-input {
+  background: #0f172a;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+.theme-dark .copy-id-button {
+  background: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+.theme-dark .copy-id-button:hover {
+  background: #334155;
+}
+
 .theme-dark .square {
   background: #0f172a;
   border-color: #64748b;
   color: #e2e8f0;
+}
+
+.theme-dark .error-message {
+  color: #fca5a5;
 }
 
 .theme-dark .square.is-available:hover {

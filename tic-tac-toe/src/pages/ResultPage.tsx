@@ -1,19 +1,17 @@
 import React, { useEffect } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
-import { useAppDispatch } from '../app/hooks';
-import { startNewGame } from '../features/game/gameSlice';
+import { clearGameSession } from '../features/game/session';
 
 type GameOutcome = 'win' | 'lose' | 'draw';
 
 const messageByOutcome: Record<GameOutcome, string> = {
   win: 'You win!',
-  lose: 'CPU wins!',
+  lose: 'You lose!',
   draw: 'Draw!',
 };
 
 function ResultPage() {
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
   const { outcome } = useParams<{ outcome: string }>();
   const showConfetti = outcome === 'win';
   const showSadRain = outcome === 'lose';
@@ -177,13 +175,19 @@ function ResultPage() {
           <button
             className="start"
             onClick={() => {
-              dispatch(startNewGame());
-              navigate('/game');
+              clearGameSession();
+              navigate('/');
             }}
           >
-            Rematch
+            Play Again
           </button>
-          <button className="reset secondary" onClick={() => navigate('/')}>
+          <button
+            className="reset secondary"
+            onClick={() => {
+              clearGameSession();
+              navigate('/');
+            }}
+          >
             Home
           </button>
         </div>

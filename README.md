@@ -1,29 +1,52 @@
 # AI Tic-Tac-Toe Lab
 
-This repository is a simple Tic-Tac-Toe game with a CPU opponent, built as a small React + Redux learning lab.
+This repository now contains:
 
-## Structure
+- `tic-tac-toe/`: React + Redux frontend for multiplayer tic-tac-toe.
+- `api-server/`: Node HTTP API for multiplayer game sessions.
 
-- `tic-tac-toe/` holds the app source and build tooling.
-- `tic-tac-toe/src/pages/README.md` explains what lives in the pages folder.
-- `tic-tac-toe/src/features/README.md` explains what lives in the features folder.
+The frontend coordinates game state through the API server (HTTP + WebSocket).
 
 ## Run Locally
 
 ```bash
-cd tic-tac-toe
+cd api-server
+npm install
+npm run dev
+
+cd ../tic-tac-toe
 npm install
 npm start
 ```
 
-## Run Tests
+For a production-style API run:
+
+```bash
+cd api-server
+npm run build
+npm start
+```
+
+Optional frontend config:
+
+```bash
+REACT_APP_API_BASE_URL=http://localhost:4000 npm start
+```
+
+Optional websocket override:
+
+```bash
+REACT_APP_WS_BASE_URL=http://localhost:4000 npm start
+```
+
+## Frontend: Run Tests
 
 ```bash
 cd tic-tac-toe
 npm test -- --watchAll=false
 ```
 
-## Run Playwright
+## Frontend: Run Playwright
 
 ```bash
 cd tic-tac-toe
@@ -32,7 +55,14 @@ npx playwright install
 npm run test:e2e
 ```
 
-## Libraries
+## API Server: Run Tests
+
+```bash
+cd api-server
+npm test
+```
+
+## Frontend Libraries
 
 - `react` and `react-dom` for the UI.
 - `react-router-dom` for routing between pages.
