@@ -1,5 +1,7 @@
 # ai-tic-tac-toe-lab
 
+DUMMY CHANGE FOR A DUMMY PR.
+
 ## Setup and run
 
 Requires Node.js 22+ (see `.nvmrc`).
