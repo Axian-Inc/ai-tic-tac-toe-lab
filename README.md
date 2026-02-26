@@ -146,7 +146,7 @@ VITE_API_BASE="https://$(terraform -chdir=terraform output -raw cloudfront_domai
 
 CloudFront invalidation:
 ```bash
-aws cloudfront create-invalidation --distribution-id E2OIVQ7L1EG91H --paths '/*'
+aws cloudfront create-invalidation --distribution-id <distribution-id> --paths '/*'
 ```
 
 Teardown:
