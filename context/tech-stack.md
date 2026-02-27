@@ -5,6 +5,7 @@ Date: 2026-02-27
 - React + React DOM
 - TypeScript
 - Vite + `@vitejs/plugin-react`
+- Tailwind CSS + `@tailwindcss/vite`
 - ESLint (v9 flat config) + `@typescript-eslint` + `eslint-plugin-react-hooks`
 - Prettier
 
@@ -15,5 +16,4 @@ Date: 2026-02-27
 ## Pending Decisions
 - Unit test framework execution baseline (Vitest story implementation pending)
 - E2E test implementation details (Playwright story implementation pending)
-- Final styling system usage in gameplay UI (Tailwind story pending)
 - Audio/confetti library selection

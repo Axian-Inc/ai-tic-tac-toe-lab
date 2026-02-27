@@ -20,6 +20,17 @@ npm run build
 
 The initial app scaffold renders `Coming Soon` as the primary heading.
 
+## Tailwind Setup (TTT-14)
+
+Tailwind CSS is configured for the Vite app using the official Vite plugin.
+
+- Installed packages: `tailwindcss`, `@tailwindcss/vite`
+- Tailwind is enabled in `vite.config.ts` via the `@tailwindcss/vite` plugin.
+- Global styles import Tailwind from `src/index.css` using `@import 'tailwindcss';`.
+- Placeholder UI in `src/App.tsx` includes visible Tailwind utility class examples.
+
+No optional Tailwind plugins are configured in this baseline story.
+
 ## Manual Deploy Pipeline (TTT-12)
 
 This repository includes a local deployment script for static assets hosted on S3 + CloudFront.
