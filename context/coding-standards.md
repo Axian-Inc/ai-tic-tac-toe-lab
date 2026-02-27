@@ -10,3 +10,9 @@ Date: 2026-02-05
 ## Open Questions
 - Preferred linting/formatting (ESLint/Prettier)?
 - Naming conventions or folder structure preferences?
+
+## Implementation Updates
+Date: 2026-02-27
+- Repository baseline uses ESLint v9 flat config (`eslint.config.js`) for TypeScript + React hooks rules.
+- Prettier is configured via `.prettierrc.json`; run `npm run format` / `npm run format:check`.
+- Standard npm validation scripts are `npm run lint` and `npm run build`.

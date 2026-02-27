@@ -1,17 +1,19 @@
-# Tech Stack (Draft)
-Date: 2026-02-05
+# Tech Stack
+Date: 2026-02-27
 
-## Known Requirements
-- React
+## Application Baseline (Implemented)
+- React + React DOM
 - TypeScript
-- Playwright for E2E tests
-- Vite (build tooling)
-- Vitest (unit testing)
-- Tailwind CSS (styling)
+- Vite + `@vitejs/plugin-react`
+- ESLint (v9 flat config) + `@typescript-eslint` + `eslint-plugin-react-hooks`
+- Prettier
 
-## TBD
-- Build tooling (Vite / CRA / Next / other)
-- Testing framework for unit tests (Vitest / Jest / other)
-- Styling approach (CSS modules / styled-components / Tailwind / other)
-- Audio/confetti libraries
-- IaC tooling (CDK / Terraform / other)
+## Additional Project Tooling
+- Terraform for IaC (`infra/terraform`)
+- AWS S3 + CloudFront for static hosting
+
+## Pending Decisions
+- Unit test framework execution baseline (Vitest story implementation pending)
+- E2E test implementation details (Playwright story implementation pending)
+- Final styling system usage in gameplay UI (Tailwind story pending)
+- Audio/confetti library selection

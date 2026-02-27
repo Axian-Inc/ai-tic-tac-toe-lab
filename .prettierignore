@@ -1,0 +1,12 @@
+node_modules
+dist
+coverage
+.codex
+.devcontainer
+context
+docs
+infra
+AGENTS.md
+infra/terraform/terraform.tfstate
+infra/terraform/terraform.tfstate.backup
+infra/terraform/plan.tfplan

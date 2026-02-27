@@ -56,8 +56,29 @@ Work is tracked in Jira.  Utilize the Atlassian MCP server to access Jira to man
 
 The project key is: TTT
 
+## Current Work Tracking
+
+Maintain a single source of truth for active execution in `context/current-work.md`.
+
+Required contents:
+- Current Jira ticket key and summary
+- A short implementation plan (step-by-step)
+- Live progress status with timestamps
+- Blockers/risks and next immediate action
+
+Rules:
+- Only one Jira ticket may be `In Progress` at any time.
+- Before starting a new ticket, explicitly close or pause the current one in Jira and update `context/current-work.md`.
+- Keep plan and progress current during execution, not just at the end.
+- When work is complete, mark the ticket outcome and clear/replace the active ticket entry before beginning another.
+- Required status flow for active delivery work:
+  - Move ticket from `In Progress` to `In QA` when implementation is complete and ready for QA validation.
+  - Move ticket from `In QA` to `In Review` after QA tasks/checks are complete.
+  - Move ticket from `In Review` to `Done` after review is complete.
+- Status transitions must be performed one step at a time and only when that step's work has actually been completed.
+- Do not batch-skip statuses in one pass.
+- Example: if a ticket is `In Progress` and development is completed, transition only to `In QA` (not directly to `In Review` or `Done`).
 
 ## Inital Project Documentation
 
 Initial project documentation is located in the `docs` directory and divided into `Phase_#` sub-directories.  these are initial input and will not be modified directly.  Use these as initial references.
-
