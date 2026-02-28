@@ -27,6 +27,14 @@ function createInitialBoard(): Board {
   return Array.from<BoardCell>({ length: BOARD_SIZE }).fill(null);
 }
 
+function getNextPlayer(player: Player): Player {
+  return player === "X" ? "O" : "X";
+}
+
+function isValidPosition(position: number): boolean {
+  return Number.isInteger(position) && position >= 0 && position < BOARD_SIZE;
+}
+
 function cloneState(state: GameState): GameState {
   return {
     board: [...state.board],
@@ -72,5 +80,31 @@ export class Game {
 
   getStatus(): GameStatus {
     return { ...this.state.status };
+  }
+
+  canPlaceMove(position: number): boolean {
+    return (
+      isValidPosition(position) &&
+      !this.state.status.isOver &&
+      this.state.board[position] === null
+    );
+  }
+
+  placeMove(position: number): boolean {
+    if (!this.canPlaceMove(position)) {
+      return false;
+    }
+
+    const player = this.state.currentPlayer;
+
+    this.state.board[position] = player;
+    this.state.moves.push({
+      order: this.state.moves.length + 1,
+      player,
+      position,
+    });
+    this.state.currentPlayer = getNextPlayer(player);
+
+    return true;
   }
 }
