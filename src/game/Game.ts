@@ -22,6 +22,16 @@ export interface GameState {
 }
 
 const BOARD_SIZE = 9;
+const WINNING_LINES: ReadonlyArray<readonly [number, number, number]> = [
+  [0, 1, 2],
+  [3, 4, 5],
+  [6, 7, 8],
+  [0, 3, 6],
+  [1, 4, 7],
+  [2, 5, 8],
+  [0, 4, 8],
+  [2, 4, 6],
+];
 
 function createInitialBoard(): Board {
   return Array.from<BoardCell>({ length: BOARD_SIZE }).fill(null);
@@ -33,6 +43,16 @@ function getNextPlayer(player: Player): Player {
 
 function isValidPosition(position: number): boolean {
   return Number.isInteger(position) && position >= 0 && position < BOARD_SIZE;
+}
+
+function hasWinningLine(board: Board, player: Player): boolean {
+  return WINNING_LINES.some(
+    ([a, b, c]) => board[a] === player && board[b] === player && board[c] === player
+  );
+}
+
+function isBoardFull(board: Board): boolean {
+  return board.every((cell) => cell !== null);
 }
 
 function cloneState(state: GameState): GameState {
@@ -103,6 +123,25 @@ export class Game {
       player,
       position,
     });
+
+    if (hasWinningLine(this.state.board, player)) {
+      this.state.status = {
+        winner: player,
+        isDraw: false,
+        isOver: true,
+      };
+      return true;
+    }
+
+    if (isBoardFull(this.state.board)) {
+      this.state.status = {
+        winner: null,
+        isDraw: true,
+        isOver: true,
+      };
+      return true;
+    }
+
     this.state.currentPlayer = getNextPlayer(player);
 
     return true;
