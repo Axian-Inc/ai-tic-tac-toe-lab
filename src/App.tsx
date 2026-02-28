@@ -10,11 +10,42 @@ function resolveRoute(pathname: string): RoutePath {
 function LandingPage({ onStartGame }: { onStartGame: () => void }) {
   return (
     <main className="page page-landing">
-      <h1>AI Tic-Tac-Toe Lab</h1>
-      <p>Welcome to Tic-Tac-Toe.</p>
-      <button type="button" onClick={onStartGame}>
-        Start New Game
-      </button>
+      <div className="landing-decor landing-decor-left" aria-hidden="true">
+        X
+      </div>
+      <div className="landing-decor landing-decor-right" aria-hidden="true">
+        O
+      </div>
+
+      <section className="landing-content" aria-label="Game introduction">
+        <p className="landing-brand">
+          <span className="player-x">X</span>
+          <span className="brand-divider">|</span>
+          <span className="player-o">O</span>
+        </p>
+        <h1>Tic Tac Toe</h1>
+        <p className="landing-intro">
+          The classic game of X&apos;s and O&apos;s. Can you beat the CPU?
+        </p>
+        <button type="button" className="landing-cta" onClick={onStartGame}>
+          Play vs CPU
+        </button>
+
+        <div className="landing-meta" aria-hidden="true">
+          <div>
+            <span className="meta-value player-x">X</span>
+            <span className="meta-label">YOU</span>
+          </div>
+          <div>
+            <span className="meta-value">VS</span>
+            <span className="meta-label">BATTLE</span>
+          </div>
+          <div>
+            <span className="meta-value player-o">O</span>
+            <span className="meta-label">CPU</span>
+          </div>
+        </div>
+      </section>
     </main>
   );
 }
