@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Game } from "./game/Game";
 
 type RoutePath = "/" | "/game";
 
@@ -19,10 +20,15 @@ function LandingPage({ onStartGame }: { onStartGame: () => void }) {
 }
 
 function GameplayPage() {
+  const game = new Game();
+  const gameState = game.getState();
+
   return (
     <main className="page page-gameplay">
       <h1>Gameplay</h1>
-      <p>Game board view is ready for the next story.</p>
+      <p>Current turn: {gameState.currentPlayer}</p>
+      <p>Moves recorded: {gameState.moves.length}</p>
+      <p>Winner: {gameState.status.winner ?? "None"}</p>
     </main>
   );
 }
