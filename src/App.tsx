@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Game } from "./game/Game";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Game, type BoardCell, type GameState } from "./game/Game";
 
 type RoutePath = "/" | "/game";
 
@@ -50,16 +50,77 @@ function LandingPage({ onStartGame }: { onStartGame: () => void }) {
   );
 }
 
+function getCellLabel(cell: BoardCell): string {
+  if (cell === "X") {
+    return "X";
+  }
+
+  if (cell === "O") {
+    return "O";
+  }
+
+  return "";
+}
+
 function GameplayPage() {
-  const game = new Game();
-  const gameState = game.getState();
+  const gameRef = useRef<Game>(new Game());
+  const [gameState, setGameState] = useState<GameState>(() =>
+    gameRef.current.getState()
+  );
+
+  const boardCells = useMemo(
+    () =>
+      gameState.board.map((cell, index) => ({
+        cell,
+        index,
+        isInteractive: gameRef.current.canPlaceMove(index),
+      })),
+    [gameState.board]
+  );
+
+  const handleCellClick = (position: number) => {
+    const didPlaceMove = gameRef.current.placeMove(position);
+
+    if (didPlaceMove) {
+      setGameState(gameRef.current.getState());
+    }
+  };
 
   return (
-    <main className="page page-gameplay">
-      <h1>Gameplay</h1>
-      <p>Current turn: {gameState.currentPlayer}</p>
-      <p>Moves recorded: {gameState.moves.length}</p>
-      <p>Winner: {gameState.status.winner ?? "None"}</p>
+    <main className="page page-gameplay" aria-label="Gameplay board">
+      <section className="gameplay-shell">
+        <h1 className="gameplay-title">
+          <span className="title-x">Tic Tac</span>
+          <span className="title-o">Toe</span>
+        </h1>
+
+        <div className="gameplay-players" aria-hidden="true">
+          <p className="player-indicator player-indicator-x">
+            <span className="player-x">X</span>
+            <span>You</span>
+          </p>
+          <p className="player-indicator player-indicator-vs">VS</p>
+          <p className="player-indicator player-indicator-o">
+            <span className="player-o">O</span>
+            <span>CPU</span>
+          </p>
+        </div>
+
+        <section className="game-board" aria-label="Tic Tac Toe board">
+          {boardCells.map(({ cell, index, isInteractive }) => (
+            <button
+              type="button"
+              key={index}
+              className={`board-cell ${cell ? `board-cell-${cell.toLowerCase()}` : ""}`}
+              onClick={() => handleCellClick(index)}
+              disabled={!isInteractive}
+              aria-label={`Cell ${index + 1}${cell ? `, marked ${cell}` : ""}`}
+            >
+              {getCellLabel(cell)}
+            </button>
+          ))}
+        </section>
+      </section>
     </main>
   );
 }
