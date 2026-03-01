@@ -218,10 +218,32 @@ body,
   display: flex;
   align-items: center;
   gap: 0.35rem;
+  opacity: 0.78;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.player-indicator-active {
+  opacity: 1;
+  transform: translateY(-1px);
 }
 
 .player-indicator-vs {
   letter-spacing: 0.04em;
+}
+
+.gameplay-status {
+  margin-top: 0.9rem;
+  min-height: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.gameplay-status-active {
+  color: #d9e6fb;
+}
+
+.gameplay-status-over {
+  color: #ffd7c3;
 }
 
 .game-board {
@@ -234,6 +256,11 @@ body,
   border: 1px solid var(--cell-border);
   border-radius: 0.8rem;
   background: rgba(61, 71, 95, 0.58);
+  transition: opacity 120ms ease;
+}
+
+.game-board-over {
+  opacity: 0.9;
 }
 
 .board-cell {

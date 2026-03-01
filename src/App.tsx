@@ -62,11 +62,31 @@ function getCellLabel(cell: BoardCell): string {
   return "";
 }
 
+function getStatusMessage(gameState: GameState): string {
+  if (gameState.status.isOver) {
+    if (gameState.status.winner === "X") {
+      return "Game over: You win!";
+    }
+
+    if (gameState.status.winner === "O") {
+      return "Game over: CPU wins.";
+    }
+
+    return "Game over: It's a draw.";
+  }
+
+  return gameState.currentPlayer === "X" ? "Your turn (X)" : "CPU turn (O)";
+}
+
 function GameplayPage() {
   const gameRef = useRef<Game>(new Game());
   const [gameState, setGameState] = useState<GameState>(() =>
     gameRef.current.getState()
   );
+  const statusMessage = getStatusMessage(gameState);
+  const isGameOver = gameState.status.isOver;
+  const isXTurn = !isGameOver && gameState.currentPlayer === "X";
+  const isOTurn = !isGameOver && gameState.currentPlayer === "O";
 
   const boardCells = useMemo(
     () =>
@@ -95,18 +115,33 @@ function GameplayPage() {
         </h1>
 
         <div className="gameplay-players" aria-hidden="true">
-          <p className="player-indicator player-indicator-x">
+          <p
+            className={`player-indicator player-indicator-x ${isXTurn ? "player-indicator-active" : ""}`}
+          >
             <span className="player-x">X</span>
             <span>You</span>
           </p>
           <p className="player-indicator player-indicator-vs">VS</p>
-          <p className="player-indicator player-indicator-o">
+          <p
+            className={`player-indicator player-indicator-o ${isOTurn ? "player-indicator-active" : ""}`}
+          >
             <span className="player-o">O</span>
             <span>CPU</span>
           </p>
         </div>
 
-        <section className="game-board" aria-label="Tic Tac Toe board">
+        <p
+          className={`gameplay-status ${isGameOver ? "gameplay-status-over" : "gameplay-status-active"}`}
+          role="status"
+          aria-live="polite"
+        >
+          {statusMessage}
+        </p>
+
+        <section
+          className={`game-board ${isGameOver ? "game-board-over" : ""}`}
+          aria-label="Tic Tac Toe board"
+        >
           {boardCells.map(({ cell, index, isInteractive }) => (
             <button
               type="button"
