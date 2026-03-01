@@ -309,20 +309,29 @@ body,
 
 .board-cell {
   min-height: clamp(72px, 20vw, 104px);
-  border: 0;
+  border: 1px solid transparent;
   border-radius: 0.55rem;
   background: var(--cell-bg);
   color: #f4f7fb;
   font: inherit;
   font-size: clamp(2rem, 9vw, 3.1rem);
   font-weight: 800;
-  cursor: pointer;
-  transition: transform 120ms ease, background-color 120ms ease;
+  transition:
+    transform 120ms ease,
+    background-color 120ms ease,
+    border-color 120ms ease,
+    opacity 120ms ease;
 }
 
-.board-cell:hover:enabled {
+.board-cell-available {
+  cursor: pointer;
+  border-color: rgba(135, 162, 205, 0.4);
+}
+
+.board-cell-available:hover:enabled {
   transform: translateY(-1px);
   background: rgba(33, 42, 67, 0.92);
+  border-color: rgba(111, 227, 235, 0.7);
 }
 
 .board-cell:focus-visible {
@@ -330,11 +339,17 @@ body,
   outline-offset: 2px;
 }
 
-.board-cell:disabled {
-  cursor: default;
+.board-cell-blocked {
+  cursor: not-allowed;
+  border-color: rgba(110, 121, 145, 0.35);
+  opacity: 0.84;
 }
 
-.board-cell:disabled:not(.board-cell-x):not(.board-cell-o) {
+.board-cell-blocked:disabled {
+  cursor: not-allowed;
+}
+
+.board-cell-blocked:disabled:not(.board-cell-x):not(.board-cell-o) {
   background: var(--cell-bg-disabled);
 }
 

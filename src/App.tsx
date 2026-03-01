@@ -201,9 +201,11 @@ function GameplayPage({ onHome }: { onHome: () => void }) {
         cell,
         index,
         isInteractive:
-          gameState.currentPlayer === "X" && gameRef.current.canPlaceMove(index),
+          !gameState.status.isOver &&
+          gameState.currentPlayer === "X" &&
+          gameRef.current.canPlaceMove(index),
       })),
-    [gameState.board, gameState.currentPlayer]
+    [gameState.board, gameState.currentPlayer, gameState.status.isOver]
   );
 
   const ensureAudioContext = (): AudioContext => {
@@ -247,6 +249,10 @@ function GameplayPage({ onHome }: { onHome: () => void }) {
   };
 
   const handleCellClick = (position: number) => {
+    if (!gameRef.current.canPlaceMove(position)) {
+      return;
+    }
+
     const didPlaceMove = gameRef.current.placeMove(position);
 
     if (didPlaceMove) {
@@ -328,10 +334,10 @@ function GameplayPage({ onHome }: { onHome: () => void }) {
             <button
               type="button"
               key={index}
-              className={`board-cell ${cell ? `board-cell-${cell.toLowerCase()}` : ""}`}
+              className={`board-cell ${isInteractive ? "board-cell-available" : "board-cell-blocked"} ${cell ? `board-cell-${cell.toLowerCase()}` : ""}`}
               onClick={() => handleCellClick(index)}
               disabled={!isInteractive}
-              aria-label={`Cell ${index + 1}${cell ? `, marked ${cell}` : ""}`}
+              aria-label={`Cell ${index + 1}${cell ? `, marked ${cell}` : ""}${!isInteractive ? ", unavailable" : ", available"}`}
             >
               {getCellLabel(cell)}
             </button>

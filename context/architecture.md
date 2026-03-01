@@ -34,3 +34,11 @@ Last updated: 2026-03-01
 - A short low-frequency "thud" is triggered only after `placeMove(position)` returns `true`, ensuring sound plays for valid placements only.
 - Audio trigger is applied for both human and CPU move paths so each successful move has consistent feedback.
 - Invalid or blocked move attempts produce no sound because their move placement calls return `false`.
+
+## Move Validity Affordances
+- Gameplay board derives a per-cell interactivity flag from `currentPlayer`, `status.isOver`, and `canPlaceMove(index)`.
+- UI disables all non-interactive cells at the button level, so illegal placements are blocked directly in the interface before move handling.
+- Board cells render explicit visual states:
+  - `board-cell-available` for valid moves with a hover-highlight affordance.
+  - `board-cell-blocked` for invalid or unavailable cells using muted styling and a not-allowed cursor.
+- Click handler guards with `canPlaceMove(position)` before placement as a defensive check that matches UI state and game rules.
