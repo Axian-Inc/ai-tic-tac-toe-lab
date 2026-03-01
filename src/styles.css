@@ -183,6 +183,9 @@ body,
 
 .gameplay-shell {
   width: min(460px, 100%);
+  position: relative;
+  overflow: hidden;
+  padding-top: 0.9rem;
   display: grid;
   justify-items: center;
 }
@@ -244,6 +247,15 @@ body,
 
 .gameplay-status-over {
   color: #ffd7c3;
+}
+
+.gameplay-loss-feedback {
+  margin-top: 0.2rem;
+  min-height: 1.3rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #ffb082;
 }
 
 .game-board {
@@ -361,6 +373,79 @@ body,
 .board-cell-o {
   color: var(--o-color);
   text-shadow: 0 0 18px rgba(255, 135, 79, 0.16);
+}
+
+.confetti-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 2;
+}
+
+.confetti-piece {
+  position: absolute;
+  top: -10%;
+  width: 0.38rem;
+  height: 0.86rem;
+  border-radius: 0.12rem;
+  opacity: 0;
+}
+
+.confetti-piece-color-0 {
+  background: #3ce7ee;
+}
+
+.confetti-piece-color-1 {
+  background: #ffb173;
+}
+
+.confetti-piece-color-2 {
+  background: #9dd67a;
+}
+
+.confetti-piece-color-3 {
+  background: #ffe18a;
+}
+
+.confetti-piece-right {
+  animation: confetti-fall-right 1150ms ease-out forwards;
+}
+
+.confetti-piece-left {
+  animation: confetti-fall-left 1150ms ease-out forwards;
+}
+
+@keyframes confetti-fall-right {
+  0% {
+    transform: translate3d(0, -8%, 0) rotate(0deg);
+    opacity: 0;
+  }
+
+  12% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate3d(26px, 130%, 0) rotate(320deg);
+    opacity: 0;
+  }
+}
+
+@keyframes confetti-fall-left {
+  0% {
+    transform: translate3d(0, -8%, 0) rotate(0deg);
+    opacity: 0;
+  }
+
+  12% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate3d(-26px, 130%, 0) rotate(-300deg);
+    opacity: 0;
+  }
 }
 
 @media (max-width: 520px) {

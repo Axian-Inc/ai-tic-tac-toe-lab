@@ -42,3 +42,12 @@ Last updated: 2026-03-01
   - `board-cell-available` for valid moves with a hover-highlight affordance.
   - `board-cell-blocked` for invalid or unavailable cells using muted styling and a not-allowed cursor.
 - Click handler guards with `canPlaceMove(position)` before placement as a defensive check that matches UI state and game rules.
+
+## Win/Loss Endgame Effects
+- Gameplay UI watches for the `status.isOver` transition (`false -> true`) to trigger one-time endgame effects for each completed game.
+- Outcome audio is synthesized with Web Audio API:
+  - Player win (`winner = X`) triggers a short ascending victory chord.
+  - Player loss (`winner = O`) triggers a short descending loss tone.
+- Winning moves (`winner !== null`) trigger a transient confetti overlay rendered on the gameplay page.
+- Loss outcomes (`winner = O`) render explicit text feedback: `Try again.`
+- Existing move-thud audio remains tied to successful `placeMove` calls for both human and CPU turns; endgame sounds are additive and outcome-specific.

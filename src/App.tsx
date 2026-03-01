@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Game, type BoardCell, type GameState } from "./game/Game";
 
 type RoutePath = "/" | "/game";
@@ -91,6 +91,7 @@ const WINNING_LINES: ReadonlyArray<readonly [number, number, number]> = [
 
 // Fixed ordering keeps equivalent-score choices deterministic.
 const POSITION_PRIORITY = [4, 0, 2, 6, 8, 1, 3, 5, 7];
+const CONFETTI_INDICES = Array.from({ length: 26 }, (_, index) => index);
 
 function hasWinningLine(board: BoardCell[], player: "X" | "O"): boolean {
   return WINNING_LINES.some(
@@ -187,9 +188,13 @@ function getCpuMovePosition(game: Game): number | null {
 function GameplayPage({ onHome }: { onHome: () => void }) {
   const gameRef = useRef<Game>(new Game());
   const audioContextRef = useRef<AudioContext | null>(null);
+  const confettiTimerRef = useRef<number | null>(null);
+  const previousGameOverRef = useRef<boolean>(false);
   const [gameState, setGameState] = useState<GameState>(() =>
     gameRef.current.getState()
   );
+  const [isConfettiVisible, setIsConfettiVisible] = useState<boolean>(false);
+  const [confettiBurstId, setConfettiBurstId] = useState<number>(0);
   const statusMessage = getStatusMessage(gameState);
   const isGameOver = gameState.status.isOver;
   const isXTurn = !isGameOver && gameState.currentPlayer === "X";
@@ -214,6 +219,23 @@ function GameplayPage({ onHome }: { onHome: () => void }) {
     }
 
     return audioContextRef.current;
+  };
+
+  const clearConfettiTimer = () => {
+    if (confettiTimerRef.current !== null) {
+      window.clearTimeout(confettiTimerRef.current);
+      confettiTimerRef.current = null;
+    }
+  };
+
+  const triggerConfetti = () => {
+    clearConfettiTimer();
+    setConfettiBurstId((current) => current + 1);
+    setIsConfettiVisible(true);
+    confettiTimerRef.current = window.setTimeout(() => {
+      setIsConfettiVisible(false);
+      confettiTimerRef.current = null;
+    }, 2200);
   };
 
   const playMoveThud = () => {
@@ -248,6 +270,71 @@ function GameplayPage({ onHome }: { onHome: () => void }) {
     oscillator.stop(now + 0.16);
   };
 
+  const playWinningSound = () => {
+    const audioContext = ensureAudioContext();
+
+    if (audioContext.state === "suspended") {
+      void audioContext.resume();
+    }
+
+    const now = audioContext.currentTime;
+    const frequencies = [523.25, 659.25, 783.99];
+    frequencies.forEach((frequency, index) => {
+      const startTime = now + index * 0.09;
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(frequency, startTime);
+      oscillator.frequency.exponentialRampToValueAtTime(
+        frequency * 1.06,
+        startTime + 0.14
+      );
+
+      gainNode.gain.setValueAtTime(0.001, startTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.08, startTime + 0.02);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.2);
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.start(startTime);
+      oscillator.stop(startTime + 0.21);
+    });
+  };
+
+  const playLosingSound = () => {
+    const audioContext = ensureAudioContext();
+
+    if (audioContext.state === "suspended") {
+      void audioContext.resume();
+    }
+
+    const now = audioContext.currentTime;
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    const filterNode = audioContext.createBiquadFilter();
+
+    oscillator.type = "sawtooth";
+    oscillator.frequency.setValueAtTime(210, now);
+    oscillator.frequency.exponentialRampToValueAtTime(90, now + 0.34);
+
+    filterNode.type = "lowpass";
+    filterNode.frequency.setValueAtTime(680, now);
+    filterNode.Q.setValueAtTime(0.7, now);
+
+    gainNode.gain.setValueAtTime(0.001, now);
+    gainNode.gain.exponentialRampToValueAtTime(0.1, now + 0.03);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+
+    oscillator.connect(filterNode);
+    filterNode.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    oscillator.start(now);
+    oscillator.stop(now + 0.4);
+  };
+
   const handleCellClick = (position: number) => {
     if (!gameRef.current.canPlaceMove(position)) {
       return;
@@ -262,6 +349,8 @@ function GameplayPage({ onHome }: { onHome: () => void }) {
   };
 
   const handlePlayAgain = () => {
+    clearConfettiTimer();
+    setIsConfettiVisible(false);
     gameRef.current = new Game();
     setGameState(gameRef.current.getState());
   };
@@ -286,7 +375,24 @@ function GameplayPage({ onHome }: { onHome: () => void }) {
   }, [gameState.currentPlayer, gameState.status.isOver]);
 
   useEffect(() => {
+    if (!previousGameOverRef.current && gameState.status.isOver) {
+      if (gameState.status.winner !== null) {
+        triggerConfetti();
+      }
+
+      if (gameState.status.winner === "X") {
+        playWinningSound();
+      } else if (gameState.status.winner === "O") {
+        playLosingSound();
+      }
+    }
+
+    previousGameOverRef.current = gameState.status.isOver;
+  }, [gameState.status.isOver, gameState.status.winner]);
+
+  useEffect(() => {
     return () => {
+      clearConfettiTimer();
       if (audioContextRef.current !== null) {
         void audioContextRef.current.close();
         audioContextRef.current = null;
@@ -297,6 +403,25 @@ function GameplayPage({ onHome }: { onHome: () => void }) {
   return (
     <main className="page page-gameplay" aria-label="Gameplay board">
       <section className="gameplay-shell">
+        {isConfettiVisible ? (
+          <div className="confetti-layer" aria-hidden="true" key={confettiBurstId}>
+            {CONFETTI_INDICES.map((index) => {
+              const style = {
+                left: `${4 + ((index * 11) % 90)}%`,
+                animationDelay: `${(index % 7) * 55}ms`,
+              } as CSSProperties;
+
+              return (
+                <span
+                  key={index}
+                  className={`confetti-piece confetti-piece-color-${index % 4} ${index % 2 === 0 ? "confetti-piece-right" : "confetti-piece-left"}`}
+                  style={style}
+                />
+              );
+            })}
+          </div>
+        ) : null}
+
         <h1 className="gameplay-title">
           <span className="title-x">Tic Tac</span>
           <span className="title-o">Toe</span>
@@ -325,6 +450,9 @@ function GameplayPage({ onHome }: { onHome: () => void }) {
         >
           {statusMessage}
         </p>
+        {isGameOver && gameState.status.winner === "O" ? (
+          <p className="gameplay-loss-feedback">Try again.</p>
+        ) : null}
 
         <section
           className={`game-board ${isGameOver ? "game-board-over" : ""}`}
