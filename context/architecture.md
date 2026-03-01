@@ -29,6 +29,11 @@ Last updated: 2026-03-01
 - `Play Again` reconstructs a fresh `Game` instance in memory and rebinds gameplay state from `getState()` to guarantee a reset board, reset move list, `currentPlayer = X`, and non-terminal status.
 - `Home` uses the app's route state navigation (`navigateTo("/")`) to return to the landing screen without page refresh.
 
+## Quit Control During Active Game
+- During in-progress gameplay (`status.isOver === false`), the secondary gameplay control is labeled `Quit`.
+- `Quit` exits the current game flow by navigating to the landing route (`/`) via in-app history state (`pushState`), without browser refresh.
+- After game completion (`status.isOver === true`), the same control remains an exit path and is labeled `Home`.
+
 ## Move Audio Feedback
 - Gameplay UI synthesizes move feedback with the Web Audio API (`AudioContext`) instead of static audio assets.
 - A short low-frequency "thud" is triggered only after `placeMove(position)` returns `true`, ensuring sound plays for valid placements only.

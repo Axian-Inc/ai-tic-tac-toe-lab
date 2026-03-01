@@ -185,7 +185,7 @@ function getCpuMovePosition(game: Game): number | null {
   return bestMove;
 }
 
-function GameplayPage({ onHome }: { onHome: () => void }) {
+function GameplayPage({ onExitGame }: { onExitGame: () => void }) {
   const gameRef = useRef<Game>(new Game());
   const audioContextRef = useRef<AudioContext | null>(null);
   const confettiTimerRef = useRef<number | null>(null);
@@ -485,9 +485,9 @@ function GameplayPage({ onHome }: { onHome: () => void }) {
           <button
             type="button"
             className="gameplay-control gameplay-control-secondary"
-            onClick={onHome}
+            onClick={onExitGame}
           >
-            Home
+            {isGameOver ? "Home" : "Quit"}
           </button>
         </div>
       </section>
@@ -515,7 +515,7 @@ export default function App() {
   };
 
   if (route === "/game") {
-    return <GameplayPage onHome={() => navigateTo("/")} />;
+    return <GameplayPage onExitGame={() => navigateTo("/")} />;
   }
 
   return <LandingPage onStartGame={() => navigateTo("/game")} />;

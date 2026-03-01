@@ -1,6 +1,6 @@
 # User Stories
 
-Last updated: 2026-02-28
+Last updated: 2026-03-01
 
 ## Epic 1: App Foundation
 
@@ -115,6 +115,11 @@ Acceptance criteria:
 ### US-13 Quit Game Control
 As a player, I want to quit an in-progress game so that I can leave gameplay intentionally.
 
+Status note (2026-03-01):
+- Added a `Quit` label for the secondary gameplay control while a game is in progress.
+- Modified post-game behavior so the same control is labeled `Home` after game completion.
+- Exiting via `Quit`/`Home` routes back to landing without a browser refresh.
+
 Acceptance criteria:
 - A `Quit` control is available during gameplay.
 - Activating `Quit` exits the current game flow to the appropriate non-game state.
@@ -122,6 +127,9 @@ Acceptance criteria:
 
 ### US-14 Post-Game Rematch Against CPU
 As a player, I want a rematch option after finishing a CPU game so that I can immediately play again.
+
+Status note (2026-03-01):
+- Skipped as a duplicate of US-09 `Play Again` behavior.
 
 Acceptance criteria:
 - After a game against the CPU finishes, a `Rematch` option is available.
