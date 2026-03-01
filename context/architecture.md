@@ -23,3 +23,8 @@ Last updated: 2026-03-01
   - Simulates move outcomes recursively for both players until terminal state (CPU win, player win, or draw).
   - Chooses highest-scoring move for CPU, preferring faster wins and slower losses.
 - Tie-breaking across equivalent scores uses fixed board priority (`[4, 0, 2, 6, 8, 1, 3, 5, 7]`) to keep behavior stable and testable.
+
+## Gameplay Replay and Exit Controls
+- Gameplay UI includes persistent `Home` control and a post-game-only `Play Again` control to support clear in-progress vs completed-game transitions.
+- `Play Again` reconstructs a fresh `Game` instance in memory and rebinds gameplay state from `getState()` to guarantee a reset board, reset move list, `currentPlayer = X`, and non-terminal status.
+- `Home` uses the app's route state navigation (`navigateTo("/")`) to return to the landing screen without page refresh.

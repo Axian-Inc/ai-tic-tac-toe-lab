@@ -184,7 +184,7 @@ function getCpuMovePosition(game: Game): number | null {
   return bestMove;
 }
 
-function GameplayPage() {
+function GameplayPage({ onHome }: { onHome: () => void }) {
   const gameRef = useRef<Game>(new Game());
   const [gameState, setGameState] = useState<GameState>(() =>
     gameRef.current.getState()
@@ -211,6 +211,11 @@ function GameplayPage() {
     if (didPlaceMove) {
       setGameState(gameRef.current.getState());
     }
+  };
+
+  const handlePlayAgain = () => {
+    gameRef.current = new Game();
+    setGameState(gameRef.current.getState());
   };
 
   useEffect(() => {
@@ -280,6 +285,25 @@ function GameplayPage() {
             </button>
           ))}
         </section>
+
+        <div className="gameplay-controls">
+          {isGameOver ? (
+            <button
+              type="button"
+              className="gameplay-control gameplay-control-primary"
+              onClick={handlePlayAgain}
+            >
+              Play Again
+            </button>
+          ) : null}
+          <button
+            type="button"
+            className="gameplay-control gameplay-control-secondary"
+            onClick={onHome}
+          >
+            Home
+          </button>
+        </div>
       </section>
     </main>
   );
@@ -305,7 +329,7 @@ export default function App() {
   };
 
   if (route === "/game") {
-    return <GameplayPage />;
+    return <GameplayPage onHome={() => navigateTo("/")} />;
   }
 
   return <LandingPage onStartGame={() => navigateTo("/game")} />;

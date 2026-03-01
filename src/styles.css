@@ -263,6 +263,50 @@ body,
   opacity: 0.9;
 }
 
+.gameplay-controls {
+  margin-top: 1rem;
+  width: min(360px, 100%);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.gameplay-control {
+  border: 0;
+  border-radius: 0.6rem;
+  font: inherit;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  padding: 0.62rem 1rem;
+  transition: transform 120ms ease, filter 120ms ease;
+}
+
+.gameplay-control:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+}
+
+.gameplay-control:active {
+  transform: translateY(0);
+}
+
+.gameplay-control:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 2px;
+}
+
+.gameplay-control-primary {
+  background: linear-gradient(180deg, #3ce7ee 0%, #28c8de 100%);
+  color: #04162c;
+}
+
+.gameplay-control-secondary {
+  background: rgba(48, 60, 88, 0.88);
+  color: var(--text-main);
+  border: 1px solid rgba(142, 156, 185, 0.42);
+}
+
 .board-cell {
   min-height: clamp(72px, 20vw, 104px);
   border: 0;

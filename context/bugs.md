@@ -10,6 +10,13 @@ This file tracks active and resolved product defects discovered during developme
 
 ## Resolved
 
+### BUG-003 Play Again Visible Before Game Over
+- Reported: 2026-03-01
+- Resolved: 2026-03-01
+- Related stories: US-09, US-14
+- Root cause: Gameplay controls always rendered the `Play Again` button without checking game status.
+- Resolution: Updated gameplay controls to render `Play Again` only when `gameState.status.isOver` is true.
+
 ### BUG-002 CPU Does Not Select Winning-Path Moves
 - Reported: 2026-03-01
 - Resolved: 2026-03-01
