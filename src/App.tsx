@@ -78,6 +78,18 @@ function getStatusMessage(gameState: GameState): string {
   return gameState.currentPlayer === "X" ? "Your turn (X)" : "CPU turn (O)";
 }
 
+function getCpuMovePosition(game: Game): number | null {
+  const board = game.getBoard();
+
+  for (let index = 0; index < board.length; index += 1) {
+    if (game.canPlaceMove(index)) {
+      return index;
+    }
+  }
+
+  return null;
+}
+
 function GameplayPage() {
   const gameRef = useRef<Game>(new Game());
   const [gameState, setGameState] = useState<GameState>(() =>
@@ -93,9 +105,10 @@ function GameplayPage() {
       gameState.board.map((cell, index) => ({
         cell,
         index,
-        isInteractive: gameRef.current.canPlaceMove(index),
+        isInteractive:
+          gameState.currentPlayer === "X" && gameRef.current.canPlaceMove(index),
       })),
-    [gameState.board]
+    [gameState.board, gameState.currentPlayer]
   );
 
   const handleCellClick = (position: number) => {
@@ -105,6 +118,24 @@ function GameplayPage() {
       setGameState(gameRef.current.getState());
     }
   };
+
+  useEffect(() => {
+    if (gameState.status.isOver || gameState.currentPlayer !== "O") {
+      return;
+    }
+
+    const cpuMovePosition = getCpuMovePosition(gameRef.current);
+
+    if (cpuMovePosition === null) {
+      return;
+    }
+
+    const didPlaceCpuMove = gameRef.current.placeMove(cpuMovePosition);
+
+    if (didPlaceCpuMove) {
+      setGameState(gameRef.current.getState());
+    }
+  }, [gameState.currentPlayer, gameState.status.isOver]);
 
   return (
     <main className="page page-gameplay" aria-label="Gameplay board">
