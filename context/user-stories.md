@@ -142,8 +142,6 @@ As a developer, I want CPU move selection to be deterministic so that behavior i
 Acceptance criteria:
 - Given the same board state and turn context, the CPU always chooses the same move.
 - CPU move selection logic is stable across repeated runs in the same app version.
-- Deterministic behavior is testable via unit or integration tests.
-
 
 ## Epic 5: Quality and Readiness
 
