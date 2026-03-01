@@ -186,6 +186,7 @@ function getCpuMovePosition(game: Game): number | null {
 
 function GameplayPage({ onHome }: { onHome: () => void }) {
   const gameRef = useRef<Game>(new Game());
+  const audioContextRef = useRef<AudioContext | null>(null);
   const [gameState, setGameState] = useState<GameState>(() =>
     gameRef.current.getState()
   );
@@ -205,10 +206,51 @@ function GameplayPage({ onHome }: { onHome: () => void }) {
     [gameState.board, gameState.currentPlayer]
   );
 
+  const ensureAudioContext = (): AudioContext => {
+    if (audioContextRef.current === null) {
+      audioContextRef.current = new AudioContext();
+    }
+
+    return audioContextRef.current;
+  };
+
+  const playMoveThud = () => {
+    const audioContext = ensureAudioContext();
+
+    if (audioContext.state === "suspended") {
+      void audioContext.resume();
+    }
+
+    const now = audioContext.currentTime;
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    const filterNode = audioContext.createBiquadFilter();
+
+    oscillator.type = "triangle";
+    oscillator.frequency.setValueAtTime(135, now);
+    oscillator.frequency.exponentialRampToValueAtTime(65, now + 0.1);
+
+    filterNode.type = "lowpass";
+    filterNode.frequency.setValueAtTime(480, now);
+    filterNode.Q.setValueAtTime(0.8, now);
+
+    gainNode.gain.setValueAtTime(0.001, now);
+    gainNode.gain.exponentialRampToValueAtTime(0.12, now + 0.01);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+
+    oscillator.connect(filterNode);
+    filterNode.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    oscillator.start(now);
+    oscillator.stop(now + 0.16);
+  };
+
   const handleCellClick = (position: number) => {
     const didPlaceMove = gameRef.current.placeMove(position);
 
     if (didPlaceMove) {
+      playMoveThud();
       setGameState(gameRef.current.getState());
     }
   };
@@ -232,9 +274,19 @@ function GameplayPage({ onHome }: { onHome: () => void }) {
     const didPlaceCpuMove = gameRef.current.placeMove(cpuMovePosition);
 
     if (didPlaceCpuMove) {
+      playMoveThud();
       setGameState(gameRef.current.getState());
     }
   }, [gameState.currentPlayer, gameState.status.isOver]);
+
+  useEffect(() => {
+    return () => {
+      if (audioContextRef.current !== null) {
+        void audioContextRef.current.close();
+        audioContextRef.current = null;
+      }
+    };
+  }, []);
 
   return (
     <main className="page page-gameplay" aria-label="Gameplay board">

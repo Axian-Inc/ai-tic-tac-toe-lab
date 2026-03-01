@@ -28,3 +28,9 @@ Last updated: 2026-03-01
 - Gameplay UI includes persistent `Home` control and a post-game-only `Play Again` control to support clear in-progress vs completed-game transitions.
 - `Play Again` reconstructs a fresh `Game` instance in memory and rebinds gameplay state from `getState()` to guarantee a reset board, reset move list, `currentPlayer = X`, and non-terminal status.
 - `Home` uses the app's route state navigation (`navigateTo("/")`) to return to the landing screen without page refresh.
+
+## Move Audio Feedback
+- Gameplay UI synthesizes move feedback with the Web Audio API (`AudioContext`) instead of static audio assets.
+- A short low-frequency "thud" is triggered only after `placeMove(position)` returns `true`, ensuring sound plays for valid placements only.
+- Audio trigger is applied for both human and CPU move paths so each successful move has consistent feedback.
+- Invalid or blocked move attempts produce no sound because their move placement calls return `false`.
