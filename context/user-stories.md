@@ -1,6 +1,6 @@
 # User Stories
 
-Last updated: 2026-03-01
+Last updated: 2026-03-06
 
 ## Epic 1: App Foundation
 
@@ -143,9 +143,45 @@ Acceptance criteria:
 - Given the same board state and turn context, the CPU always chooses the same move.
 - CPU move selection logic is stable across repeated runs in the same app version.
 
-## Epic 5: Quality and Readiness
+## Epic 5: AWS S3 Static Website Deployment
 
-### US-16 Core Logic Test Coverage
+### US-16 AWS Static Website Infrastructure
+As a developer, I want AWS infrastructure for static hosting so that the app can run as an S3 webpage.
+
+Status note (2026-03-06):
+- Added infrastructure template: `infra/s3-static-website.yaml`.
+- Added setup script: `scripts/aws/setup-s3-website.sh`.
+- Added npm command: `npm run aws:s3:setup`.
+- Deployed stack `ttt-ms-aj-s3-website` with bucket `ttt-ms-aj-tic-tac-toe-site` in `us-west-2`.
+- Configured S3 static website with `index.html` as index and error document for SPA routing.
+
+Acceptance criteria:
+- An S3 bucket is created and configured for static website hosting.
+- Bucket naming includes `ttt-ms-aj` (for example as a prefix or suffix).
+- Public read access is configured safely for website assets.
+- Website index and error document behavior is defined for SPA routing.
+
+### US-17 Build and Deploy to S3
+As a developer, I want a repeatable deployment process so that the latest app build can be published to the S3 website bucket.
+
+Acceptance criteria:
+- Production build artifacts are generated before deployment.
+- Deployment syncs the build output to the S3 website bucket.
+- Deployment target resource names include `ttt-ms-aj`.
+- A documented command/script exists for repeatable deployment.
+
+### US-18 S3 Website Validation and Access
+As a player, I want to access the deployed app via the S3 website endpoint so that I can play without local setup.
+
+Acceptance criteria:
+- The app is reachable from the S3 static website URL.
+- Landing page and gameplay route both load successfully from the deployed site.
+- Browser refresh on gameplay route is handled by configured S3 website behavior.
+- Validation notes include the deployed resource names containing `ttt-ms-aj`.
+
+## Epic 6: Quality and Readiness
+
+### US-19 Core Logic Test Coverage
 As a developer, I want tests for game logic so that regressions are caught quickly.
 
 Acceptance criteria:

@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "aws:s3:setup": "bash scripts/aws/setup-s3-website.sh"
   },
   "dependencies": {
     "react": "^18.3.1",

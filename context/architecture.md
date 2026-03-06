@@ -1,6 +1,6 @@
 # Architecture
 
-Last updated: 2026-03-01
+Last updated: 2026-03-06
 
 ## Game State Module
 - Added `src/game/Game.ts` as the centralized state container for core Tic-Tac-Toe data.
@@ -56,3 +56,12 @@ Last updated: 2026-03-01
 - Winning moves (`winner !== null`) trigger a transient confetti overlay rendered on the gameplay page.
 - Loss outcomes (`winner = O`) render explicit text feedback: `Try again.`
 - Existing move-thud audio remains tied to successful `placeMove` calls for both human and CPU turns; endgame sounds are additive and outcome-specific.
+
+## AWS S3 Static Website Infrastructure
+- Added CloudFormation template at `infra/s3-static-website.yaml` to provision static hosting infrastructure for the app.
+- Template provisions one S3 bucket configured with:
+  - Static website hosting.
+  - `index.html` as both index and error document to support SPA route refresh behavior.
+  - Public read access for website objects through a bucket policy that grants only `s3:GetObject` on bucket objects.
+- Bucket naming is constrained to include `ttt-ms-aj` via CloudFormation parameter validation.
+- Added executable helper script at `scripts/aws/setup-s3-website.sh` to deploy/update the infrastructure with consistent stack and bucket naming.

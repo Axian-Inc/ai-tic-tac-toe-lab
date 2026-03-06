@@ -1,0 +1,52 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Deploys an S3 static website bucket for ai-tic-tac-toe-lab.
+
+Parameters:
+  BucketName:
+    Type: String
+    Description: S3 bucket name for hosting the static website. Must include ttt-ms-aj.
+    AllowedPattern: '^(?=.*ttt-ms-aj)[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$'
+    ConstraintDescription: Bucket name must be 3-63 chars, lowercase, and include ttt-ms-aj.
+
+Resources:
+  WebsiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref BucketName
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        IgnorePublicAcls: false
+        BlockPublicPolicy: false
+        RestrictPublicBuckets: false
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: index.html
+
+  WebsiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref WebsiteBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowPublicReadForWebsiteObjects
+            Effect: Allow
+            Principal: '*'
+            Action: s3:GetObject
+            Resource: !Sub '${WebsiteBucket.Arn}/*'
+
+Outputs:
+  BucketName:
+    Description: Name of the website bucket.
+    Value: !Ref WebsiteBucket
+
+  WebsiteURL:
+    Description: Public static website endpoint.
+    Value: !GetAtt WebsiteBucket.WebsiteURL
+
+  RegionalDomainName:
+    Description: Regional S3 domain used for API operations.
+    Value: !GetAtt WebsiteBucket.RegionalDomainName
