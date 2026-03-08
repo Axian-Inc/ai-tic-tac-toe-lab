@@ -1,66 +1,134 @@
 # ai-tic-tac-toe-lab
 
-## Dev Container Setup Instructions
+A browser-based Tic-Tac-Toe game built with React and TypeScript. The app is fully client-side: there is no backend, no database, and no multiplayer service. A human player controls `X`, the CPU controls `O`, and gameplay runs entirely in the browser.
 
-### Pre-Requisites:
-This lab will takes place INSIDE a docker container using the Dev Containers Extension so you need very little on the host OS beyond Docker, Git, VS Code (and Dev Containers Extension)
+## Tech Stack
 
-- Docker Desktop
-- VS Code + Dev Container Extension
-- LOCAL (host OS) install of OpenAI Codex CLI (npm / brew are easiest)
-<br/>Example: brew install codex or  npm install -g @openai/codex
-<br/>NOTE: We’ll only be running codex to enable auth, you won’t need many of its features on the Host OS.
-- Axian Github account access
-- Axian AWS L&D Access Key (for AWS CLI work) 
+- React 18
+- TypeScript 5
+- Vite 5
+- Node.js 20
+- npm 10
+- AWS CloudFormation for infrastructure provisioning
+- AWS CLI v2 for deployment
 
-### Prep:
+## Architecture
 
-- Grab/generate your AWS L&D access key (URL: Axian AWS L&D Account)
+- Single-page React application with two main views: a landing page and a gameplay page.
+- Core game rules and state are centralized in [`src/game/Game.ts`](/workspaces/ai-tic-tac-toe-lab/src/game/Game.ts), which owns the board, move history, turn order, and win/draw resolution.
+- CPU decision-making lives in [`src/game/cpu.ts`](/workspaces/ai-tic-tac-toe-lab/src/game/cpu.ts) and uses deterministic minimax scoring for repeatable move selection.
+- The UI layer in [`src/App.tsx`](/workspaces/ai-tic-tac-toe-lab/src/App.tsx) renders the game, handles route-state navigation, and adds browser-only effects such as audio feedback and confetti.
+- Production hosting uses an S3 static website provisioned from [`infra/s3-static-website.yaml`](/workspaces/ai-tic-tac-toe-lab/infra/s3-static-website.yaml).
 
-- Run codex from the terminal/command prompt and login to your local codex (follow the prompts to the web UI auth).
+## Run Locally
 
-### Clone and Create Personal Branch
+### Prerequisites
 
-- Clone the repo to your local machine
+- Node.js 20
+- npm 10
+
+### Install dependencies
+
+```bash
+npm install
 ```
-git clone https://github.com/Axian-Inc/ai-tic-tac-toe-lab.git
-```
-- Checkout the starting lab branch
-```
-git checkout 00-devcontainer-starter
-```
-- Create a personal branch for your work (i.e. chadr-first-pass)
-```
-git checkout -b <firstname-last initial>-<whatever you want>
+
+### Start the development server
+
+```bash
+npm run dev
 ```
 
-### Open in Dev Container
-- Open the folder in VS Code
-- When prompted, open in Dev Container
-- Wait for the container to build and start (this may take a few minutes the first time)
-- The build will run the `copy-codex-auth.sh` script to copy your local codex auth into the container
+Vite will print the local URL, typically `http://localhost:5173`.
 
-### Verify Codex Auth Copied
-- Open a terminal in the Dev Container
-- Run `codex` and verify you are logged in (it should not prompt you to login again)
-- You can use `/status` to verify the account info
+### Build for production
 
-### AWS Setup
-- In the Dev Container terminal, run `aws configure`
-- Enter your Axian AWS L&D Access Key ID and Secret Access Key when prompted
-- For default region, enter `us-west-2`
-- For default output format, enter `json` or leave blank
-- Verify AWS CLI is working by running `aws s3 ls` (you should see a list of S3 buckets)
+```bash
+npm run build
+```
 
-### Github Setup
-- In the Dev Container terminal, verify git is working by running `git ls-remote origin` 
-- If prompted, enter your Github credentials (you may need to set up a personal access token)
-- Set GitHub account identity
-   - `git config --global user.email "you@example.com"`
-   - `git config --global user.name "Your Name"`
+### Preview the production build locally
 
-### You are now ready to begin the lab!
+```bash
+npm run preview
+```
 
+## Deploy to AWS
 
+This project deploys as an S3 static website in two steps: provision the infrastructure, then upload the built app.
 
+### Prerequisites
 
+- AWS CLI v2 installed
+- AWS credentials configured locally
+- Access to an AWS account with permission to use CloudFormation and S3
+
+Configure AWS if needed:
+
+```bash
+aws configure
+```
+
+The default region used by the scripts is `us-west-2`.
+
+### 1. Provision the S3 website infrastructure
+
+```bash
+npm run aws:s3:setup
+```
+
+Default resources:
+
+- Stack name: `ttt-ms-aj-s3-website`
+- Bucket name: `ttt-ms-aj-tic-tac-toe-site`
+- Region: `us-west-2`
+
+Important: both the stack name and bucket name must include `ttt-ms-aj`.
+
+Optional overrides:
+
+```bash
+BUCKET_NAME=ttt-ms-aj-your-unique-site \
+STACK_NAME=ttt-ms-aj-s3-website-usw2 \
+AWS_REGION=us-west-2 \
+npm run aws:s3:setup
+```
+
+### 2. Build and deploy the app to S3
+
+```bash
+npm run aws:s3:deploy
+```
+
+This command:
+
+- runs `npm run build`
+- resolves the S3 bucket from the CloudFormation stack if `BUCKET_NAME` is not set
+- syncs `dist/` to the website bucket with `--delete`
+
+Optional overrides:
+
+```bash
+BUCKET_NAME=ttt-ms-aj-your-unique-site npm run aws:s3:deploy
+```
+
+```bash
+STACK_NAME=ttt-ms-aj-s3-website-usw2 AWS_REGION=us-west-2 npm run aws:s3:deploy
+```
+
+### Deployment output
+
+After deployment, the script prints the website URL in this format:
+
+```text
+http://<bucket-name>.s3-website-<region>.amazonaws.com
+```
+
+## Useful Scripts
+
+- `npm run dev` - start the local development server
+- `npm run build` - create a production build
+- `npm run preview` - preview the production build locally
+- `npm run typecheck` - run TypeScript checks
+- `npm run aws:s3:setup` - create or update the S3 website infrastructure
+- `npm run aws:s3:deploy` - build and deploy the app to S3
