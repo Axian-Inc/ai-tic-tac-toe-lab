@@ -176,15 +176,6 @@ Acceptance criteria:
 - Deployment target resource names include `ttt-ms-aj`.
 - A documented command/script exists for repeatable deployment.
 
-### US-18 S3 Website Validation and Access
-As a player, I want to access the deployed app via the S3 website endpoint so that I can play without local setup.
-
-Acceptance criteria:
-- The app is reachable from the S3 static website URL.
-- Landing page and gameplay route both load successfully from the deployed site.
-- Browser refresh on gameplay route is handled by configured S3 website behavior.
-- Validation notes include the deployed resource names containing `ttt-ms-aj`.
-
 ## Epic 6: Quality and Readiness
 
 ### US-19 Core Logic Test Coverage
