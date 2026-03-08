@@ -25,3 +25,21 @@ Optional overrides:
 ```bash
 BUCKET_NAME=ttt-ms-aj-your-unique-site STACK_NAME=ttt-ms-aj-s3-website-usw2 AWS_REGION=us-west-2 npm run aws:s3:setup
 ```
+
+## App Deployment (US-17)
+
+Build the production app and sync it to the website bucket:
+
+```bash
+npm run aws:s3:deploy
+```
+
+Optional overrides:
+
+```bash
+BUCKET_NAME=ttt-ms-aj-your-unique-site npm run aws:s3:deploy
+```
+
+```bash
+STACK_NAME=ttt-ms-aj-s3-website-usw2 AWS_REGION=us-west-2 npm run aws:s3:deploy
+```

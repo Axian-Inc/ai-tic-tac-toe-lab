@@ -1,6 +1,6 @@
 # User Stories
 
-Last updated: 2026-03-06
+Last updated: 2026-03-08
 
 ## Epic 1: App Foundation
 
@@ -163,6 +163,12 @@ Acceptance criteria:
 
 ### US-17 Build and Deploy to S3
 As a developer, I want a repeatable deployment process so that the latest app build can be published to the S3 website bucket.
+
+Status note (2026-03-08):
+- Added deployment script: `scripts/aws/deploy-s3-website.sh`.
+- Added npm command: `npm run aws:s3:deploy`.
+- Deployment now builds production assets first, then syncs `dist/` to the S3 website bucket.
+- Default target resolution uses stack `ttt-ms-aj-s3-website` to discover bucket `ttt-ms-aj-tic-tac-toe-site` in `us-west-2`, with override support via environment variables or script flags.
 
 Acceptance criteria:
 - Production build artifacts are generated before deployment.

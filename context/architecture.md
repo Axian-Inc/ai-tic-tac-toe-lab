@@ -1,6 +1,6 @@
 # Architecture
 
-Last updated: 2026-03-06
+Last updated: 2026-03-08
 
 ## Game State Module
 - Added `src/game/Game.ts` as the centralized state container for core Tic-Tac-Toe data.
@@ -65,3 +65,11 @@ Last updated: 2026-03-06
   - Public read access for website objects through a bucket policy that grants only `s3:GetObject` on bucket objects.
 - Bucket naming is constrained to include `ttt-ms-aj` via CloudFormation parameter validation.
 - Added executable helper script at `scripts/aws/setup-s3-website.sh` to deploy/update the infrastructure with consistent stack and bucket naming.
+
+## AWS S3 Build and Deploy Workflow
+- Added executable helper script at `scripts/aws/deploy-s3-website.sh` for repeatable production deployments.
+- The deploy workflow:
+  - Runs the production build before any upload.
+  - Resolves the target bucket from the CloudFormation stack output when `BUCKET_NAME` is not provided.
+  - Syncs the generated `dist/` artifacts to the S3 website bucket with `aws s3 sync --delete`.
+- Stack and bucket guardrails still require `ttt-ms-aj` in resource names for both explicit and default targets.
