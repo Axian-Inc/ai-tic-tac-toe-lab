@@ -53,6 +53,8 @@ The backend listens on `http://0.0.0.0:3001` by default and exposes:
 
 - `GET /health`
 - `GET /ready`
+- `POST /games`
+- `GET /games?status=waiting|active|over`
 
 ### Start frontend and backend together
 
@@ -61,6 +63,20 @@ npm run dev:full
 ```
 
 This starts the Vite frontend and the backend scaffold in one terminal session.
+
+### Multiplayer API base URL override
+
+The browser app defaults to `http://localhost:3001` for multiplayer API calls.
+
+To point the frontend at a different backend, set `VITE_MULTIPLAYER_API_BASE_URL` before starting or building:
+
+```bash
+VITE_MULTIPLAYER_API_BASE_URL=https://your-api.example.com npm run dev
+```
+
+```bash
+VITE_MULTIPLAYER_API_BASE_URL=https://your-api.example.com npm run build
+```
 
 ### Build for production
 

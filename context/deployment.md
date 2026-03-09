@@ -56,3 +56,11 @@ Last updated: 2026-03-09
   - Health endpoint: `/health`
   - Readiness endpoint: `/ready`
 - Backend IaC foundation template: `infra/multiplayer-service-foundation.yaml`
+
+### US-31 Local Multiplayer Discovery
+- The landing page multiplayer lobby UI calls the backend API directly from the browser.
+- Default local backend base URL: `http://localhost:3001`
+- Optional frontend override for non-local or deployed API targets:
+  - `VITE_MULTIPLAYER_API_BASE_URL=https://your-api.example.com npm run dev`
+  - `VITE_MULTIPLAYER_API_BASE_URL=https://your-api.example.com npm run build`
+- Backend currently serves in-memory multiplayer lobbies only; restarting the service clears waiting games.

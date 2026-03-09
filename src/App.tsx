@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Game, type BoardCell, type GameState } from "./game/Game";
 import { getDeterministicCpuMovePosition } from "./game/cpu";
+import {
+  createMultiplayerGame,
+  listMultiplayerGames,
+} from "./multiplayer/api";
+import type { MultiplayerGameSummary } from "./shared/multiplayer";
 
 type RoutePath = "/" | "/game";
 
@@ -8,7 +13,69 @@ function resolveRoute(pathname: string): RoutePath {
   return pathname === "/game" ? "/game" : "/";
 }
 
+function formatMultiplayerTimestamp(timestamp: string): string {
+  const value = new Date(timestamp);
+
+  if (Number.isNaN(value.getTime())) {
+    return "Unknown";
+  }
+
+  return new Intl.DateTimeFormat(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+    month: "short",
+    day: "numeric",
+  }).format(value);
+}
+
 function LandingPage({ onStartGame }: { onStartGame: () => void }) {
+  const [isJoinPanelVisible, setIsJoinPanelVisible] = useState<boolean>(false);
+  const [waitingGames, setWaitingGames] = useState<MultiplayerGameSummary[]>([]);
+  const [createdGame, setCreatedGame] = useState<MultiplayerGameSummary | null>(null);
+  const [isLoadingWaitingGames, setIsLoadingWaitingGames] = useState<boolean>(false);
+  const [isCreatingMultiplayerGame, setIsCreatingMultiplayerGame] =
+    useState<boolean>(false);
+  const [multiplayerError, setMultiplayerError] = useState<string>("");
+
+  const loadWaitingGames = async () => {
+    setIsLoadingWaitingGames(true);
+    setMultiplayerError("");
+
+    try {
+      const response = await listMultiplayerGames("waiting");
+      setWaitingGames(response.games);
+    } catch (error) {
+      setMultiplayerError(
+        error instanceof Error ? error.message : "Unable to load waiting games."
+      );
+    } finally {
+      setIsLoadingWaitingGames(false);
+    }
+  };
+
+  const handleCreateMultiplayerGame = async () => {
+    setIsCreatingMultiplayerGame(true);
+    setIsJoinPanelVisible(true);
+    setMultiplayerError("");
+
+    try {
+      const response = await createMultiplayerGame();
+      setCreatedGame(response.game);
+      await loadWaitingGames();
+    } catch (error) {
+      setMultiplayerError(
+        error instanceof Error ? error.message : "Unable to create a multiplayer game."
+      );
+    } finally {
+      setIsCreatingMultiplayerGame(false);
+    }
+  };
+
+  const handleOpenJoinPanel = async () => {
+    setIsJoinPanelVisible(true);
+    await loadWaitingGames();
+  };
+
   return (
     <main className="page page-landing">
       <div className="landing-decor landing-decor-left" aria-hidden="true">
@@ -28,9 +95,95 @@ function LandingPage({ onStartGame }: { onStartGame: () => void }) {
         <p className="landing-intro">
           The classic game of X&apos;s and O&apos;s. Can you beat the CPU?
         </p>
-        <button type="button" className="landing-cta" onClick={onStartGame}>
-          Play vs CPU
-        </button>
+        <div className="landing-actions">
+          <button type="button" className="landing-cta" onClick={onStartGame}>
+            Play vs CPU
+          </button>
+          <button
+            type="button"
+            className="landing-cta landing-cta-secondary"
+            onClick={() => {
+              void handleCreateMultiplayerGame();
+            }}
+            disabled={isCreatingMultiplayerGame}
+          >
+            {isCreatingMultiplayerGame ? "Creating..." : "Start Multiplayer Game"}
+          </button>
+          <button
+            type="button"
+            className="landing-cta landing-cta-ghost"
+            onClick={() => {
+              void handleOpenJoinPanel();
+            }}
+            disabled={isLoadingWaitingGames}
+          >
+            {isLoadingWaitingGames && isJoinPanelVisible
+              ? "Loading..."
+              : "Join Multiplayer Game"}
+          </button>
+        </div>
+
+        {createdGame ? (
+          <section className="multiplayer-created-card" aria-live="polite">
+            <p className="multiplayer-created-label">Waiting game created</p>
+            <p className="multiplayer-created-id">{createdGame.id}</p>
+            <p className="multiplayer-created-help">
+              Share this game ID so another player can join it in the next story flow.
+            </p>
+          </section>
+        ) : null}
+
+        {isJoinPanelVisible ? (
+          <section className="multiplayer-panel" aria-live="polite">
+            <div className="multiplayer-panel-header">
+              <div>
+                <p className="multiplayer-panel-kicker">Multiplayer Lobby</p>
+                <h2>Waiting games</h2>
+              </div>
+              <button
+                type="button"
+                className="multiplayer-refresh"
+                onClick={() => {
+                  void loadWaitingGames();
+                }}
+                disabled={isLoadingWaitingGames}
+              >
+                Refresh
+              </button>
+            </div>
+
+            {multiplayerError ? (
+              <p className="multiplayer-message multiplayer-message-error">
+                {multiplayerError}
+              </p>
+            ) : null}
+
+            {!multiplayerError && waitingGames.length === 0 && !isLoadingWaitingGames ? (
+              <p className="multiplayer-message">
+                No waiting games yet. Start one to create a joinable lobby.
+              </p>
+            ) : null}
+
+            {waitingGames.length > 0 ? (
+              <ul className="multiplayer-game-list">
+                {waitingGames.map((game) => (
+                  <li key={game.id} className="multiplayer-game-card">
+                    <div>
+                      <p className="multiplayer-game-id">{game.id}</p>
+                      <p className="multiplayer-game-meta">
+                        Created {formatMultiplayerTimestamp(game.createdAt)}
+                      </p>
+                    </div>
+                    <div className="multiplayer-game-badge">
+                      <span>{game.status}</span>
+                      <span>{game.openSeatCount} seat open</span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </section>
+        ) : null}
 
         <div className="landing-meta" aria-hidden="true">
           <div>

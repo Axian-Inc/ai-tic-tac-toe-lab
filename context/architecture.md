@@ -86,6 +86,18 @@ Last updated: 2026-03-09
 - Shared game rules moved to `src/shared/game.ts` so both the browser app and backend service consume the same `Game` implementation and types without duplication.
 - `src/game/Game.ts` now acts as a frontend-facing re-export layer over the shared module to preserve existing app imports.
 
+### Create and List Multiplayer Games (US-31)
+- Backend now keeps an in-memory multiplayer lobby registry inside `server/index.ts`.
+- Added multiplayer lobby APIs:
+  - `POST /games` creates a new waiting game and returns its join identifier.
+  - `GET /games?status=waiting|active|over` returns lobby summaries filtered by status.
+- The service enforces the documented Phase 2 capacity guardrail by rejecting game creation with HTTP 429 once 25 waiting or active games exist.
+- Multiplayer lobby response contracts are shared through `src/shared/multiplayer.ts` so frontend and backend use the same status and summary shapes.
+- Landing page multiplayer discovery is implemented in `src/App.tsx`:
+  - `Start Multiplayer Game` creates a waiting lobby and shows the generated game identifier.
+  - `Join Multiplayer Game` loads waiting lobbies from the backend and displays them without disrupting the existing single-player route flow.
+- Frontend-to-backend calls are isolated in `src/multiplayer/api.ts`, with `VITE_MULTIPLAYER_API_BASE_URL` support for non-local backend URLs.
+
 ### Planned Server-Backed Multiplayer Architecture
 - Introduce a lightweight HTTP server API as the authoritative source of truth for multiplayer games.
 - Keep the shared `Game` domain rules as the core move-validation engine, reused by the server for multiplayer game progression.

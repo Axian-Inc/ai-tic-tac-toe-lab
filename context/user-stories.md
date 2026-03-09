@@ -221,6 +221,12 @@ Acceptance criteria:
 ### US-31 Create and List Multiplayer Games
 As a player, I want to create a multiplayer game and see waiting games so that a second player has something joinable.
 
+Status note (2026-03-09):
+- Added `POST /games` and `GET /games?status=waiting|active|over` to the Express multiplayer service.
+- Added in-memory waiting-game storage with a 25 concurrent waiting-or-active game cap and HTTP 429 when full.
+- Added landing-page `Start Multiplayer Game` and `Join Multiplayer Game` entry points.
+- The client can now create a waiting multiplayer game, display its identifier, and list waiting games from the backend.
+
 Deployable increment:
 - The deployed app supports game creation and discovery, even before live play is available.
 - Waiting games can be created, listed, and displayed without breaking single-player.
