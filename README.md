@@ -54,6 +54,14 @@ The backend listens on `http://0.0.0.0:3001` by default and exposes:
 - `GET /health`
 - `GET /ready`
 
+### Start frontend and backend together
+
+```bash
+npm run dev:full
+```
+
+This starts the Vite frontend and the backend scaffold in one terminal session.
+
 ### Build for production
 
 ```bash
@@ -140,6 +148,7 @@ http://<bucket-name>.s3-website-<region>.amazonaws.com
 ## Useful Scripts
 
 - `npm run dev` - start the local development server
+- `npm run dev:full` - start the local frontend and backend together
 - `npm run build` - create a production build
 - `npm run preview` - preview the production build locally
 - `npm run typecheck` - run TypeScript checks

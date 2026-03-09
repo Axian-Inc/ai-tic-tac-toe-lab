@@ -47,6 +47,7 @@ Last updated: 2026-03-09
 - Capacity guardrail for multiplayer remains 25 concurrent active or waiting games.
 
 ### US-30 Foundation Commands
+- Frontend and backend local start together: `npm run dev:full`
 - Backend local build: `npm run server:build`
 - Backend local start: `npm run server:start`
 - Backend service defaults:
