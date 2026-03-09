@@ -43,3 +43,18 @@ BUCKET_NAME=ttt-ms-aj-your-unique-site npm run aws:s3:deploy
 ```bash
 STACK_NAME=ttt-ms-aj-s3-website-usw2 AWS_REGION=us-west-2 npm run aws:s3:deploy
 ```
+
+## Multiplayer Service Foundation (US-30)
+
+Phase 2 adds a backend deployment placeholder at `multiplayer-service-foundation.yaml`.
+
+### Files
+- `multiplayer-service-foundation.yaml`: CloudFormation foundation template that currently records:
+  - expected backend port
+  - `/health` path
+  - `/ready` path
+  - `ttt-ms-aj` naming guardrail for future backend resources
+
+### Purpose
+- Establish the backend IaC entry point before multiplayer infrastructure is fully provisioned.
+- Keep the backend deployment path documented without prematurely selecting higher-cost resources.

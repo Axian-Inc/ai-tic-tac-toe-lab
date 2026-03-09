@@ -78,9 +78,17 @@ Last updated: 2026-03-09
 
 ## Phase 2
 
+### Multiplayer Service Foundation (US-30)
+- Added `server/index.ts` as the initial Express backend scaffold for Phase 2 multiplayer work.
+- Service exposes foundational operational endpoints:
+  - `GET /health` for liveness metadata.
+  - `GET /ready` for readiness confirmation that exercises the shared game domain.
+- Shared game rules moved to `src/shared/game.ts` so both the browser app and backend service consume the same `Game` implementation and types without duplication.
+- `src/game/Game.ts` now acts as a frontend-facing re-export layer over the shared module to preserve existing app imports.
+
 ### Planned Server-Backed Multiplayer Architecture
 - Introduce a lightweight HTTP server API as the authoritative source of truth for multiplayer games.
-- Keep the existing `Game` domain rules as the core move-validation engine, reused by the server for multiplayer game progression.
+- Keep the shared `Game` domain rules as the core move-validation engine, reused by the server for multiplayer game progression.
 - Split responsibilities by runtime:
   - S3-hosted client handles UI, route state, and websocket subscriptions.
   - Multiplayer server handles game creation, joins, move validation, resignation, abandonment checks, and event fan-out.
@@ -98,4 +106,5 @@ Last updated: 2026-03-09
 
 ### Planned Infrastructure Direction
 - Phase 1 S3 static website hosting remains the frontend delivery path.
-- Infrastructure as code will expand to include the multiplayer backend resources needed for low-cost AWS hosting.
+- Added `infra/multiplayer-service-foundation.yaml` as the Phase 2 backend IaC entry point to capture expected service configuration before full backend resources are provisioned.
+- Infrastructure as code will expand from that foundation into the multiplayer backend resources needed for low-cost AWS hosting.

@@ -201,6 +201,13 @@ Last updated: 2026-03-09
 ### US-30 Multiplayer Service Skeleton and Shared Domain
 As a developer, I want a backend service scaffold that reuses shared game rules so that multiplayer work starts from a deployable foundation.
 
+Status note (2026-03-09):
+- Added `server/index.ts` as a minimal Express service scaffold.
+- Added `GET /health` and `GET /ready` endpoints.
+- Extracted the `Game` domain implementation to `src/shared/game.ts` and kept frontend imports stable via `src/game/Game.ts` re-exports.
+- Added backend local scripts in `package.json` and backend TypeScript config in `tsconfig.server.json`.
+- Added IaC placeholder template `infra/multiplayer-service-foundation.yaml` and supporting docs.
+
 Deployable increment:
 - Single-player remains unchanged and deployed from S3.
 - A separate backend service can be deployed with health visibility and no user-facing multiplayer entry points yet.

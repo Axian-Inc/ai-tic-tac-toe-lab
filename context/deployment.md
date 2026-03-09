@@ -45,3 +45,13 @@ Last updated: 2026-03-09
 - Phase 2 deployment should remain low cost on AWS.
 - Frontend and backend deployment paths should stay independently deployable so stories can ship incrementally.
 - Capacity guardrail for multiplayer remains 25 concurrent active or waiting games.
+
+### US-30 Foundation Commands
+- Backend local build: `npm run server:build`
+- Backend local start: `npm run server:start`
+- Backend service defaults:
+  - Host: `0.0.0.0`
+  - Port: `3001`
+  - Health endpoint: `/health`
+  - Readiness endpoint: `/ready`
+- Backend IaC foundation template: `infra/multiplayer-service-foundation.yaml`

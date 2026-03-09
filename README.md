@@ -1,12 +1,12 @@
 # ai-tic-tac-toe-lab
 
-A browser-based Tic-Tac-Toe game built with React and TypeScript. The app is fully client-side: there is no backend, no database, and no multiplayer service. A human player controls `X`, the CPU controls `O`, and gameplay runs entirely in the browser.
+A browser-based Tic-Tac-Toe game built with React and TypeScript. The shipping player experience is still single-player in the browser, and the repo now also includes a Phase 2 multiplayer service scaffold with health/readiness endpoints for backend foundation work.
 
 ## Tech Stack
 
 - React 18
 - TypeScript 5
-- Vite 5
+- Vite 7
 - Node.js 20
 - npm 10
 - AWS CloudFormation for infrastructure provisioning
@@ -15,9 +15,11 @@ A browser-based Tic-Tac-Toe game built with React and TypeScript. The app is ful
 ## Architecture
 
 - Single-page React application with two main views: a landing page and a gameplay page.
-- Core game rules and state are centralized in [`src/game/Game.ts`](/workspaces/ai-tic-tac-toe-lab/src/game/Game.ts), which owns the board, move history, turn order, and win/draw resolution.
+- Core game rules and state are centralized in [`src/shared/game.ts`](/workspaces/ai-tic-tac-toe-lab/src/shared/game.ts), which is shared by the browser app and the multiplayer service.
+- The frontend continues to consume the shared game domain through [`src/game/Game.ts`](/workspaces/ai-tic-tac-toe-lab/src/game/Game.ts).
 - CPU decision-making lives in [`src/game/cpu.ts`](/workspaces/ai-tic-tac-toe-lab/src/game/cpu.ts) and uses deterministic minimax scoring for repeatable move selection.
 - The UI layer in [`src/App.tsx`](/workspaces/ai-tic-tac-toe-lab/src/App.tsx) renders the game, handles route-state navigation, and adds browser-only effects such as audio feedback and confetti.
+- The Phase 2 backend foundation lives in [`server/index.ts`](/workspaces/ai-tic-tac-toe-lab/server/index.ts) as an Express service exposing `/health` and `/ready`.
 - Production hosting uses an S3 static website provisioned from [`infra/s3-static-website.yaml`](/workspaces/ai-tic-tac-toe-lab/infra/s3-static-website.yaml).
 
 ## Run Locally
@@ -40,6 +42,17 @@ npm run dev
 ```
 
 Vite will print the local URL, typically `http://localhost:5173`.
+
+### Start the multiplayer service scaffold
+
+```bash
+npm run server:start
+```
+
+The backend listens on `http://0.0.0.0:3001` by default and exposes:
+
+- `GET /health`
+- `GET /ready`
 
 ### Build for production
 
@@ -130,5 +143,7 @@ http://<bucket-name>.s3-website-<region>.amazonaws.com
 - `npm run build` - create a production build
 - `npm run preview` - preview the production build locally
 - `npm run typecheck` - run TypeScript checks
+- `npm run server:build` - compile the backend scaffold to `dist-server/`
+- `npm run server:start` - build and start the backend scaffold locally
 - `npm run aws:s3:setup` - create or update the S3 website infrastructure
 - `npm run aws:s3:deploy` - build and deploy the app to S3

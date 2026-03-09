@@ -1,0 +1,41 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  Foundation placeholder for the Phase 2 multiplayer backend deployment path.
+  This template intentionally provisions no resources yet. It captures the
+  expected service configuration inputs that later Phase 2 infrastructure will
+  build on.
+
+Metadata:
+  Story:
+    Id: US-30
+    Name: Multiplayer Service Skeleton and Shared Domain
+
+Parameters:
+  ProjectTag:
+    Type: String
+    Default: ttt-ms-aj
+    Description: Project tag prefix retained for future backend resources.
+    AllowedPattern: ".*ttt-ms-aj.*"
+  ServicePort:
+    Type: Number
+    Default: 3001
+    Description: Local and deployed HTTP port for the multiplayer service.
+  HealthPath:
+    Type: String
+    Default: /health
+    Description: Health endpoint path exposed by the multiplayer service.
+  ReadinessPath:
+    Type: String
+    Default: /ready
+    Description: Readiness endpoint path exposed by the multiplayer service.
+
+Outputs:
+  PlannedServicePort:
+    Description: Expected HTTP port for the multiplayer service.
+    Value: !Ref ServicePort
+  PlannedHealthEndpoint:
+    Description: Expected health endpoint path.
+    Value: !Ref HealthPath
+  PlannedReadinessEndpoint:
+    Description: Expected readiness endpoint path.
+    Value: !Ref ReadinessPath
