@@ -12,6 +12,7 @@ Date: 2026-02-27
 ## Additional Project Tooling
 - Terraform for IaC (`infra/terraform`)
 - AWS S3 + CloudFront for static hosting
+- Playwright (installed and configured as of 2026-03-08)
 
 ## Pending Decisions
 - Unit test framework execution baseline (Vitest story implementation pending)

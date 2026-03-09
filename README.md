@@ -31,6 +31,46 @@ Tailwind CSS is configured for the Vite app using the official Vite plugin.
 
 No optional Tailwind plugins are configured in this baseline story.
 
+## Playwright Setup (TTT-62 add-on under TTT-14)
+
+Playwright configuration and scaffolding are in place for UI and API testing.
+
+- Config: `playwright.config.ts`
+- Test root: `tests/playwright`
+- POM base: `tests/playwright/pages/BasePage.ts`
+- Runner helper: `scripts/run_playwright_ui.sh`
+
+### Install Playwright (required once)
+
+```powershell
+npm install
+npx playwright install
+```
+
+### Run Playwright
+
+```powershell
+npm run test:pw
+```
+
+```powershell
+scripts/run_playwright_ui.sh ui -- tests/playwright
+```
+
+### TypeScript
+
+Playwright tests use a dedicated TS config (`tsconfig.playwright.json`) with Node types enabled.
+
+### Environment Variables
+
+If you prefer using a `.env` file for Playwright, add variables like:
+
+```
+TTT11_BASE_URL=https://<cloudfront-url>|https://<bucket>.s3.amazonaws.com/index.html
+TTT11_CLOUDFRONT_URL=https://<cloudfront-url>
+TTT11_S3_URL=https://<bucket>.s3.amazonaws.com/index.html
+```
+
 ## Manual Deploy Pipeline (TTT-12)
 
 This repository includes a local deployment script for static assets hosted on S3 + CloudFront.

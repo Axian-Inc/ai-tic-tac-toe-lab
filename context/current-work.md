@@ -10,7 +10,7 @@ Track the single active Jira ticket and execution state so work is visible and u
 - Status: IN QA
 
 ## Plan
-1. Implementation completed and transitioned `TTT-14` to `IN QA`.
+1. Implementation completed for Playwright setup add-on under TTT-14.
 2. Await QA validation and transition `IN QA` -> `In Review` when QA tasks are complete.
 
 ## Progress Log
@@ -79,9 +79,14 @@ Track the single active Jira ticket and execution state so work is visible and u
 - 2026-02-27 14:51 - Ran `npm run format` to resolve one formatting issue in `src/App.tsx`; `npm run format:check` now passes.
 - 2026-02-27 14:52 - Added implementation/validation evidence comment on Jira issue `TTT-14`.
 - 2026-02-27 14:52 - Transitioned Jira ticket `TTT-14` from `In Progress` to `IN QA`.
+- 2026-03-08 10:40 - Reopened `TTT-14` to add Playwright dependencies/configuration per user request; transitioned `IN QA` -> `In Progress`.
+- 2026-03-08 10:47 - Attempted `npm install -D @playwright/test`; failed due to network/DNS error (`EAI_AGAIN` to `registry.npmjs.org`). No dependency changes applied.
+- 2026-03-08 11:10 - Added Playwright config scaffold (`playwright.config.ts`), runner script (`scripts/run_playwright_ui.sh`), POM base class, test folder README, and Playwright ignore entries; updated `package.json` scripts/devDependency and README guidance. Install still pending local npm access.
+- 2026-03-08 11:32 - Local install completed (`npm install`, `npx playwright install`); `package-lock.json` updated.
+- 2026-03-08 11:33 - Transitioned `TTT-14` from `In Progress` back to `IN QA` after Playwright install completion.
 
 ## Blockers/Risks
 - None.
 
 ## Next Action
-- Await QA validation on `TTT-14`; transition `IN QA` -> `In Review` after QA completion.
+- Transition `TTT-14` back to `IN QA` and await QA validation.
