@@ -1,17 +1,18 @@
 # Current Work
-Date: 2026-02-27
+Date: 2026-03-10
 
 ## Purpose
 Track the single active Jira ticket and execution state so work is visible and uninterrupted.
 
 ## Active Ticket
-- Key: TTT-14
-- Summary: Add Tailwind CSS
-- Status: IN QA
+- Key: TTT-12
+- Summary: Manual deploy pipeline (local)
+- Status: In Progress
 
 ## Plan
-1. Implementation completed for Playwright setup add-on under TTT-14.
-2. Await QA validation and transition `IN QA` -> `In Review` when QA tasks are complete.
+1. Rebuild app artifacts (`npm run build`).
+2. Run deploy script (`scripts/deploy-static.ps1`) to sync S3 and invalidate CloudFront.
+3. Verify CloudFront URL returns updated content and capture evidence.
 
 ## Progress Log
 - 2026-02-16: Initialized tracking template.
@@ -84,9 +85,16 @@ Track the single active Jira ticket and execution state so work is visible and u
 - 2026-03-08 11:10 - Added Playwright config scaffold (`playwright.config.ts`), runner script (`scripts/run_playwright_ui.sh`), POM base class, test folder README, and Playwright ignore entries; updated `package.json` scripts/devDependency and README guidance. Install still pending local npm access.
 - 2026-03-08 11:32 - Local install completed (`npm install`, `npx playwright install`); `package-lock.json` updated.
 - 2026-03-08 11:33 - Transitioned `TTT-14` from `In Progress` back to `IN QA` after Playwright install completion.
+- 2026-03-10 09:00 - Paused `TTT-14` by transitioning `IN QA` -> `Groomed` to allow redeploy work on `TTT-12`.
+- 2026-03-10 09:00 - Transitioned `TTT-12` from `IN QA` -> `In Progress` to rebuild and redeploy the app.
+- 2026-03-10 09:02 - `npm run build` succeeded; `dist/` updated.
+- 2026-03-10 09:03 - Deploy script could not run: `powershell`/`pwsh` not available in this environment.
+- 2026-03-10 09:04 - AWS CLI present but `aws sts get-caller-identity` failed (no credentials configured).
+- 2026-03-10 09:12 - Ran `ttt-11-cloudfront.spec.ts`; failed due to DNS resolution errors (`EAI_AGAIN`) for CloudFront and S3 endpoints.
 
 ## Blockers/Risks
-- None.
+- AWS credentials are not configured in the current shell.
+- PowerShell is not installed, so `scripts/deploy-static.ps1` cannot run here.
 
 ## Next Action
-- Transition `TTT-14` back to `IN QA` and await QA validation.
+- Configure AWS credentials (or provide a profile) and decide whether to install PowerShell or run the equivalent AWS CLI commands manually.
