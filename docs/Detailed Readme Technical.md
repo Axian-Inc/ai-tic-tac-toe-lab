@@ -12,8 +12,13 @@
 
 ### Testing
 
+* To run locally
+  * If developing in the browser: `npm run dev -- --host 0.0.0.0 --port 5173`
 * Unit: Vitest (recommended with Vite)
+  * Run: npm run test:run
 * E2E: Playwright
+  * Run: npm run test:e2e
+  * First time: npx playwright install
 
 ### Infrastructure
 
