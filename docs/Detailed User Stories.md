@@ -48,7 +48,6 @@ So that full game flows are validated.
 
 * Install Playwright
 * Configure base URL
-* Write initial page load test
 * Ensure CLI command works
 
 ---
@@ -316,28 +315,3 @@ So that publishing is easy.
 * Testing instructions
 * Deployment instructions
 
----
-
-## Story 6.2 – Codex Integration
-
-* Ensure Codex CLI logged in
-* Document usage patterns
-* Maintain intentional memory context
-
----
-
-# Epic 7 – Quality & Work Patterns
-
----
-
-## Story 7.1 – Intentional Context Management
-
-**As a developer**,
-I want to manage context deliberately
-So that I remain efficient and structured.
-
-### Tasks
-
-* Maintain project notes
-* Track time allocation
-* Reflect on work patterns

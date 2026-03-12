@@ -63,7 +63,6 @@ The application emphasizes:
 ### Game Page
 
 * Displays:
-
   * Board
   * Turn indicator
   * Move history (internal tracking)
