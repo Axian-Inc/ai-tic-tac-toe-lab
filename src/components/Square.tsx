@@ -4,9 +4,13 @@ type SquareProps = {
   value: Cell
   onClick: () => void
   isInteractive: boolean
+  position: {
+    row: number
+    col: number
+  }
 }
 
-const Square = ({ value, onClick, isInteractive }: SquareProps) => {
+const Square = ({ value, onClick, isInteractive, position }: SquareProps) => {
   const classes = ['square']
   if (isInteractive) classes.push('square--interactive')
   if (value === 'X') classes.push('square--x')
@@ -19,6 +23,7 @@ const Square = ({ value, onClick, isInteractive }: SquareProps) => {
       disabled={!isInteractive}
       type="button"
       aria-label={value ? `Square ${value}` : 'Empty square'}
+      data-testid={`square-${position.row}-${position.col}`}
     >
       {value ?? ''}
     </button>

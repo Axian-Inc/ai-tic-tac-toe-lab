@@ -20,6 +20,7 @@ const Board = ({ board, canPlayAt, onSelect }: BoardProps) => {
               value={cell}
               onClick={() => onSelect(position)}
               isInteractive={interactive}
+              position={position}
             />
           )
         }),

@@ -51,7 +51,11 @@ Run: npm run test
 
 Tests full deterministic game including win condition.
 
-Run: npm run test:e2e
+Run: `npm run test:e2e`
+
+Container note:
+- First-time setup: `npx playwright install`
+- If browsers fail to launch in the container: `npx playwright install-deps`
 
 ## Deployment
 
