@@ -52,3 +52,12 @@ Date: 2026-02-16
     - `Verification update: deployed on 2026-02-16 14:22 PT.`
 - Repository baseline alignment:
   - Updated Terraform placeholder HTML in `infra/terraform/main.tf` to include `Manual deployment pipeline verification complete.`
+
+Date: 2026-03-13
+- Deployed the `TTT-16` landing-screen update with the standard script:
+  - Command: `powershell -ExecutionPolicy Bypass -File .\scripts\deploy-static.ps1`
+  - Build completed successfully and uploaded the current `dist/` artifacts to bucket `ttt-static-6e555da9`.
+  - CloudFront invalidation created: `IBXY9RLYEOJ7KRYJSF7AZ23H3Z` for distribution `EGW5O3MVJM73U`.
+- Verification:
+  - `curl.exe -I https://dh0s8gqynjyz6.cloudfront.net` returned `HTTP/1.1 200 OK`.
+  - Response headers showed `Last-Modified: Fri, 13 Mar 2026 15:37:01 GMT`.

@@ -1,17 +1,18 @@
 # Current Work
-Date: 2026-02-27
+Date: 2026-03-13
 
 ## Purpose
 Track the single active Jira ticket and execution state so work is visible and uninterrupted.
 
 ## Active Ticket
-- Key: TTT-14
-- Summary: Add Tailwind CSS
+- Key: TTT-16
+- Summary: Landing screen with Play vs CPU and mark selection
 - Status: IN QA
 
 ## Plan
-1. Implementation completed and transitioned `TTT-14` to `IN QA`.
-2. Await QA validation and transition `IN QA` -> `In Review` when QA tasks are complete.
+1. Await QA validation for `TTT-16`.
+2. If QA passes, transition `TTT-16` from `IN QA` to `In Review`.
+3. Keep `TTT-14` under observation for its separate QA follow-up.
 
 ## Progress Log
 - 2026-02-16: Initialized tracking template.
@@ -79,9 +80,26 @@ Track the single active Jira ticket and execution state so work is visible and u
 - 2026-02-27 14:51 - Ran `npm run format` to resolve one formatting issue in `src/App.tsx`; `npm run format:check` now passes.
 - 2026-02-27 14:52 - Added implementation/validation evidence comment on Jira issue `TTT-14`.
 - 2026-02-27 14:52 - Transitioned Jira ticket `TTT-14` from `In Progress` to `IN QA`.
+- 2026-02-27 14:57 - Started grooming session for `TTT-15` (`Documentation baseline`) and performed initial issue/transition review.
+- 2026-02-27 15:00 - Determined `TTT-15` overlaps existing implementation-story documentation updates and is obsolete as a standalone story.
+- 2026-02-27 15:00 - Added closure rationale comment to `TTT-15` and transitioned ticket directly from `To Do` to `Done`.
+- 2026-03-13 08:09 - Started grooming pass for `TTT-16`; reviewed all `context/` docs, the grooming skill workflow, and source requirements in `docs/Phase_1/phase_1_overview.md` and `docs/Phase_1_Work_Items.md`.
+- 2026-03-13 08:09 - Completed initial readiness scan for `TTT-16`; identified missing scope boundaries, landing-to-game handoff behavior, dependency notes, edge cases, and actionable testing guidance.
+- 2026-03-13 08:11 - Rewrote `TTT-16` description with explicit in/out scope, dependencies, Gherkin acceptance criteria, and normalized unit/integration/E2E testing specs.
+- 2026-03-13 08:11 - Added Grooming Notes comment to `TTT-16` documenting READY status, DoR checklist results, key decisions, and testing-spec classification summary.
+- 2026-03-13 08:11 - Transitioned Jira ticket `TTT-16` from `To Do` to `Groomed`.
+- 2026-03-13 08:11 - Closed active grooming entry and reset tracker to idle state.
+- 2026-03-13 08:14 - Received implementation assignment for `TTT-16`; reviewed current app files and transitioned the Jira ticket from `Groomed` to `In Progress`.
+- 2026-03-13 08:14 - Confirmed the app surface is still limited to `src/App.tsx`, `src/main.tsx`, and `src/index.css`, so this story can be implemented without broader architecture changes.
+- 2026-03-13 08:16 - Implemented the `TTT-16` landing flow in `src/App.tsx`: added `X`/`O`/`Random` selection, `Play vs CPU` CTA wiring, and a lightweight started-game view that exposes the resolved player/CPU marks.
+- 2026-03-13 08:16 - Validation passed locally with `npm run format:check`, `npm run lint`, and `npm run build`.
+- 2026-03-13 08:16 - Added implementation evidence comment on Jira issue `TTT-16`.
+- 2026-03-13 08:16 - Transitioned Jira ticket `TTT-16` from `In Progress` to `IN QA`.
+- 2026-03-13 08:37 - Deployed the current app with `powershell -ExecutionPolicy Bypass -File .\scripts\deploy-static.ps1`; S3 sync completed and CloudFront invalidation `IBXY9RLYEOJ7KRYJSF7AZ23H3Z` was created for distribution `EGW5O3MVJM73U`.
+- 2026-03-13 08:37 - Verified the deployed URL `https://dh0s8gqynjyz6.cloudfront.net` returned `HTTP/1.1 200 OK`; added deployment evidence comment on Jira issue `TTT-16`.
 
 ## Blockers/Risks
 - None.
 
 ## Next Action
-- Await QA validation on `TTT-14`; transition `IN QA` -> `In Review` after QA completion.
+- Await QA validation on `TTT-16`; if it passes, move it from `IN QA` to `In Review`.
