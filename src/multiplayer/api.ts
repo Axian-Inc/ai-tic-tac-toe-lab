@@ -1,5 +1,7 @@
 import type {
   CreateGameResponse,
+  GetGameResponse,
+  JoinGameResponse,
   ListGamesResponse,
   MultiplayerGameStatus,
 } from "../shared/multiplayer";
@@ -53,4 +55,21 @@ export async function listMultiplayerGames(
   const response = await fetch(`${getApiBaseUrl()}/games?${query.toString()}`);
 
   return readJsonResponse<ListGamesResponse>(response);
+}
+
+export async function getMultiplayerGame(gameId: string): Promise<GetGameResponse> {
+  const response = await fetch(`${getApiBaseUrl()}/games/${gameId}`);
+
+  return readJsonResponse<GetGameResponse>(response);
+}
+
+export async function joinMultiplayerGame(gameId: string): Promise<JoinGameResponse> {
+  const response = await fetch(`${getApiBaseUrl()}/games/${gameId}/join`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+    },
+  });
+
+  return readJsonResponse<JoinGameResponse>(response);
 }

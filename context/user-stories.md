@@ -1,6 +1,6 @@
 # User Stories - Phase 1
 
-Last updated: 2026-03-09
+Last updated: 2026-03-15
 
 ## Epic 1: App Foundation
 
@@ -240,6 +240,13 @@ Acceptance criteria:
 
 ### US-32 Join Game and Start Multiplayer Match
 As a player, I want to join an existing waiting game so that two players can start a multiplayer match.
+
+Status note (2026-03-15):
+- Added `POST /games/{id}/join` and `GET /games/{id}` to the Express multiplayer service.
+- Extended the multiplayer game record and shared contracts to track explicit player `X`/`O` assignments, join timestamps, and full game snapshots.
+- Starting a multiplayer game now enters gameplay as player `X` in a waiting multiplayer session.
+- Joining a waiting game from the landing page enters gameplay as player `O` and promotes the game to `active`.
+- Multiplayer gameplay now renders session-specific UI, labels the current player role, and supports manual refresh of the authoritative setup state while keeping the board non-authoritative until server move submission is implemented.
 
 Deployable increment:
 - Two players can complete the game setup flow end to end.

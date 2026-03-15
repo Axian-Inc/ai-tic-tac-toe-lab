@@ -1,12 +1,17 @@
 import { randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import express from "express";
-import { Game } from "../src/shared/game.js";
+import { Game, type Player } from "../src/shared/game.js";
 import type {
   CreateGameResponse,
+  GetGameResponse,
+  JoinGameResponse,
   ListGamesResponse,
+  MultiplayerGameSnapshot,
   MultiplayerGameStatus,
+  MultiplayerPlayerAssignments,
   MultiplayerGameSummary,
+  MultiplayerSession,
 } from "../src/shared/multiplayer.js";
 
 const DEFAULT_PORT = 3001;
@@ -26,15 +31,37 @@ interface MultiplayerGameRecord {
   createdAt: string;
   updatedAt: string;
   game: Game;
+  players: MultiplayerPlayerAssignments;
 }
 
 function toGameSummary(game: MultiplayerGameRecord): MultiplayerGameSummary {
+  const openSeatCount = game.players.O === null ? 1 : 0;
+
   return {
     id: game.id,
     status: game.status,
     createdAt: game.createdAt,
     updatedAt: game.updatedAt,
-    openSeatCount: game.status === "waiting" ? 1 : 0,
+    openSeatCount,
+  };
+}
+
+function toGameSnapshot(game: MultiplayerGameRecord): MultiplayerGameSnapshot {
+  return {
+    ...toGameSummary(game),
+    players: {
+      X: { ...game.players.X },
+      O: game.players.O ? { ...game.players.O } : null,
+    },
+    state: game.game.getState(),
+  };
+}
+
+function createSession(gameId: string, player: Player): MultiplayerSession {
+  return {
+    gameId,
+    player,
+    mode: "multiplayer",
   };
 }
 
@@ -54,7 +81,7 @@ class InMemoryMultiplayerGameStore {
     ).length;
   }
 
-  createWaitingGame(): MultiplayerGameSummary {
+  createWaitingGame(): MultiplayerGameRecord {
     const timestamp = new Date().toISOString();
     const game: MultiplayerGameRecord = {
       id: randomUUID(),
@@ -62,11 +89,47 @@ class InMemoryMultiplayerGameStore {
       createdAt: timestamp,
       updatedAt: timestamp,
       game: new Game(),
+      players: {
+        X: {
+          player: "X",
+          joinedAt: timestamp,
+        },
+        O: null,
+      },
     };
 
     this.games.set(game.id, game);
 
-    return toGameSummary(game);
+    return game;
+  }
+
+  get(id: string): MultiplayerGameRecord | undefined {
+    return this.games.get(id);
+  }
+
+  joinWaitingGame(id: string): MultiplayerGameRecord | "not_found" | "not_joinable" {
+    const game = this.games.get(id);
+
+    if (!game) {
+      return "not_found";
+    }
+
+    if (game.status !== "waiting" || game.players.O !== null) {
+      return "not_joinable";
+    }
+
+    const timestamp = new Date().toISOString();
+    game.players = {
+      ...game.players,
+      O: {
+        player: "O",
+        joinedAt: timestamp,
+      },
+    };
+    game.status = "active";
+    game.updatedAt = timestamp;
+
+    return game;
   }
 }
 
@@ -126,8 +189,9 @@ export function createMultiplayerApp() {
 
     const game = gameStore.createWaitingGame();
     const payload: CreateGameResponse = {
-      game,
+      game: toGameSnapshot(game),
       joinCode: game.id,
+      session: createSession(game.id, "X"),
     };
 
     response.status(201).json(payload);
@@ -150,6 +214,55 @@ export function createMultiplayerApp() {
 
     const payload: ListGamesResponse = {
       games: gameStore.list(status),
+    };
+
+    response.status(200).json(payload);
+  });
+
+  app.get("/games/:id", (request, response) => {
+    response.setHeader("cache-control", "no-store");
+
+    const game = gameStore.get(request.params.id);
+
+    if (!game) {
+      response.status(404).json({
+        status: "not_found",
+        message: "Game not found.",
+      });
+      return;
+    }
+
+    const payload: GetGameResponse = {
+      game: toGameSnapshot(game),
+    };
+
+    response.status(200).json(payload);
+  });
+
+  app.post("/games/:id/join", (request, response) => {
+    response.setHeader("cache-control", "no-store");
+
+    const result = gameStore.joinWaitingGame(request.params.id);
+
+    if (result === "not_found") {
+      response.status(404).json({
+        status: "not_found",
+        message: "Game not found.",
+      });
+      return;
+    }
+
+    if (result === "not_joinable") {
+      response.status(409).json({
+        status: "not_joinable",
+        message: "Only waiting games with one open player slot can be joined.",
+      });
+      return;
+    }
+
+    const payload: JoinGameResponse = {
+      game: toGameSnapshot(result),
+      session: createSession(result.id, "O"),
     };
 
     response.status(200).json(payload);

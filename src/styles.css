@@ -252,6 +252,12 @@ body,
   background: rgba(20, 28, 46, 0.82);
 }
 
+.multiplayer-game-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .multiplayer-game-id {
   font-weight: 800;
   color: #f7fbff;
@@ -273,6 +279,23 @@ body,
   font-weight: 700;
   color: #9fd6df;
   text-transform: capitalize;
+}
+
+.multiplayer-join-button {
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #3ce7ee 0%, #28c8de 100%);
+  color: #04162c;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 800;
+  padding: 0.55rem 1rem;
+}
+
+.multiplayer-join-button:disabled {
+  cursor: wait;
+  opacity: 0.7;
 }
 
 .landing-meta {
@@ -344,6 +367,56 @@ body,
   font-size: clamp(2rem, 8vw, 2.7rem);
   font-weight: 800;
   letter-spacing: 0.02em;
+}
+
+.gameplay-session-card {
+  width: min(360px, 100%);
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid rgba(121, 133, 162, 0.3);
+  border-radius: 0.9rem;
+  background: rgba(14, 22, 38, 0.8);
+}
+
+.gameplay-session-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.gameplay-session-kicker {
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #89cfd8;
+}
+
+.gameplay-session-id {
+  margin-top: 0.25rem;
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: var(--text-main);
+  word-break: break-all;
+}
+
+.gameplay-session-refresh {
+  flex-shrink: 0;
+}
+
+.gameplay-session-meta {
+  margin-top: 0.8rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1rem;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+}
+
+.gameplay-session-help {
+  margin-top: 0.65rem;
+  color: var(--text-muted);
 }
 
 .title-x {
@@ -607,9 +680,18 @@ body,
     flex-direction: column;
   }
 
+  .multiplayer-game-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
   .multiplayer-game-badge {
     min-width: 0;
     justify-items: start;
+  }
+
+  .gameplay-session-header {
+    flex-direction: column;
   }
 
   .landing-meta {

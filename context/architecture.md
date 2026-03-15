@@ -1,6 +1,6 @@
 # Architecture
 
-Last updated: 2026-03-09
+Last updated: 2026-03-15
 
 ## Phase 1
 
@@ -97,6 +97,24 @@ Last updated: 2026-03-09
   - `Start Multiplayer Game` creates a waiting lobby and shows the generated game identifier.
   - `Join Multiplayer Game` loads waiting lobbies from the backend and displays them without disrupting the existing single-player route flow.
 - Frontend-to-backend calls are isolated in `src/multiplayer/api.ts`, with `VITE_MULTIPLAYER_API_BASE_URL` support for non-local backend URLs.
+
+### Join Game and Start Multiplayer Match (US-32)
+- Multiplayer game records now track explicit player slots in `server/index.ts`:
+  - Player `X` is assigned when the host creates the waiting game.
+  - Player `O` is assigned only by a successful join.
+  - Waiting-to-active transition is stored explicitly when the second seat is filled.
+- Added multiplayer session and snapshot contracts in `src/shared/multiplayer.ts` so client and server share the same shapes for:
+  - Player assignments and join timestamps.
+  - Full game snapshots used by create/join/detail responses.
+  - Route/session metadata identifying the current player role.
+- Added multiplayer session APIs:
+  - `POST /games/{id}/join` joins one waiting game, promotes it to `active`, and rejects duplicate or invalid joins.
+  - `GET /games/{id}` returns the authoritative current snapshot for that multiplayer game.
+- Landing page and gameplay route flow in `src/App.tsx` now support multiplayer setup end to end:
+  - Starting a multiplayer game navigates the host into gameplay as player `X` in `waiting` state.
+  - Joining a listed waiting game navigates the second player into gameplay as player `O` in `active` state.
+  - Multiplayer gameplay renders session-specific UI and keeps the board non-authoritative/read-only until server move submission is implemented in the next story.
+- Multiplayer gameplay includes a manual refresh path backed by `GET /games/{id}` so the host can reload session status after another player joins.
 
 ### Planned Server-Backed Multiplayer Architecture
 - Introduce a lightweight HTTP server API as the authoritative source of truth for multiplayer games.

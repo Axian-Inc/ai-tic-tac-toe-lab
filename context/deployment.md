@@ -1,6 +1,6 @@
 # Deployment
 
-Last updated: 2026-03-09
+Last updated: 2026-03-15
 
 ## Phase 1
 
@@ -64,3 +64,12 @@ Last updated: 2026-03-09
   - `VITE_MULTIPLAYER_API_BASE_URL=https://your-api.example.com npm run dev`
   - `VITE_MULTIPLAYER_API_BASE_URL=https://your-api.example.com npm run build`
 - Backend currently serves in-memory multiplayer lobbies only; restarting the service clears waiting games.
+
+### US-32 Local Join Flow
+- Multiplayer setup now uses these backend endpoints locally:
+  - `POST /games` to create a waiting game with host player `X`
+  - `GET /games?status=waiting` to discover joinable games
+  - `POST /games/{id}/join` to assign player `O` and move the game to `active`
+  - `GET /games/{id}` to refresh the authoritative multiplayer setup snapshot
+- The frontend gameplay route now carries multiplayer session state in browser history so the created or joined player enters gameplay in the correct role without breaking the existing single-player route.
+- Local verification for US-32 is covered by `npm run typecheck` and `npm run build`.
