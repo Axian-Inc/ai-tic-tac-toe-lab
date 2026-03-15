@@ -245,6 +245,16 @@ Deployable increment:
 - Two players can complete the game setup flow end to end.
 - Started games move from waiting state into an active multiplayer game, even if move sync is still HTTP-driven at first.
 
+Technical notes:
+- Extend the multiplayer game model in `server/index.ts` and `src/shared/multiplayer.ts` to track player slots, joined timestamps, and the state transition from `waiting` to `active`.
+  Meaning and objective: This means the backend data shape should explicitly store who occupies player one and player two, when each player joined, and whether the game is still waiting or has started. The goal is to make join decisions and game-status transitions deterministic instead of inferred from incomplete state.
+- Add `POST /games/{id}/join` server logic that validates game existence, rejects joins for non-waiting games or full games, assigns the second player, and returns the authoritative game snapshot.
+  Meaning and objective: This means the server, not the client, must decide whether a join is valid by checking that the game exists, is still joinable, and has exactly one open player slot. The goal is to prevent duplicate joins, invalid match starts, and client-side assumptions about who successfully entered the game.
+- Update the landing-page join flow and gameplay route state so the joining client enters gameplay with multiplayer metadata such as `gameId`, player role, and mode.
+  Meaning and objective: This means the client needs to carry multiplayer-specific context into the gameplay screen instead of treating the session like a local game. The goal is to ensure the joined player knows which game to talk to, which side they control, and which UI behavior should apply.
+- Update gameplay UI state management to branch between local single-player state and server-backed multiplayer state without regressing existing single-player interactions.
+  Meaning and objective: This means gameplay code should have a clear separation between local in-browser game state and state loaded from or synchronized with the server. The goal is to add multiplayer behavior safely while keeping the current single-player path stable and unchanged for existing users.
+
 Acceptance criteria:
 - `POST /games/{id}/join` allows one second player to join a waiting game.
 - Joining a game changes its status from `waiting` to `active`.
@@ -261,6 +271,16 @@ Deployable increment:
 - Multiplayer games are playable end to end using the HTTP API, even if live updates are still basic.
 - Server authority exists before websocket fan-out is introduced.
 
+Technical notes:
+- Introduce an authoritative active-game store on the backend that keeps the shared `Game` instance or equivalent serialized multiplayer state per `gameId`.
+  Meaning and objective: This means the server must hold the official version of each multiplayer game rather than relying on either browser tab to be correct. The goal is to give every client a single source of truth for board state, turn order, move history, and outcome.
+- Add `POST /games/{id}/moves` to validate player role, expected turn, cell availability, and terminal-game constraints using the shared game rules before mutating state.
+  Meaning and objective: This means every move request should be checked by the backend to confirm the caller is allowed to act, it is their turn, the target cell is open, and the game is not already over. The goal is to prevent illegal moves and keep both players synchronized on the same valid progression.
+- Add a `GET /games/{id}` or equivalent fetch endpoint so the client can recover the current board, move history, status, and assigned side after reload.
+  Meaning and objective: This means a client should be able to request the latest game snapshot at any time instead of depending on in-memory browser state. The goal is to support refresh recovery, reconnects, and late entry into an already active session.
+- Update the client gameplay flow to submit multiplayer moves to the API, reconcile from the server response, and stop treating local board updates as authoritative in multiplayer mode.
+  Meaning and objective: This means the client should stop committing multiplayer moves locally first and instead wait for the server response before updating the displayed state. The goal is to align UI behavior with backend authority and avoid conflicting client-side interpretations of the game.
+
 Acceptance criteria:
 - `POST /games/{id}/moves` accepts a move suggestion and validates game existence, turn ownership, cell availability, and game-over state.
 - Server-side move processing updates authoritative board state, move history, current turn, and win/draw outcome.
@@ -275,6 +295,16 @@ Deployable increment:
 - Multiplayer is now real-time for active players.
 - If websocket delivery fails, the rest of the deployed application still remains usable.
 
+Technical notes:
+- Add a websocket server alongside Express that manages subscriptions by `gameId` and can broadcast multiplayer events after server-side joins and moves.
+  Meaning and objective: This means the backend needs a live push channel where connected clients subscribe to a specific game and receive updates when that game changes. The goal is to remove manual polling and make remote actions appear in near real time.
+- Define shared event payload types in `src/shared/multiplayer.ts` for connection-ready, move-applied, game-over, and resync-needed messages so client and server stay aligned.
+  Meaning and objective: This means websocket message shapes should be defined once in shared TypeScript types instead of being hand-coded differently on each side. The goal is to reduce integration bugs and make event handling predictable and testable.
+- Update multiplayer server handlers to publish websocket events after authoritative state changes while keeping HTTP responses as a fallback path.
+  Meaning and objective: This means server endpoints should first apply the official state change and then notify subscribers, while still returning normal HTTP responses to the caller. The goal is to support real-time updates without making websocket delivery a hard dependency for correctness.
+- Add client websocket lifecycle handling in the gameplay UI, including reconnect, stale-connection messaging, and HTTP refetch fallback when live sync is unavailable.
+  Meaning and objective: This means the client should handle connection open, close, reconnect attempts, and degraded states instead of assuming the socket is always healthy. The goal is to keep multiplayer usable and understandable even when real-time transport is temporarily broken.
+
 Acceptance criteria:
 - `WS /ws?gameId=...` allows clients to subscribe to multiplayer game events.
 - When a valid remote move occurs, subscribed clients receive an event with the updated state or enough data to reconcile state.
@@ -287,6 +317,16 @@ As a player, I want to resign a multiplayer game so that I can end a match I no 
 
 Deployable increment:
 - Multiplayer game completion supports an intentional early-exit path without waiting for timeout.
+
+Technical notes:
+- Add resignation state handling to the shared multiplayer model so completed games record end reason, winner, loser, and completion timestamp.
+  Meaning and objective: This means the multiplayer data model should treat resignation as a first-class game-ending outcome with explicit fields describing what happened. The goal is to preserve accurate game history and allow the UI to explain why the match ended.
+- Implement `POST /games/{id}/resign` with checks for active game status, valid player role, and idempotent rejection once the game is already over.
+  Meaning and objective: This means only an active player in an active game should be able to resign, and repeated or late resign requests should not alter finished state. The goal is to make resignation safe, predictable, and resistant to duplicate submissions.
+- Publish a resignation event through the websocket channel and update any HTTP game-detail response to expose the resignation outcome consistently.
+  Meaning and objective: This means all connected clients and future fetches should report the same resignation result using both live and pull-based channels. The goal is to keep the game-ending state consistent for the resigning player, the opponent, and any spectators.
+- Add a multiplayer-only resign control in gameplay UI that confirms intent, calls the API, and transitions the board into a locked completed state.
+  Meaning and objective: This means the interface should provide a deliberate action for multiplayer resignation and then stop further board interaction once the action succeeds. The goal is to give players a clear exit path while preventing accidental continued play after the match is over.
 
 Acceptance criteria:
 - `POST /games/{id}/resign` marks the game as over and assigns the other player as winner.
@@ -303,6 +343,16 @@ Deployable increment:
 - The system now supports a third user role without disrupting active player flows.
 - Spectators can observe active games in production even before full replay features are added.
 
+Technical notes:
+- Extend the game access model to support a `spectator` session role that can subscribe and fetch state without occupying a player slot.
+  Meaning and objective: This means the system should distinguish between people who are playing and people who are only observing, with observers not consuming one of the two player positions. The goal is to enable spectating without interfering with normal match setup.
+- Expose discoverable active-game data to the client through lobby listing or game-detail responses so spectators have a stable entry path.
+  Meaning and objective: This means the frontend needs a defined way to find games that are available to watch instead of requiring hidden or manual IDs. The goal is to make spectating a supported user flow rather than an implementation accident.
+- Allow websocket subscriptions and initial state hydration for non-player clients while keeping move, join, and resign endpoints restricted to player roles only.
+  Meaning and objective: This means spectators should be able to read game state and receive updates, but any action that changes the game must still require a player role. The goal is to preserve watch access without weakening gameplay authority or permissions.
+- Add a spectate route or gameplay mode in the client that renders the board as read-only and surfaces that the viewer is observing rather than participating.
+  Meaning and objective: This means the UI should visually communicate that the current user is not allowed to make moves and should disable interaction accordingly. The goal is to avoid confusion between playing and watching while reusing as much gameplay presentation as possible.
+
 Acceptance criteria:
 - A spectator can subscribe to a game without being one of the two players.
 - Spectators receive the current game state plus subsequent websocket events for live updates.
@@ -315,6 +365,16 @@ As a player or spectator, I want enough history stored to catch up to live games
 Deployable increment:
 - Live games become recoverable after reconnect.
 - Completed games can be viewed as replays without affecting active gameplay reliability.
+
+Technical notes:
+- Persist ordered move history and key game events as part of each multiplayer game record instead of relying only on current board state.
+  Meaning and objective: This means the backend should keep the sequence of what happened, not just the latest board snapshot. The goal is to support reconnect recovery, replay features, and debugging of how a game reached its current state.
+- Ensure game-detail responses include enough data to rebuild the board from history, including move order, player side, terminal status, and end reason.
+  Meaning and objective: This means API responses should provide all fields needed for a client to reconstruct state deterministically from stored history. The goal is to allow replay and catch-up logic to work without hidden backend-only assumptions.
+- Add client replay/catch-up logic that can derive intermediate board states from stored history without mutating authoritative live state.
+  Meaning and objective: This means the frontend should be able to step through recorded moves for viewing purposes while keeping the real server-owned game state untouched. The goal is to support replay and historical inspection without introducing side effects into live matches.
+- Decide and document whether Phase 2 retention remains in-memory for a single-process deployment or moves to a low-cost persisted store as part of deployment work.
+  Meaning and objective: This means the team must make an explicit storage decision for how long move history survives process restarts and deployments. The goal is to avoid ambiguous reliability expectations and ensure the replay feature matches the chosen operational model.
 
 Acceptance criteria:
 - Server persists ordered moves or equivalent event history for each multiplayer game.
@@ -331,6 +391,16 @@ Deployable increment:
 - Multiplayer operations can close stalled games cleanly in production.
 - Timeout handling becomes part of normal live operations without requiring manual admin intervention.
 
+Technical notes:
+- Track per-game activity timestamps on the backend, updating the relevant fields after joins, valid moves, and reconnect-driven state fetches only where appropriate.
+  Meaning and objective: This means the server should record when the game last progressed and, if needed, when the currently expected player last had a chance to act. The goal is to give abandonment checks a reliable time basis instead of guessing from incomplete events.
+- Implement `POST /games/{id}/abandonment-check` to compare current time against the expected-turn inactivity window and reject premature checks safely.
+  Meaning and objective: This means a client can ask the server to evaluate timeout status, but the server must only end the game when the full three-minute threshold has actually passed. The goal is to automate stalled-game resolution without creating false positives.
+- Record abandonment as a distinct game-over reason and determine the winner from the player who was not overdue for the required move.
+  Meaning and objective: This means abandonment should be stored differently from win, draw, or resignation, with the remaining responsive player marked as the winner. The goal is to preserve accurate outcome semantics for UI messaging, history, and later analysis.
+- Broadcast abandonment outcomes over websocket and surface countdown or stale-game messaging in the client so players understand why the game ended.
+  Meaning and objective: This means timeout results should be pushed to connected clients immediately, and the interface should explain the reason for the closure. The goal is to reduce confusion when a game ends without a normal final move.
+
 Acceptance criteria:
 - The server tracks the timestamp needed to evaluate abandonment for active multiplayer games.
 - `POST /games/{id}/abandonment-check` evaluates whether the game has been abandoned based on 3 minutes without the required move.
@@ -344,6 +414,16 @@ As a developer, I want Phase 2 infrastructure and deployment automation updated 
 Deployable increment:
 - The complete Phase 2 system is deployable through documented infrastructure and release steps.
 - Frontend and backend can be updated independently without breaking the deployed product.
+
+Technical notes:
+- Expand `infra/multiplayer-service-foundation.yaml` into deployable backend infrastructure that exposes both HTTP API and websocket connectivity while preserving the existing S3 frontend path.
+  Meaning and objective: This means the placeholder infrastructure template should become a real deployment definition for the multiplayer service, including network access for REST and websocket traffic. The goal is to make the backend shippable without changing the established static frontend hosting model.
+- Add deployment scripting and environment configuration for backend build, release, and client API/websocket endpoint injection so frontend and backend remain independently deployable.
+  Meaning and objective: This means deployment automation should cover building and releasing the backend and passing its public endpoint information into the frontend configuration. The goal is to let each side be updated on its own cadence without manual, error-prone setup steps.
+- Document operational assumptions in context, including concurrency limits, in-memory versus persistent storage decisions, health checks, and rollback expectations.
+  Meaning and objective: This means the context docs should state the system limits and operating model explicitly rather than leaving them implied in code or scripts. The goal is to make deployment, support, and future implementation decisions consistent with the intended constraints.
+- Keep AWS choices constrained to low-cost managed services or a single lightweight backend runtime that can support the Phase 2 25-game cap without introducing unnecessary infrastructure.
+  Meaning and objective: This means infrastructure selection should stay intentionally small and cheap, only adding services that are required to meet the documented multiplayer scope. The goal is to satisfy Phase 2 functionality while preserving the project’s low-cost deployment requirement.
 
 Acceptance criteria:
 - IaC defines the additional backend resources needed for multiplayer deployment.
