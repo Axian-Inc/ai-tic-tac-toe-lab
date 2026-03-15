@@ -274,6 +274,12 @@ Acceptance criteria:
 ### US-33 Server-Validated Multiplayer Moves
 As a player, I want multiplayer moves validated by the server so that both clients see the same legal game state.
 
+Status note (2026-03-15):
+- Added `POST /games/{id}/moves` to the Express multiplayer service and kept authoritative multiplayer state in the existing in-memory shared `Game` instance per `gameId`.
+- Move submission now validates game existence, active status, assigned player role, expected turn, cell availability, and game-over blocking before mutating state.
+- Active multiplayer gameplay now submits moves to the server instead of applying them locally and reconciles from the returned authoritative snapshot.
+- Multiplayer gameplay route state is now recoverable after browser refresh through URL query session metadata plus `GET /games/{id}` snapshot loading.
+
 Deployable increment:
 - Multiplayer games are playable end to end using the HTTP API, even if live updates are still basic.
 - Server authority exists before websocket fan-out is introduced.

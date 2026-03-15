@@ -3,7 +3,9 @@ import type {
   GetGameResponse,
   JoinGameResponse,
   ListGamesResponse,
+  MultiplayerMoveRequest,
   MultiplayerGameStatus,
+  SubmitMoveResponse,
 } from "../shared/multiplayer";
 
 const DEFAULT_API_BASE_URL = "http://localhost:3001";
@@ -72,4 +74,19 @@ export async function joinMultiplayerGame(gameId: string): Promise<JoinGameRespo
   });
 
   return readJsonResponse<JoinGameResponse>(response);
+}
+
+export async function submitMultiplayerMove(
+  gameId: string,
+  move: MultiplayerMoveRequest
+): Promise<SubmitMoveResponse> {
+  const response = await fetch(`${getApiBaseUrl()}/games/${gameId}/moves`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(move),
+  });
+
+  return readJsonResponse<SubmitMoveResponse>(response);
 }

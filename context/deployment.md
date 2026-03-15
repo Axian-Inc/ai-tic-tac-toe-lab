@@ -73,3 +73,8 @@ Last updated: 2026-03-15
   - `GET /games/{id}` to refresh the authoritative multiplayer setup snapshot
 - The frontend gameplay route now carries multiplayer session state in browser history so the created or joined player enters gameplay in the correct role without breaking the existing single-player route.
 - Local verification for US-32 is covered by `npm run typecheck` and `npm run build`.
+
+### US-33 Local Authoritative Move Flow
+- Multiplayer gameplay now adds `POST /games/{id}/moves` for HTTP-driven authoritative move submission before websocket fan-out exists.
+- The frontend gameplay route also persists multiplayer session details in the URL query (`mode`, `gameId`, `player`) so a page refresh can recover the session and reload current authoritative state through `GET /games/{id}`.
+- Local verification for US-33 is covered by `npm run typecheck` and `npm run build`.

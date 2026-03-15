@@ -7,11 +7,13 @@ import type {
   GetGameResponse,
   JoinGameResponse,
   ListGamesResponse,
+  MultiplayerMoveRequest,
   MultiplayerGameSnapshot,
   MultiplayerGameStatus,
   MultiplayerPlayerAssignments,
   MultiplayerGameSummary,
   MultiplayerSession,
+  SubmitMoveResponse,
 } from "../src/shared/multiplayer.js";
 
 const DEFAULT_PORT = 3001;
@@ -63,6 +65,10 @@ function createSession(gameId: string, player: Player): MultiplayerSession {
     player,
     mode: "multiplayer",
   };
+}
+
+function hasAssignedPlayer(game: MultiplayerGameRecord, player: Player): boolean {
+  return player === "X" ? true : game.players.O !== null;
 }
 
 class InMemoryMultiplayerGameStore {
@@ -128,6 +134,53 @@ class InMemoryMultiplayerGameStore {
     };
     game.status = "active";
     game.updatedAt = timestamp;
+
+    return game;
+  }
+
+  submitMove(
+    id: string,
+    player: Player,
+    position: number
+  ):
+    | MultiplayerGameRecord
+    | "not_found"
+    | "not_active"
+    | "player_not_joined"
+    | "wrong_turn"
+    | "invalid_move" {
+    const game = this.games.get(id);
+
+    if (!game) {
+      return "not_found";
+    }
+
+    if (game.status !== "active") {
+      return "not_active";
+    }
+
+    if (!hasAssignedPlayer(game, player)) {
+      return "player_not_joined";
+    }
+
+    if (game.game.getCurrentPlayer() !== player) {
+      return "wrong_turn";
+    }
+
+    if (!game.game.canPlaceMove(position)) {
+      return "invalid_move";
+    }
+
+    const didPlaceMove = game.game.placeMove(position);
+
+    if (!didPlaceMove) {
+      return "invalid_move";
+    }
+
+    game.updatedAt = new Date().toISOString();
+    if (game.game.getStatus().isOver) {
+      game.status = "over";
+    }
 
     return game;
   }
@@ -263,6 +316,73 @@ export function createMultiplayerApp() {
     const payload: JoinGameResponse = {
       game: toGameSnapshot(result),
       session: createSession(result.id, "O"),
+    };
+
+    response.status(200).json(payload);
+  });
+
+  app.post("/games/:id/moves", (request, response) => {
+    response.setHeader("cache-control", "no-store");
+
+    const { player, position } = (request.body ?? {}) as Partial<MultiplayerMoveRequest>;
+
+    if ((player !== "X" && player !== "O") || !Number.isInteger(position)) {
+      response.status(400).json({
+        status: "invalid_move_request",
+        message: "Move requests must include a valid player and integer board position.",
+      });
+      return;
+    }
+
+    const validatedPosition = position as number;
+    const result = gameStore.submitMove(
+      request.params.id,
+      player,
+      validatedPosition
+    );
+
+    if (result === "not_found") {
+      response.status(404).json({
+        status: "not_found",
+        message: "Game not found.",
+      });
+      return;
+    }
+
+    if (result === "not_active") {
+      response.status(409).json({
+        status: "not_active",
+        message: "Moves are only accepted for active multiplayer games.",
+      });
+      return;
+    }
+
+    if (result === "player_not_joined") {
+      response.status(409).json({
+        status: "player_not_joined",
+        message: "That player is not assigned to this game.",
+      });
+      return;
+    }
+
+    if (result === "wrong_turn") {
+      response.status(409).json({
+        status: "wrong_turn",
+        message: "It is not that player's turn.",
+      });
+      return;
+    }
+
+    if (result === "invalid_move") {
+      response.status(409).json({
+        status: "invalid_move",
+        message: "That move is not allowed for the current game state.",
+      });
+      return;
+    }
+
+    const payload: SubmitMoveResponse = {
+      game: toGameSnapshot(result),
     };
 
     response.status(200).json(payload);

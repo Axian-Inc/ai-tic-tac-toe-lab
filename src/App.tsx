@@ -6,6 +6,7 @@ import {
   getMultiplayerGame,
   joinMultiplayerGame,
   listMultiplayerGames,
+  submitMultiplayerMove,
 } from "./multiplayer/api";
 import type {
   MultiplayerGameSnapshot,
@@ -21,7 +22,7 @@ interface SinglePlayerGameView {
 
 interface MultiplayerGameView {
   kind: "multiplayer";
-  game: MultiplayerGameSnapshot;
+  game: MultiplayerGameSnapshot | null;
   session: MultiplayerSession;
 }
 
@@ -35,7 +36,43 @@ function resolveRoute(pathname: string): RoutePath {
   return pathname === "/game" ? "/game" : "/";
 }
 
-function readHistoryGameView(path: RoutePath, historyState: unknown): GameView {
+function createMultiplayerGameView(
+  session: MultiplayerSession,
+  game: MultiplayerGameSnapshot | null
+): MultiplayerGameView {
+  return {
+    kind: "multiplayer",
+    game,
+    session,
+  };
+}
+
+function readSearchMultiplayerSession(search: string): MultiplayerSession | null {
+  const query = new URLSearchParams(search);
+  const mode = query.get("mode");
+  const gameId = query.get("gameId");
+  const player = query.get("player");
+
+  if (
+    mode !== "multiplayer" ||
+    !gameId ||
+    (player !== "X" && player !== "O")
+  ) {
+    return null;
+  }
+
+  return {
+    gameId,
+    player,
+    mode: "multiplayer",
+  };
+}
+
+function readHistoryGameView(
+  path: RoutePath,
+  historyState: unknown,
+  search: string
+): GameView {
   if (path !== "/game") {
     return SINGLE_PLAYER_GAME_VIEW;
   }
@@ -46,7 +83,26 @@ function readHistoryGameView(path: RoutePath, historyState: unknown): GameView {
     return state.gameView;
   }
 
+  const multiplayerSession = readSearchMultiplayerSession(search);
+  if (multiplayerSession) {
+    return createMultiplayerGameView(multiplayerSession, null);
+  }
+
   return SINGLE_PLAYER_GAME_VIEW;
+}
+
+function buildGameLocation(path: RoutePath, gameView?: GameView): string {
+  if (path !== "/game" || !gameView || gameView.kind !== "multiplayer") {
+    return path;
+  }
+
+  const query = new URLSearchParams({
+    mode: gameView.session.mode,
+    gameId: gameView.session.gameId,
+    player: gameView.session.player,
+  });
+
+  return `${path}?${query.toString()}`;
 }
 
 function formatMultiplayerTimestamp(timestamp: string): string {
@@ -93,9 +149,13 @@ function getSinglePlayerStatusMessage(gameState: GameState): string {
 }
 
 function getMultiplayerStatusMessage(
-  game: MultiplayerGameSnapshot,
+  game: MultiplayerGameSnapshot | null,
   session: MultiplayerSession
 ): string {
+  if (game === null) {
+    return "Loading multiplayer game...";
+  }
+
   if (game.status === "waiting") {
     return "Waiting for player O to join this match.";
   }
@@ -161,11 +221,9 @@ function LandingPage({
 
     try {
       const response = await createMultiplayerGame();
-      onOpenMultiplayerGame({
-        kind: "multiplayer",
-        game: response.game,
-        session: response.session,
-      });
+      onOpenMultiplayerGame(
+        createMultiplayerGameView(response.session, response.game)
+      );
     } catch (error) {
       setMultiplayerError(
         error instanceof Error ? error.message : "Unable to create a multiplayer game."
@@ -182,11 +240,9 @@ function LandingPage({
 
     try {
       const response = await joinMultiplayerGame(gameId);
-      onOpenMultiplayerGame({
-        kind: "multiplayer",
-        game: response.game,
-        session: response.session,
-      });
+      onOpenMultiplayerGame(
+        createMultiplayerGameView(response.session, response.game)
+      );
     } catch (error) {
       setMultiplayerError(
         error instanceof Error ? error.message : "Unable to join that multiplayer game."
@@ -362,34 +418,52 @@ function GameplayPage({
   const [confettiBurstId, setConfettiBurstId] = useState<number>(0);
   const [isRefreshingMultiplayerGame, setIsRefreshingMultiplayerGame] =
     useState<boolean>(false);
-  const [multiplayerRefreshError, setMultiplayerRefreshError] = useState<string>("");
+  const [isSubmittingMultiplayerMove, setIsSubmittingMultiplayerMove] =
+    useState<boolean>(false);
+  const [multiplayerError, setMultiplayerError] = useState<string>("");
 
   const displayedGameState = multiplayerGame?.state ?? singlePlayerGameState;
   const statusMessage =
-    multiplayerGame && multiplayerSession
+    multiplayerSession && isMultiplayer
       ? getMultiplayerStatusMessage(multiplayerGame, multiplayerSession)
       : getSinglePlayerStatusMessage(displayedGameState);
   const isGameOver = displayedGameState.status.isOver;
   const isXTurn = !isGameOver && displayedGameState.currentPlayer === "X";
   const isOTurn = !isGameOver && displayedGameState.currentPlayer === "O";
-  const isBoardInteractive = !isMultiplayer;
+  const isLoadingMultiplayerGame = isMultiplayer && multiplayerGame === null;
 
   const boardCells = useMemo(
     () =>
-      displayedGameState.board.map((cell, index) => ({
-        cell,
-        index,
-        isInteractive:
-          isBoardInteractive &&
+      displayedGameState.board.map((cell, index) => {
+        const isInteractive =
+          !isMultiplayer &&
           !displayedGameState.status.isOver &&
           displayedGameState.currentPlayer === "X" &&
-          gameRef.current.canPlaceMove(index),
-      })),
+          gameRef.current.canPlaceMove(index);
+
+        const isMultiplayerInteractive =
+          isMultiplayer &&
+          multiplayerGame !== null &&
+          multiplayerGame.status === "active" &&
+          !multiplayerGame.state.status.isOver &&
+          !isSubmittingMultiplayerMove &&
+          multiplayerGame.state.currentPlayer === multiplayerSession?.player &&
+          cell === null;
+
+        return {
+          cell,
+          index,
+          isInteractive: isInteractive || isMultiplayerInteractive,
+        };
+      }),
     [
       displayedGameState.board,
       displayedGameState.currentPlayer,
       displayedGameState.status.isOver,
-      isBoardInteractive,
+      isMultiplayer,
+      isSubmittingMultiplayerMove,
+      multiplayerGame,
+      multiplayerSession,
     ]
   );
 
@@ -515,19 +589,6 @@ function GameplayPage({
     oscillator.stop(now + 0.4);
   };
 
-  const handleCellClick = (position: number) => {
-    if (isMultiplayer || !gameRef.current.canPlaceMove(position)) {
-      return;
-    }
-
-    const didPlaceMove = gameRef.current.placeMove(position);
-
-    if (didPlaceMove) {
-      playMoveThud();
-      setSinglePlayerGameState(gameRef.current.getState());
-    }
-  };
-
   const handlePlayAgain = () => {
     clearConfettiTimer();
     setIsConfettiVisible(false);
@@ -535,23 +596,25 @@ function GameplayPage({
     setSinglePlayerGameState(gameRef.current.getState());
   };
 
-  const handleRefreshMultiplayerGame = async () => {
+  const syncMultiplayerGame = async () => {
     if (!multiplayerSession) {
       return;
     }
 
+    const response = await getMultiplayerGame(multiplayerSession.gameId);
+    onUpdateMultiplayerGame(
+      createMultiplayerGameView(multiplayerSession, response.game)
+    );
+  };
+
+  const handleRefreshMultiplayerGame = async () => {
     setIsRefreshingMultiplayerGame(true);
-    setMultiplayerRefreshError("");
+    setMultiplayerError("");
 
     try {
-      const response = await getMultiplayerGame(multiplayerSession.gameId);
-      onUpdateMultiplayerGame({
-        kind: "multiplayer",
-        game: response.game,
-        session: multiplayerSession,
-      });
+      await syncMultiplayerGame();
     } catch (error) {
-      setMultiplayerRefreshError(
+      setMultiplayerError(
         error instanceof Error ? error.message : "Unable to refresh multiplayer game."
       );
     } finally {
@@ -559,8 +622,77 @@ function GameplayPage({
     }
   };
 
+  const handleCellClick = (position: number) => {
+    if (
+      isMultiplayer &&
+      multiplayerGame !== null &&
+      multiplayerSession !== null &&
+      multiplayerGame.status === "active" &&
+      multiplayerGame.state.currentPlayer === multiplayerSession.player &&
+      multiplayerGame.state.board[position] === null &&
+      !multiplayerGame.state.status.isOver &&
+      !isSubmittingMultiplayerMove
+    ) {
+      setIsSubmittingMultiplayerMove(true);
+      setMultiplayerError("");
+
+      void submitMultiplayerMove(multiplayerSession.gameId, {
+        player: multiplayerSession.player,
+        position,
+      })
+        .then((response) => {
+          playMoveThud();
+          onUpdateMultiplayerGame(
+            createMultiplayerGameView(multiplayerSession, response.game)
+          );
+        })
+        .catch((error: unknown) => {
+          setMultiplayerError(
+            error instanceof Error
+              ? error.message
+              : "Unable to submit multiplayer move."
+          );
+        })
+        .finally(() => {
+          setIsSubmittingMultiplayerMove(false);
+        });
+
+      return;
+    }
+
+    if (!isMultiplayer && gameRef.current.canPlaceMove(position)) {
+      const didPlaceMove = gameRef.current.placeMove(position);
+
+      if (didPlaceMove) {
+        playMoveThud();
+        setSinglePlayerGameState(gameRef.current.getState());
+      }
+    }
+  };
+
   useEffect(() => {
-    if (isMultiplayer || singlePlayerGameState.status.isOver || singlePlayerGameState.currentPlayer !== "O") {
+    if (
+      !isMultiplayer ||
+      multiplayerSession === null ||
+      multiplayerGame !== null
+    ) {
+      return;
+    }
+
+    setMultiplayerError("");
+    void syncMultiplayerGame().catch((error: unknown) => {
+      setMultiplayerError(
+        error instanceof Error ? error.message : "Unable to load multiplayer game."
+      );
+    });
+  }, [isMultiplayer, multiplayerGame, multiplayerSession]);
+
+  useEffect(() => {
+    if (
+      isMultiplayer ||
+      singlePlayerGameState.status.isOver ||
+      singlePlayerGameState.currentPlayer !== "O"
+    ) {
       return;
     }
 
@@ -576,7 +708,11 @@ function GameplayPage({
       playMoveThud();
       setSinglePlayerGameState(gameRef.current.getState());
     }
-  }, [isMultiplayer, singlePlayerGameState.currentPlayer, singlePlayerGameState.status.isOver]);
+  }, [
+    isMultiplayer,
+    singlePlayerGameState.currentPlayer,
+    singlePlayerGameState.status.isOver,
+  ]);
 
   useEffect(() => {
     if (isMultiplayer) {
@@ -609,6 +745,13 @@ function GameplayPage({
     };
   }, []);
 
+  const multiplayerHelpMessage =
+    multiplayerGame === null
+      ? "Loading the authoritative multiplayer state from the server."
+      : multiplayerGame.status === "waiting"
+        ? "Share this match ID with another player. Refresh after they join to see the active session."
+        : "Moves are validated by the server. Use Refresh Match to pull the latest state after the opponent plays.";
+
   return (
     <main className="page page-gameplay" aria-label="Gameplay board">
       <section className="gameplay-shell">
@@ -636,12 +779,12 @@ function GameplayPage({
           <span className="title-o">Toe</span>
         </h1>
 
-        {multiplayerGame && multiplayerSession ? (
+        {multiplayerSession ? (
           <section className="gameplay-session-card" aria-label="Multiplayer session">
             <div className="gameplay-session-header">
               <div>
                 <p className="gameplay-session-kicker">Multiplayer Match</p>
-                <p className="gameplay-session-id">{multiplayerGame.id}</p>
+                <p className="gameplay-session-id">{multiplayerSession.gameId}</p>
               </div>
               <button
                 type="button"
@@ -649,24 +792,22 @@ function GameplayPage({
                 onClick={() => {
                   void handleRefreshMultiplayerGame();
                 }}
-                disabled={isRefreshingMultiplayerGame}
+                disabled={isRefreshingMultiplayerGame || isLoadingMultiplayerGame}
               >
                 {isRefreshingMultiplayerGame ? "Refreshing..." : "Refresh Match"}
               </button>
             </div>
             <div className="gameplay-session-meta">
               <span>You are player {multiplayerSession.player}</span>
-              <span>Status: {multiplayerGame.status}</span>
-              <span>Created {formatMultiplayerTimestamp(multiplayerGame.createdAt)}</span>
+              {multiplayerGame ? <span>Status: {multiplayerGame.status}</span> : null}
+              {multiplayerGame ? (
+                <span>Created {formatMultiplayerTimestamp(multiplayerGame.createdAt)}</span>
+              ) : null}
             </div>
-            <p className="gameplay-session-help">
-              {multiplayerGame.status === "waiting"
-                ? "Share this match ID with another player. Refresh after they join to see the active session."
-                : "Match setup is complete. Multiplayer move submission is added in the next story."}
-            </p>
-            {multiplayerRefreshError ? (
+            <p className="gameplay-session-help">{multiplayerHelpMessage}</p>
+            {multiplayerError ? (
               <p className="multiplayer-message multiplayer-message-error">
-                {multiplayerRefreshError}
+                {multiplayerError}
               </p>
             ) : null}
           </section>
@@ -753,14 +894,20 @@ export default function App() {
     resolveRoute(window.location.pathname)
   );
   const [gameView, setGameView] = useState<GameView>(() =>
-    readHistoryGameView(resolveRoute(window.location.pathname), window.history.state)
+    readHistoryGameView(
+      resolveRoute(window.location.pathname),
+      window.history.state,
+      window.location.search
+    )
   );
 
   useEffect(() => {
     const onPopState = () => {
       const nextRoute = resolveRoute(window.location.pathname);
       setRoute(nextRoute);
-      setGameView(readHistoryGameView(nextRoute, window.history.state));
+      setGameView(
+        readHistoryGameView(nextRoute, window.history.state, window.location.search)
+      );
     };
 
     window.addEventListener("popstate", onPopState);
@@ -768,14 +915,23 @@ export default function App() {
   }, []);
 
   const navigateTo = (path: RoutePath, nextGameView?: GameView) => {
-    const resolvedGameView = path === "/game" ? nextGameView ?? SINGLE_PLAYER_GAME_VIEW : undefined;
-    window.history.pushState({ gameView: resolvedGameView }, "", path);
+    const resolvedGameView =
+      path === "/game" ? nextGameView ?? SINGLE_PLAYER_GAME_VIEW : undefined;
+    window.history.pushState(
+      { gameView: resolvedGameView },
+      "",
+      buildGameLocation(path, resolvedGameView)
+    );
     setRoute(path);
     setGameView(resolvedGameView ?? SINGLE_PLAYER_GAME_VIEW);
   };
 
   const updateMultiplayerGame = (nextGameView: MultiplayerGameView) => {
-    window.history.replaceState({ gameView: nextGameView }, "", window.location.pathname);
+    window.history.replaceState(
+      { gameView: nextGameView },
+      "",
+      buildGameLocation("/game", nextGameView)
+    );
     setGameView(nextGameView);
   };
 

@@ -113,8 +113,23 @@ Last updated: 2026-03-15
 - Landing page and gameplay route flow in `src/App.tsx` now support multiplayer setup end to end:
   - Starting a multiplayer game navigates the host into gameplay as player `X` in `waiting` state.
   - Joining a listed waiting game navigates the second player into gameplay as player `O` in `active` state.
-  - Multiplayer gameplay renders session-specific UI and keeps the board non-authoritative/read-only until server move submission is implemented in the next story.
+  - Multiplayer gameplay renders session-specific UI and carries the metadata needed for later authoritative move submission and refresh.
 - Multiplayer gameplay includes a manual refresh path backed by `GET /games/{id}` so the host can reload session status after another player joins.
+
+### Server-Validated Multiplayer Moves (US-33)
+- The in-memory multiplayer store continues to hold the authoritative shared `Game` instance per `gameId`; `US-33` extends that same store instead of introducing a second multiplayer state model.
+- Added `POST /games/{id}/moves` in `server/index.ts` for authoritative move submission:
+  - Validates game existence and `active` status.
+  - Validates that the submitted player has an assigned seat in the game.
+  - Validates expected turn ownership against the shared `Game` instance.
+  - Validates cell availability and terminal-state blocking through shared game-rule checks before mutating state.
+  - Updates multiplayer record status from `active` to `over` when the shared game reaches a terminal state.
+- Added shared move request/response contracts in `src/shared/multiplayer.ts` so the browser and backend reuse the same payload definitions for server-validated move submission.
+- Multiplayer gameplay in `src/App.tsx` now submits moves to the backend instead of applying them locally:
+  - Active multiplayer cells are interactive only for the current assigned player and only when the authoritative snapshot says the move is legal.
+  - Successful move responses replace client state with the returned authoritative snapshot.
+  - Invalid submissions surface server error messages in the multiplayer session UI without mutating client state optimistically.
+- Gameplay route recovery now uses the existing `GET /games/{id}` path together with multiplayer query parameters (`gameId`, `player`, `mode`) so a browser refresh can reconstruct the multiplayer session and reload the authoritative snapshot.
 
 ### Planned Server-Backed Multiplayer Architecture
 - Introduce a lightweight HTTP server API as the authoritative source of truth for multiplayer games.

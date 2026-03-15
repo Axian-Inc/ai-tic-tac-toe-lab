@@ -46,6 +46,15 @@ export interface GetGameResponse {
   game: MultiplayerGameSnapshot;
 }
 
+export interface MultiplayerMoveRequest {
+  player: Player;
+  position: number;
+}
+
+export interface SubmitMoveResponse {
+  game: MultiplayerGameSnapshot;
+}
+
 export interface ListGamesResponse {
   games: MultiplayerGameSummary[];
 }
