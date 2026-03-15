@@ -5,14 +5,14 @@ Date: 2026-03-10
 Track the single active Jira ticket and execution state so work is visible and uninterrupted.
 
 ## Active Ticket
-- Key: TTT-12
-- Summary: Manual deploy pipeline (local)
-- Status: In Progress
+- Key: None
+- Summary: None
+- Status: Idle
 
 ## Plan
-1. Rebuild app artifacts (`npm run build`).
-2. Run deploy script (`scripts/deploy-static.ps1`) to sync S3 and invalidate CloudFront.
-3. Verify CloudFront URL returns updated content and capture evidence.
+1. Select next Jira ticket.
+2. Review `context/` docs and Jira acceptance criteria.
+3. Update this tracker with the new active plan.
 
 ## Progress Log
 - 2026-02-16: Initialized tracking template.
@@ -91,10 +91,15 @@ Track the single active Jira ticket and execution state so work is visible and u
 - 2026-03-10 09:03 - Deploy script could not run: `powershell`/`pwsh` not available in this environment.
 - 2026-03-10 09:04 - AWS CLI present but `aws sts get-caller-identity` failed (no credentials configured).
 - 2026-03-10 09:12 - Ran `ttt-11-cloudfront.spec.ts`; failed due to DNS resolution errors (`EAI_AGAIN`) for CloudFront and S3 endpoints.
+- 2026-03-13 02:39 - Added Jira note for `TTT-12` ("No test needed.") and transitioned `IN QA` -> `In Review` -> `Done`. Cleared active ticket entry.
+- 2026-03-13 02:39 - Added Jira note for `TTT-14` ("No test needed.") and transitioned `IN QA` -> `In Review` -> `Done`.
+- 2026-03-13 02:43 - Added Jira note for `TTT-13` ("No test needed.") and transitioned `IN QA` -> `In Review` -> `Done`.
+- 2026-03-13 02:50 - Added test run failure note to `TTT-11` documenting DNS resolution errors (`EAI_AGAIN`) for CloudFront and S3 endpoints.
+- 2026-03-15 17:12 UTC - Added TTT-16 coverage-gap scenarios to Jira `TTT-64` as a comment.
 
 ## Blockers/Risks
 - AWS credentials are not configured in the current shell.
 - PowerShell is not installed, so `scripts/deploy-static.ps1` cannot run here.
 
 ## Next Action
-- Configure AWS credentials (or provide a profile) and decide whether to install PowerShell or run the equivalent AWS CLI commands manually.
+- Select the next Jira ticket and update this tracker.
