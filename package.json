@@ -11,6 +11,7 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "lint": "eslint . --ext .ts,.tsx --max-warnings 0",
+    "test:unit": "rm -rf dist-unit && tsc -p tsconfig.unit.json && node --test dist-unit/tests/unit/*.test.js",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "test:pw": "playwright test",

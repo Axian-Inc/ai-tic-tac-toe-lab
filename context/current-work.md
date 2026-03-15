@@ -96,6 +96,23 @@ Track the single active Jira ticket and execution state so work is visible and u
 - 2026-03-13 02:43 - Added Jira note for `TTT-13` ("No test needed.") and transitioned `IN QA` -> `In Review` -> `Done`.
 - 2026-03-13 02:50 - Added test run failure note to `TTT-11` documenting DNS resolution errors (`EAI_AGAIN`) for CloudFront and S3 endpoints.
 - 2026-03-15 17:12 UTC - Added TTT-16 coverage-gap scenarios to Jira `TTT-64` as a comment.
+- 2026-03-15 18:42 UTC - Reviewed all `context/` files, inspected Jira story `TTT-17`, and confirmed the project hierarchy only allows a child `Subtask` under a `Story` for the requested test-scenario work.
+- 2026-03-15 18:42 UTC - Created child Jira subtask `TTT-76` (`Outline test scenarios for TTT-17`) under `TTT-17` and reset local execution tracking to idle.
+- 2026-03-15 18:45 UTC - Reopened `TTT-76` as active implementation work, transitioned it to `In Progress`, and inspected the current app/Playwright baseline for `TTT-17` coverage feasibility.
+- 2026-03-15 18:46 UTC - Added `tests/playwright/specs/ui/ttt-76-board-status.spec.ts` with five board/status scenarios for `TTT-17`, using runtime `fixme` gating so the spec stays green until the feature UI exists.
+- 2026-03-15 18:47 UTC - Verified the new spec via `scripts/run_playwright_ui.sh test -- tests/playwright/specs/ui/ttt-76-board-status.spec.ts`; result was 5 skipped scenarios because the current app is still the placeholder screen and does not implement `TTT-17`.
+- 2026-03-15 18:47 UTC - Verified the new spec file passes ESLint via `npx eslint tests/playwright/specs/ui/ttt-76-board-status.spec.ts`.
+- 2026-03-15 18:48 UTC - Added Jira evidence comment to `TTT-76`, transitioned the ticket from `In Progress` to `IN QA`, and reset local tracking to idle.
+- 2026-03-15 18:54 UTC - Reviewed all `context/` files for the new request, fetched Jira subtask `TTT-65` and parent story `TTT-16`, and transitioned `TTT-65` to `In Progress`.
+- 2026-03-15 18:54 UTC - Confirmed the workspace still lacks the `TTT-16` landing UI and lacks a dedicated unit-test runner, so `TTT-65` will be implemented as pure mark-selection logic with a minimal Node-based test path.
+- 2026-03-15 18:56 UTC - Added `src/game/markSelection.ts`, `tests/unit/markSelection.test.ts`, `tsconfig.unit.json`, and `npm run test:unit` to provide runnable unit coverage for mark-selection behavior.
+- 2026-03-15 18:57 UTC - Validated `TTT-65` with `npm run test:unit` and `npx eslint src/game/markSelection.ts tests/unit/markSelection.test.ts`; both passed.
+- 2026-03-15 18:58 UTC - Updated `context/testing-strategy.md` and `context/tech-stack.md` to document the Node-based unit-test baseline, added Jira completion evidence, transitioned `TTT-65` from `In Progress` to `IN QA`, and reset local tracking to idle.
+- 2026-03-15 19:03 UTC - Reviewed Jira story `TTT-18`, confirmed that a `Story` can only take a child `Subtask` in this project, and created `TTT-77` (`Outline test scenarios for TTT-18`) under `TTT-18`.
+- 2026-03-15 19:05 UTC - Reopened `TTT-77` as active implementation work, transitioned it to `In Progress`, and reviewed the existing Playwright specs and current app surface for `TTT-18` coverage feasibility.
+- 2026-03-15 19:06 UTC - Added `tests/playwright/specs/ui/ttt-77-legal-move-feedback.spec.ts` with five legal-move and visual-feedback scenarios for `TTT-18`, using runtime `fixme` gating so the spec stays green until the board interaction UI exists.
+- 2026-03-15 19:07 UTC - Validated the new spec with `npx eslint tests/playwright/specs/ui/ttt-77-legal-move-feedback.spec.ts` and `scripts/run_playwright_ui.sh test -- tests/playwright/specs/ui/ttt-77-legal-move-feedback.spec.ts`; result was 5 skipped scenarios because the current app does not yet implement the `TTT-18` board interaction UI.
+- 2026-03-15 19:07 UTC - Added Jira evidence comment to `TTT-77`, transitioned the ticket from `In Progress` to `IN QA`, and reset local tracking to idle.
 
 ## Blockers/Risks
 - AWS credentials are not configured in the current shell.
