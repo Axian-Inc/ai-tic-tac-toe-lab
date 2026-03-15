@@ -5,6 +5,8 @@ import type {
   ListGamesResponse,
   MultiplayerMoveRequest,
   MultiplayerGameStatus,
+  ResignGameRequest,
+  ResignGameResponse,
   SubmitMoveResponse,
 } from "../shared/multiplayer";
 
@@ -98,4 +100,19 @@ export async function submitMultiplayerMove(
   });
 
   return readJsonResponse<SubmitMoveResponse>(response);
+}
+
+export async function resignMultiplayerGame(
+  gameId: string,
+  payload: ResignGameRequest
+): Promise<ResignGameResponse> {
+  const response = await fetch(`${getApiBaseUrl()}/games/${gameId}/resign`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  return readJsonResponse<ResignGameResponse>(response);
 }

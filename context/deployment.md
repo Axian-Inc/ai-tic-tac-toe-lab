@@ -84,3 +84,8 @@ Last updated: 2026-03-15
 - The frontend derives websocket endpoint configuration from `VITE_MULTIPLAYER_API_BASE_URL`, converting the HTTP API origin into `ws://` or `wss://` automatically.
 - Websocket delivery is additive: HTTP create/join/move and `GET /games/{id}` recovery remain the fallback path when live sync is unavailable.
 - Local verification for US-34 is covered by `npm run typecheck` and `npm run build`.
+
+### US-35 Local Resignation Flow
+- Multiplayer gameplay now adds `POST /games/{id}/resign` as an intentional early-exit endpoint for active games.
+- Resignation updates are delivered through both the existing HTTP detail path (`GET /games/{id}`) and the existing websocket fan-out path so refreshed and subscribed clients observe the same completed state.
+- Local verification for US-35 is covered by `npm run typecheck` and `npm run build`.

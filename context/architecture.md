@@ -146,6 +146,22 @@ Last updated: 2026-03-15
   - Surfaces connection states (`connecting`, `connected`, `reconnecting`, `unavailable`) so users can tell when live sync is degraded.
   - Preserves the `Refresh Match` HTTP fallback path when websocket delivery is unavailable or reconnect is in progress.
 
+### Resign Multiplayer Game (US-35)
+- `US-35` extends the existing multiplayer snapshot model rather than introducing a second game-result structure:
+  - Multiplayer snapshots in `src/shared/multiplayer.ts` now include completion metadata with end reason, winner, loser, and completion timestamp.
+  - The server maps both normal terminal move outcomes and resignation outcomes into that same completion shape.
+- Added `POST /games/{id}/resign` in `server/index.ts`:
+  - Validates game existence and active status.
+  - Validates that the resigning player is assigned to the game.
+  - Marks the game `over`, records resignation completion metadata, and prevents future move submissions through the existing active-game checks.
+- Websocket fan-out reuses the existing `US-34` transport:
+  - Added a `resigned` event carrying the authoritative updated snapshot and resigning player.
+  - The existing `game-over` event is still published so live clients receive the same terminal-state snapshot path already used for completed move outcomes.
+- Multiplayer gameplay in `src/App.tsx` now includes a multiplayer-only `Resign` control for active games:
+  - Confirms user intent before calling the API.
+  - Reconciles from the server response instead of mutating local state optimistically.
+  - Leaves the board locked once the resignation-completed snapshot is applied.
+
 ### Planned Server-Backed Multiplayer Architecture
 - Introduce a lightweight HTTP server API as the authoritative source of truth for multiplayer games.
 - Keep the shared `Game` domain rules as the core move-validation engine, reused by the server for multiplayer game progression.

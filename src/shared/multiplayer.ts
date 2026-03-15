@@ -23,6 +23,7 @@ export interface MultiplayerGameSummary {
 export interface MultiplayerGameSnapshot extends MultiplayerGameSummary {
   players: MultiplayerPlayerAssignments;
   state: GameState;
+  completion: MultiplayerCompletion | null;
 }
 
 export interface MultiplayerSession {
@@ -55,6 +56,21 @@ export interface SubmitMoveResponse {
   game: MultiplayerGameSnapshot;
 }
 
+export interface ResignGameRequest {
+  player: Player;
+}
+
+export interface ResignGameResponse {
+  game: MultiplayerGameSnapshot;
+}
+
+export interface MultiplayerCompletion {
+  endReason: "win" | "draw" | "resignation";
+  winner: Player | null;
+  loser: Player | null;
+  completedAt: string;
+}
+
 export interface MultiplayerConnectionReadyEvent {
   type: "connection-ready";
   game: MultiplayerGameSnapshot;
@@ -74,6 +90,12 @@ export interface MultiplayerGameOverEvent {
   game: MultiplayerGameSnapshot;
 }
 
+export interface MultiplayerResignedEvent {
+  type: "resigned";
+  game: MultiplayerGameSnapshot;
+  resignedPlayer: Player;
+}
+
 export interface MultiplayerResyncNeededEvent {
   type: "resync-needed";
   game: MultiplayerGameSnapshot;
@@ -84,6 +106,7 @@ export type MultiplayerServerEvent =
   | MultiplayerConnectionReadyEvent
   | MultiplayerMoveAppliedEvent
   | MultiplayerGameOverEvent
+  | MultiplayerResignedEvent
   | MultiplayerResyncNeededEvent;
 
 export interface ListGamesResponse {

@@ -9,6 +9,7 @@ import type {
   GetGameResponse,
   JoinGameResponse,
   ListGamesResponse,
+  MultiplayerCompletion,
   MultiplayerConnectionReadyEvent,
   MultiplayerGameOverEvent,
   MultiplayerGameSnapshot,
@@ -16,10 +17,13 @@ import type {
   MultiplayerMoveAppliedEvent,
   MultiplayerMoveRequest,
   MultiplayerPlayerAssignments,
+  MultiplayerResignedEvent,
   MultiplayerResyncNeededEvent,
   MultiplayerServerEvent,
   MultiplayerSession,
   MultiplayerGameSummary,
+  ResignGameRequest,
+  ResignGameResponse,
   SubmitMoveResponse,
 } from "../src/shared/multiplayer.js";
 
@@ -42,6 +46,7 @@ interface MultiplayerGameRecord {
   updatedAt: string;
   game: Game;
   players: MultiplayerPlayerAssignments;
+  completion: MultiplayerCompletion | null;
 }
 
 interface MultiplayerService {
@@ -63,13 +68,27 @@ function toGameSummary(game: MultiplayerGameRecord): MultiplayerGameSummary {
 }
 
 function toGameSnapshot(game: MultiplayerGameRecord): MultiplayerGameSnapshot {
+  const state = game.game.getState();
+  const snapshotState =
+    game.completion === null
+      ? state
+      : {
+          ...state,
+          status: {
+            winner: game.completion.winner,
+            isDraw: game.completion.endReason === "draw",
+            isOver: true,
+          },
+        };
+
   return {
     ...toGameSummary(game),
     players: {
       X: { ...game.players.X },
       O: game.players.O ? { ...game.players.O } : null,
     },
-    state: game.game.getState(),
+    state: snapshotState,
+    completion: game.completion ? { ...game.completion } : null,
   };
 }
 
@@ -83,6 +102,37 @@ function createSession(gameId: string, player: Player): MultiplayerSession {
 
 function hasAssignedPlayer(game: MultiplayerGameRecord, player: Player): boolean {
   return player === "X" ? true : game.players.O !== null;
+}
+
+function getOpponent(player: Player): Player {
+  return player === "X" ? "O" : "X";
+}
+
+function createCompletionFromCurrentGame(
+  game: MultiplayerGameRecord,
+  completedAt: string
+): MultiplayerCompletion | null {
+  const status = game.game.getStatus();
+
+  if (!status.isOver) {
+    return null;
+  }
+
+  if (status.winner === null) {
+    return {
+      endReason: "draw",
+      winner: null,
+      loser: null,
+      completedAt,
+    };
+  }
+
+  return {
+    endReason: "win",
+    winner: status.winner,
+    loser: getOpponent(status.winner),
+    completedAt,
+  };
 }
 
 function createWebSocketAcceptKey(key: string): string {
@@ -201,6 +251,7 @@ class InMemoryMultiplayerGameStore {
         },
         O: null,
       },
+      completion: null,
     };
 
     this.games.set(game.id, game);
@@ -279,7 +330,43 @@ class InMemoryMultiplayerGameStore {
     game.updatedAt = new Date().toISOString();
     if (game.game.getStatus().isOver) {
       game.status = "over";
+      game.completion = createCompletionFromCurrentGame(game, game.updatedAt);
     }
+
+    return game;
+  }
+
+  resignGame(
+    id: string,
+    player: Player
+  ):
+    | MultiplayerGameRecord
+    | "not_found"
+    | "not_active"
+    | "player_not_joined" {
+    const game = this.games.get(id);
+
+    if (!game) {
+      return "not_found";
+    }
+
+    if (game.status !== "active") {
+      return "not_active";
+    }
+
+    if (!hasAssignedPlayer(game, player)) {
+      return "player_not_joined";
+    }
+
+    const completedAt = new Date().toISOString();
+    game.status = "over";
+    game.updatedAt = completedAt;
+    game.completion = {
+      endReason: "resignation",
+      winner: getOpponent(player),
+      loser: player,
+      completedAt,
+    };
 
     return game;
   }
@@ -324,6 +411,17 @@ function createGameOverEvent(game: MultiplayerGameRecord): MultiplayerGameOverEv
   return {
     type: "game-over",
     game: toGameSnapshot(game),
+  };
+}
+
+function createResignedEvent(
+  game: MultiplayerGameRecord,
+  resignedPlayer: Player
+): MultiplayerResignedEvent {
+  return {
+    type: "resigned",
+    game: toGameSnapshot(game),
+    resignedPlayer,
   };
 }
 
@@ -605,6 +703,55 @@ export function createMultiplayerApp(): MultiplayerService {
     }
 
     const payload: SubmitMoveResponse = {
+      game: toGameSnapshot(result),
+    };
+
+    response.status(200).json(payload);
+  });
+
+  app.post("/games/:id/resign", (request, response) => {
+    response.setHeader("cache-control", "no-store");
+
+    const { player } = (request.body ?? {}) as Partial<ResignGameRequest>;
+
+    if (player !== "X" && player !== "O") {
+      response.status(400).json({
+        status: "invalid_resign_request",
+        message: "Resign requests must include a valid player.",
+      });
+      return;
+    }
+
+    const result = gameStore.resignGame(request.params.id, player);
+
+    if (result === "not_found") {
+      response.status(404).json({
+        status: "not_found",
+        message: "Game not found.",
+      });
+      return;
+    }
+
+    if (result === "not_active") {
+      response.status(409).json({
+        status: "not_active",
+        message: "Only active multiplayer games can be resigned.",
+      });
+      return;
+    }
+
+    if (result === "player_not_joined") {
+      response.status(409).json({
+        status: "player_not_joined",
+        message: "That player is not assigned to this game.",
+      });
+      return;
+    }
+
+    websocketHub.publish(result.id, createResignedEvent(result, player));
+    websocketHub.publish(result.id, createGameOverEvent(result));
+
+    const payload: ResignGameResponse = {
       game: toGameSnapshot(result),
     };
 

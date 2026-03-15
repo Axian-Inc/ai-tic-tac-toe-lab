@@ -7,6 +7,7 @@ import {
   getMultiplayerWebSocketUrl,
   joinMultiplayerGame,
   listMultiplayerGames,
+  resignMultiplayerGame,
   submitMultiplayerMove,
 } from "./multiplayer/api";
 import type {
@@ -164,6 +165,14 @@ function getMultiplayerStatusMessage(
   }
 
   if (game.state.status.isOver) {
+    if (game.completion?.endReason === "resignation") {
+      if (game.completion.loser === session.player) {
+        return "Game over: You resigned.";
+      }
+
+      return "Game over: Opponent resigned.";
+    }
+
     if (game.state.status.winner === session.player) {
       return "Game over: You win!";
     }
@@ -446,6 +455,8 @@ function GameplayPage({
     useState<boolean>(false);
   const [isSubmittingMultiplayerMove, setIsSubmittingMultiplayerMove] =
     useState<boolean>(false);
+  const [isResigningMultiplayerGame, setIsResigningMultiplayerGame] =
+    useState<boolean>(false);
   const [multiplayerError, setMultiplayerError] = useState<string>("");
   const [liveSyncState, setLiveSyncState] = useState<LiveSyncState>("idle");
 
@@ -474,6 +485,7 @@ function GameplayPage({
           multiplayerGame.status === "active" &&
           !multiplayerGame.state.status.isOver &&
           !isSubmittingMultiplayerMove &&
+          !isResigningMultiplayerGame &&
           multiplayerGame.state.currentPlayer === multiplayerSession?.player &&
           cell === null;
 
@@ -488,6 +500,7 @@ function GameplayPage({
       displayedGameState.currentPlayer,
       displayedGameState.status.isOver,
       isMultiplayer,
+      isResigningMultiplayerGame,
       isSubmittingMultiplayerMove,
       multiplayerGame,
       multiplayerSession,
@@ -656,6 +669,41 @@ function GameplayPage({
     }
   };
 
+  const handleResignMultiplayerGame = async () => {
+    if (
+      !multiplayerSession ||
+      !multiplayerGame ||
+      multiplayerGame.status !== "active" ||
+      multiplayerGame.state.status.isOver ||
+      isResigningMultiplayerGame
+    ) {
+      return;
+    }
+
+    const didConfirm = window.confirm("Resign this multiplayer game?");
+    if (!didConfirm) {
+      return;
+    }
+
+    setIsResigningMultiplayerGame(true);
+    setMultiplayerError("");
+
+    try {
+      const response = await resignMultiplayerGame(multiplayerSession.gameId, {
+        player: multiplayerSession.player,
+      });
+      onUpdateMultiplayerGame(
+        createMultiplayerGameView(multiplayerSession, response.game)
+      );
+    } catch (error) {
+      setMultiplayerError(
+        error instanceof Error ? error.message : "Unable to resign multiplayer game."
+      );
+    } finally {
+      setIsResigningMultiplayerGame(false);
+    }
+  };
+
   const handleCellClick = (position: number) => {
     if (
       isMultiplayer &&
@@ -762,6 +810,7 @@ function GameplayPage({
             message.type === "connection-ready" ||
             message.type === "resync-needed" ||
             message.type === "move-applied" ||
+            message.type === "resigned" ||
             message.type === "game-over"
           ) {
             onUpdateMultiplayerGame(
@@ -880,6 +929,8 @@ function GameplayPage({
       ? "Loading the authoritative multiplayer state from the server."
       : multiplayerGame.status === "waiting"
         ? "Share this match ID with another player. Refresh after they join to see the active session."
+        : multiplayerGame.completion?.endReason === "resignation"
+          ? "This match ended by resignation. No additional moves are accepted."
         : liveSyncState === "connected"
           ? "Moves are validated by the server and live updates are arriving automatically."
           : "Moves are validated by the server. If live sync is unavailable, use Refresh Match to pull the latest state.";
@@ -1006,6 +1057,21 @@ function GameplayPage({
         </section>
 
         <div className="gameplay-controls">
+          {isMultiplayer &&
+          multiplayerGame &&
+          multiplayerGame.status === "active" &&
+          !multiplayerGame.state.status.isOver ? (
+            <button
+              type="button"
+              className="gameplay-control gameplay-control-primary"
+              onClick={() => {
+                void handleResignMultiplayerGame();
+              }}
+              disabled={isResigningMultiplayerGame}
+            >
+              {isResigningMultiplayerGame ? "Resigning..." : "Resign"}
+            </button>
+          ) : null}
           {!isMultiplayer && isGameOver ? (
             <button
               type="button"

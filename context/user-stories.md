@@ -334,6 +334,12 @@ Acceptance criteria:
 ### US-35 Resign Multiplayer Game
 As a player, I want to resign a multiplayer game so that I can end a match I no longer want to continue.
 
+Status note (2026-03-15):
+- Added `POST /games/{id}/resign` to the Express multiplayer service.
+- Multiplayer snapshots now include completion metadata so resignation, normal win, and draw outcomes expose a consistent end-state shape through HTTP and websocket updates.
+- Multiplayer gameplay now includes a `Resign` control for active games, confirms intent, calls the API, and locks the board once the resignation-completed snapshot is applied.
+- Resignation publishes a dedicated websocket event and an updated terminal game snapshot so connected clients and refreshed clients observe the same result.
+
 Deployable increment:
 - Multiplayer game completion supports an intentional early-exit path without waiting for timeout.
 
