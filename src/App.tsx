@@ -4,6 +4,7 @@ import { getDeterministicCpuMovePosition } from "./game/cpu";
 import {
   createMultiplayerGame,
   getMultiplayerGame,
+  getMultiplayerWebSocketUrl,
   joinMultiplayerGame,
   listMultiplayerGames,
   submitMultiplayerMove,
@@ -11,6 +12,7 @@ import {
 import type {
   MultiplayerGameSnapshot,
   MultiplayerGameSummary,
+  MultiplayerServerEvent,
   MultiplayerSession,
 } from "./shared/multiplayer";
 
@@ -27,6 +29,7 @@ interface MultiplayerGameView {
 }
 
 type GameView = SinglePlayerGameView | MultiplayerGameView;
+type LiveSyncState = "idle" | "connecting" | "connected" | "reconnecting" | "unavailable";
 
 const SINGLE_PLAYER_GAME_VIEW: SinglePlayerGameView = {
   kind: "singleplayer",
@@ -181,6 +184,26 @@ function getMultiplayerStatusMessage(
 
 function getParticipantLabel(player: Player, sessionPlayer: Player): string {
   return player === sessionPlayer ? "You" : "Opponent";
+}
+
+function getLiveSyncLabel(liveSyncState: LiveSyncState): string {
+  if (liveSyncState === "connected") {
+    return "Live sync connected";
+  }
+
+  if (liveSyncState === "connecting") {
+    return "Live sync connecting";
+  }
+
+  if (liveSyncState === "reconnecting") {
+    return "Live sync reconnecting";
+  }
+
+  if (liveSyncState === "unavailable") {
+    return "Live sync unavailable";
+  }
+
+  return "Live sync idle";
 }
 
 function LandingPage({
@@ -410,6 +433,9 @@ function GameplayPage({
   const gameRef = useRef<Game>(new Game());
   const audioContextRef = useRef<AudioContext | null>(null);
   const confettiTimerRef = useRef<number | null>(null);
+  const reconnectTimerRef = useRef<number | null>(null);
+  const websocketRef = useRef<WebSocket | null>(null);
+  const shouldReconnectRef = useRef<boolean>(true);
   const previousGameOverRef = useRef<boolean>(false);
   const [singlePlayerGameState, setSinglePlayerGameState] = useState<GameState>(() =>
     gameRef.current.getState()
@@ -421,6 +447,7 @@ function GameplayPage({
   const [isSubmittingMultiplayerMove, setIsSubmittingMultiplayerMove] =
     useState<boolean>(false);
   const [multiplayerError, setMultiplayerError] = useState<string>("");
+  const [liveSyncState, setLiveSyncState] = useState<LiveSyncState>("idle");
 
   const displayedGameState = multiplayerGame?.state ?? singlePlayerGameState;
   const statusMessage =
@@ -596,6 +623,13 @@ function GameplayPage({
     setSinglePlayerGameState(gameRef.current.getState());
   };
 
+  const clearReconnectTimer = () => {
+    if (reconnectTimerRef.current !== null) {
+      window.clearTimeout(reconnectTimerRef.current);
+      reconnectTimerRef.current = null;
+    }
+  };
+
   const syncMultiplayerGame = async () => {
     if (!multiplayerSession) {
       return;
@@ -688,6 +722,102 @@ function GameplayPage({
   }, [isMultiplayer, multiplayerGame, multiplayerSession]);
 
   useEffect(() => {
+    if (!isMultiplayer || multiplayerSession === null) {
+      setLiveSyncState("idle");
+      shouldReconnectRef.current = false;
+      clearReconnectTimer();
+      if (websocketRef.current !== null) {
+        websocketRef.current.close();
+        websocketRef.current = null;
+      }
+      return;
+    }
+
+    let isDisposed = false;
+    shouldReconnectRef.current = true;
+    clearReconnectTimer();
+    const connectWebSocket = (isReconnectAttempt: boolean) => {
+      if (isDisposed || !shouldReconnectRef.current) {
+        return;
+      }
+
+      setLiveSyncState(isReconnectAttempt ? "reconnecting" : "connecting");
+
+      const websocket = new WebSocket(
+        getMultiplayerWebSocketUrl(multiplayerSession.gameId)
+      );
+      websocketRef.current = websocket;
+
+      websocket.addEventListener("open", () => {
+        if (!isDisposed) {
+          setLiveSyncState("connected");
+        }
+      });
+
+      websocket.addEventListener("message", (event) => {
+        try {
+          const message = JSON.parse(event.data) as MultiplayerServerEvent;
+
+          if (
+            message.type === "connection-ready" ||
+            message.type === "resync-needed" ||
+            message.type === "move-applied" ||
+            message.type === "game-over"
+          ) {
+            onUpdateMultiplayerGame(
+              createMultiplayerGameView(multiplayerSession, message.game)
+            );
+          }
+        } catch {
+          if (!isDisposed) {
+            setLiveSyncState("unavailable");
+          }
+        }
+      });
+
+      websocket.addEventListener("error", () => {
+        if (!isDisposed) {
+          setLiveSyncState("unavailable");
+        }
+      });
+
+      websocket.addEventListener("close", () => {
+        if (isDisposed || !shouldReconnectRef.current) {
+          if (!isDisposed) {
+            setLiveSyncState("idle");
+          }
+          return;
+        }
+
+        clearReconnectTimer();
+        reconnectTimerRef.current = window.setTimeout(() => {
+          void syncMultiplayerGame()
+            .catch(() => {
+              if (!isDisposed) {
+                setLiveSyncState("unavailable");
+              }
+            })
+            .finally(() => {
+              connectWebSocket(true);
+            });
+        }, 1200);
+      });
+    };
+
+    connectWebSocket(false);
+
+    return () => {
+      isDisposed = true;
+      shouldReconnectRef.current = false;
+      clearReconnectTimer();
+      if (websocketRef.current !== null) {
+        websocketRef.current.close();
+        websocketRef.current = null;
+      }
+    };
+  }, [isMultiplayer, multiplayerSession]);
+
+  useEffect(() => {
     if (
       isMultiplayer ||
       singlePlayerGameState.status.isOver ||
@@ -750,7 +880,9 @@ function GameplayPage({
       ? "Loading the authoritative multiplayer state from the server."
       : multiplayerGame.status === "waiting"
         ? "Share this match ID with another player. Refresh after they join to see the active session."
-        : "Moves are validated by the server. Use Refresh Match to pull the latest state after the opponent plays.";
+        : liveSyncState === "connected"
+          ? "Moves are validated by the server and live updates are arriving automatically."
+          : "Moves are validated by the server. If live sync is unavailable, use Refresh Match to pull the latest state.";
 
   return (
     <main className="page page-gameplay" aria-label="Gameplay board">
@@ -804,6 +936,13 @@ function GameplayPage({
                 <span>Created {formatMultiplayerTimestamp(multiplayerGame.createdAt)}</span>
               ) : null}
             </div>
+            <p
+              className={`gameplay-live-sync gameplay-live-sync-${liveSyncState}`}
+              role="status"
+              aria-live="polite"
+            >
+              {getLiveSyncLabel(liveSyncState)}
+            </p>
             <p className="gameplay-session-help">{multiplayerHelpMessage}</p>
             {multiplayerError ? (
               <p className="multiplayer-message multiplayer-message-error">

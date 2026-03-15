@@ -419,6 +419,29 @@ body,
   color: var(--text-muted);
 }
 
+.gameplay-live-sync {
+  margin-top: 0.7rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.gameplay-live-sync-connected {
+  color: #8ce2c8;
+}
+
+.gameplay-live-sync-connecting,
+.gameplay-live-sync-reconnecting {
+  color: #d9e6fb;
+}
+
+.gameplay-live-sync-unavailable {
+  color: #ffb38b;
+}
+
+.gameplay-live-sync-idle {
+  color: var(--text-muted);
+}
+
 .title-x {
   color: #83d8dd;
 }

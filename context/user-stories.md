@@ -304,6 +304,12 @@ Acceptance criteria:
 ### US-34 Live Multiplayer Updates via Websockets
 As a player, I want remote moves to appear automatically so that multiplayer games feel live without manual refresh.
 
+Status note (2026-03-15):
+- Added `WS /ws?gameId=...` websocket subscriptions to the multiplayer backend without changing the existing HTTP create/join/move APIs introduced in earlier stories.
+- Added shared websocket event payload types for connection-ready, resync-needed, move-applied, and game-over events.
+- Multiplayer gameplay now opens a websocket subscription for the current session, reconciles incoming authoritative snapshots automatically, and surfaces live-sync connection status in the UI.
+- `Refresh Match` remains available as the HTTP fallback path when websocket delivery is unavailable or reconnecting.
+
 Deployable increment:
 - Multiplayer is now real-time for active players.
 - If websocket delivery fails, the rest of the deployed application still remains usable.

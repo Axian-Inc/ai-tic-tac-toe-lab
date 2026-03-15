@@ -55,6 +55,37 @@ export interface SubmitMoveResponse {
   game: MultiplayerGameSnapshot;
 }
 
+export interface MultiplayerConnectionReadyEvent {
+  type: "connection-ready";
+  game: MultiplayerGameSnapshot;
+}
+
+export interface MultiplayerMoveAppliedEvent {
+  type: "move-applied";
+  game: MultiplayerGameSnapshot;
+  move: {
+    player: Player;
+    position: number;
+  };
+}
+
+export interface MultiplayerGameOverEvent {
+  type: "game-over";
+  game: MultiplayerGameSnapshot;
+}
+
+export interface MultiplayerResyncNeededEvent {
+  type: "resync-needed";
+  game: MultiplayerGameSnapshot;
+  reason: "player-joined" | "state-changed";
+}
+
+export type MultiplayerServerEvent =
+  | MultiplayerConnectionReadyEvent
+  | MultiplayerMoveAppliedEvent
+  | MultiplayerGameOverEvent
+  | MultiplayerResyncNeededEvent;
+
 export interface ListGamesResponse {
   games: MultiplayerGameSummary[];
 }

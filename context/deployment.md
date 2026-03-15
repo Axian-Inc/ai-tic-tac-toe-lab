@@ -78,3 +78,9 @@ Last updated: 2026-03-15
 - Multiplayer gameplay now adds `POST /games/{id}/moves` for HTTP-driven authoritative move submission before websocket fan-out exists.
 - The frontend gameplay route also persists multiplayer session details in the URL query (`mode`, `gameId`, `player`) so a page refresh can recover the session and reload current authoritative state through `GET /games/{id}`.
 - Local verification for US-33 is covered by `npm run typecheck` and `npm run build`.
+
+### US-34 Local Websocket Sync
+- The multiplayer backend now exposes `WS /ws?gameId=...` on the same host and port as the HTTP API.
+- The frontend derives websocket endpoint configuration from `VITE_MULTIPLAYER_API_BASE_URL`, converting the HTTP API origin into `ws://` or `wss://` automatically.
+- Websocket delivery is additive: HTTP create/join/move and `GET /games/{id}` recovery remain the fallback path when live sync is unavailable.
+- Local verification for US-34 is covered by `npm run typecheck` and `npm run build`.

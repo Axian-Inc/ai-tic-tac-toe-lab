@@ -131,6 +131,21 @@ Last updated: 2026-03-15
   - Invalid submissions surface server error messages in the multiplayer session UI without mutating client state optimistically.
 - Gameplay route recovery now uses the existing `GET /games/{id}` path together with multiplayer query parameters (`gameId`, `player`, `mode`) so a browser refresh can reconstruct the multiplayer session and reload the authoritative snapshot.
 
+### Live Multiplayer Updates via Websockets (US-34)
+- `US-34` builds on the existing `US-33` authoritative move API instead of replacing it:
+  - HTTP remains the mutation path for joins and moves.
+  - Websocket delivery is an additive fan-out layer for live state updates.
+- Added a lightweight websocket upgrade handler alongside Express in `server/index.ts`:
+  - `WS /ws?gameId=...` subscribes a socket to one multiplayer game's event stream.
+  - The server sends an initial `connection-ready` event with the current authoritative snapshot after subscription.
+  - The server broadcasts `resync-needed` after join state changes, `move-applied` after successful server-validated moves, and `game-over` when a move ends the game.
+- Shared websocket event payloads are defined in `src/shared/multiplayer.ts` so browser and backend reuse the same event schema for live updates.
+- Multiplayer gameplay in `src/App.tsx` now maintains websocket lifecycle state:
+  - Connects automatically for multiplayer sessions using the existing `gameId`.
+  - Reconciles incoming websocket snapshots into the same route/session state used by `US-32` and `US-33`.
+  - Surfaces connection states (`connecting`, `connected`, `reconnecting`, `unavailable`) so users can tell when live sync is degraded.
+  - Preserves the `Refresh Match` HTTP fallback path when websocket delivery is unavailable or reconnect is in progress.
+
 ### Planned Server-Backed Multiplayer Architecture
 - Introduce a lightweight HTTP server API as the authoritative source of truth for multiplayer games.
 - Keep the shared `Game` domain rules as the core move-validation engine, reused by the server for multiplayer game progression.

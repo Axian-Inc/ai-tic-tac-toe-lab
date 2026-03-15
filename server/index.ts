@@ -1,24 +1,32 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
+import { createServer, type Server as HttpServer } from "node:http";
+import { Socket } from "node:net";
 import { fileURLToPath } from "node:url";
-import express from "express";
+import express, { type Express } from "express";
 import { Game, type Player } from "../src/shared/game.js";
 import type {
   CreateGameResponse,
   GetGameResponse,
   JoinGameResponse,
   ListGamesResponse,
-  MultiplayerMoveRequest,
+  MultiplayerConnectionReadyEvent,
+  MultiplayerGameOverEvent,
   MultiplayerGameSnapshot,
   MultiplayerGameStatus,
+  MultiplayerMoveAppliedEvent,
+  MultiplayerMoveRequest,
   MultiplayerPlayerAssignments,
-  MultiplayerGameSummary,
+  MultiplayerResyncNeededEvent,
+  MultiplayerServerEvent,
   MultiplayerSession,
+  MultiplayerGameSummary,
   SubmitMoveResponse,
 } from "../src/shared/multiplayer.js";
 
 const DEFAULT_PORT = 3001;
 const DEFAULT_HOST = "0.0.0.0";
 const MAX_CONCURRENT_GAMES = 25;
+const WS_MAGIC_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 const SUPPORTED_GAME_STATUSES: ReadonlySet<MultiplayerGameStatus> = new Set([
   "waiting",
   "active",
@@ -34,6 +42,12 @@ interface MultiplayerGameRecord {
   updatedAt: string;
   game: Game;
   players: MultiplayerPlayerAssignments;
+}
+
+interface MultiplayerService {
+  app: Express;
+  gameStore: InMemoryMultiplayerGameStore;
+  websocketHub: MultiplayerWebSocketHub;
 }
 
 function toGameSummary(game: MultiplayerGameRecord): MultiplayerGameSummary {
@@ -69,6 +83,91 @@ function createSession(gameId: string, player: Player): MultiplayerSession {
 
 function hasAssignedPlayer(game: MultiplayerGameRecord, player: Player): boolean {
   return player === "X" ? true : game.players.O !== null;
+}
+
+function createWebSocketAcceptKey(key: string): string {
+  return createHash("sha1").update(`${key}${WS_MAGIC_GUID}`).digest("base64");
+}
+
+function encodeWebSocketFrame(message: string): Buffer {
+  const payload = Buffer.from(message, "utf8");
+
+  if (payload.length < 126) {
+    return Buffer.concat([Buffer.from([0x81, payload.length]), payload]);
+  }
+
+  if (payload.length < 65536) {
+    const header = Buffer.alloc(4);
+    header[0] = 0x81;
+    header[1] = 126;
+    header.writeUInt16BE(payload.length, 2);
+    return Buffer.concat([header, payload]);
+  }
+
+  const header = Buffer.alloc(10);
+  header[0] = 0x81;
+  header[1] = 127;
+  header.writeBigUInt64BE(BigInt(payload.length), 2);
+  return Buffer.concat([header, payload]);
+}
+
+function sendUpgradeError(socket: Socket, statusCode: number, message: string) {
+  socket.write(
+    `HTTP/1.1 ${statusCode} ${message}\r\nConnection: close\r\nContent-Length: 0\r\n\r\n`
+  );
+  socket.destroy();
+}
+
+class MultiplayerWebSocketHub {
+  private readonly subscriptions = new Map<string, Set<Socket>>();
+
+  private send(socket: Socket, event: MultiplayerServerEvent) {
+    if (socket.destroyed) {
+      return;
+    }
+
+    socket.write(encodeWebSocketFrame(JSON.stringify(event)));
+  }
+
+  subscribe(gameId: string, socket: Socket) {
+    const existingSockets = this.subscriptions.get(gameId) ?? new Set<Socket>();
+    existingSockets.add(socket);
+    this.subscriptions.set(gameId, existingSockets);
+  }
+
+  unsubscribe(gameId: string, socket: Socket) {
+    const existingSockets = this.subscriptions.get(gameId);
+
+    if (!existingSockets) {
+      return;
+    }
+
+    existingSockets.delete(socket);
+    if (existingSockets.size === 0) {
+      this.subscriptions.delete(gameId);
+    }
+  }
+
+  publish(gameId: string, event: MultiplayerServerEvent) {
+    const sockets = this.subscriptions.get(gameId);
+
+    if (!sockets || sockets.size === 0) {
+      return;
+    }
+
+    for (const socket of sockets) {
+      if (socket.destroyed) {
+        this.unsubscribe(gameId, socket);
+        continue;
+      }
+
+      this.send(socket, event);
+    }
+  }
+
+  publishToSocket(socket: Socket, event: MultiplayerServerEvent) {
+    this.send(socket, event);
+  }
 }
 
 class InMemoryMultiplayerGameStore {
@@ -186,9 +285,124 @@ class InMemoryMultiplayerGameStore {
   }
 }
 
-export function createMultiplayerApp() {
+function createConnectionReadyEvent(
+  game: MultiplayerGameRecord
+): MultiplayerConnectionReadyEvent {
+  return {
+    type: "connection-ready",
+    game: toGameSnapshot(game),
+  };
+}
+
+function createResyncNeededEvent(
+  game: MultiplayerGameRecord,
+  reason: MultiplayerResyncNeededEvent["reason"]
+): MultiplayerResyncNeededEvent {
+  return {
+    type: "resync-needed",
+    game: toGameSnapshot(game),
+    reason,
+  };
+}
+
+function createMoveAppliedEvent(
+  game: MultiplayerGameRecord,
+  player: Player,
+  position: number
+): MultiplayerMoveAppliedEvent {
+  return {
+    type: "move-applied",
+    game: toGameSnapshot(game),
+    move: {
+      player,
+      position,
+    },
+  };
+}
+
+function createGameOverEvent(game: MultiplayerGameRecord): MultiplayerGameOverEvent {
+  return {
+    type: "game-over",
+    game: toGameSnapshot(game),
+  };
+}
+
+function attachWebSocketServer(server: HttpServer, service: MultiplayerService) {
+  server.on("upgrade", (request, rawSocket) => {
+    const socket = rawSocket as Socket;
+    const requestUrl = request.url ? new URL(request.url, "http://localhost") : null;
+
+    if (!requestUrl || requestUrl.pathname !== "/ws") {
+      sendUpgradeError(socket, 404, "Not Found");
+      return;
+    }
+
+    const gameId = requestUrl.searchParams.get("gameId");
+    const upgradeHeader = request.headers.upgrade;
+    const connectionHeader = request.headers.connection;
+    const websocketKey = request.headers["sec-websocket-key"];
+
+    if (!gameId) {
+      sendUpgradeError(socket, 400, "Bad Request");
+      return;
+    }
+
+    const game = service.gameStore.get(gameId);
+    if (!game) {
+      sendUpgradeError(socket, 404, "Not Found");
+      return;
+    }
+
+    if (
+      upgradeHeader?.toLowerCase() !== "websocket" ||
+      !connectionHeader?.toLowerCase().includes("upgrade") ||
+      typeof websocketKey !== "string"
+    ) {
+      sendUpgradeError(socket, 400, "Bad Request");
+      return;
+    }
+
+    const acceptKey = createWebSocketAcceptKey(websocketKey);
+    socket.write(
+      [
+        "HTTP/1.1 101 Switching Protocols",
+        "Upgrade: websocket",
+        "Connection: Upgrade",
+        `Sec-WebSocket-Accept: ${acceptKey}`,
+        "\r\n",
+      ].join("\r\n")
+    );
+
+    service.websocketHub.subscribe(gameId, socket);
+    service.websocketHub.publishToSocket(socket, createConnectionReadyEvent(game));
+
+    socket.on("close", () => {
+      service.websocketHub.unsubscribe(gameId, socket);
+    });
+
+    socket.on("error", () => {
+      service.websocketHub.unsubscribe(gameId, socket);
+    });
+
+    socket.on("end", () => {
+      service.websocketHub.unsubscribe(gameId, socket);
+    });
+
+    socket.on("data", (chunk: Buffer) => {
+      const opcode = chunk[0] & 0x0f;
+
+      if (opcode === 0x8) {
+        service.websocketHub.unsubscribe(gameId, socket);
+        socket.end();
+      }
+    });
+  });
+}
+
+export function createMultiplayerApp(): MultiplayerService {
   const app = express();
   const gameStore = new InMemoryMultiplayerGameStore();
+  const websocketHub = new MultiplayerWebSocketHub();
 
   app.disable("x-powered-by");
   app.use(express.json());
@@ -313,6 +527,11 @@ export function createMultiplayerApp() {
       return;
     }
 
+    websocketHub.publish(
+      result.id,
+      createResyncNeededEvent(result, "player-joined")
+    );
+
     const payload: JoinGameResponse = {
       game: toGameSnapshot(result),
       session: createSession(result.id, "O"),
@@ -334,12 +553,7 @@ export function createMultiplayerApp() {
       return;
     }
 
-    const validatedPosition = position as number;
-    const result = gameStore.submitMove(
-      request.params.id,
-      player,
-      validatedPosition
-    );
+    const result = gameStore.submitMove(request.params.id, player, position as number);
 
     if (result === "not_found") {
       response.status(404).json({
@@ -381,6 +595,15 @@ export function createMultiplayerApp() {
       return;
     }
 
+    websocketHub.publish(
+      result.id,
+      createMoveAppliedEvent(result, player, position as number)
+    );
+
+    if (result.status === "over") {
+      websocketHub.publish(result.id, createGameOverEvent(result));
+    }
+
     const payload: SubmitMoveResponse = {
       game: toGameSnapshot(result),
     };
@@ -396,15 +619,23 @@ export function createMultiplayerApp() {
     });
   });
 
-  return app;
+  return {
+    app,
+    gameStore,
+    websocketHub,
+  };
 }
 
 export function startMultiplayerServer() {
   const parsedPort = Number.parseInt(process.env.PORT ?? `${DEFAULT_PORT}`, 10);
   const port = Number.isNaN(parsedPort) ? DEFAULT_PORT : parsedPort;
   const host = process.env.HOST ?? DEFAULT_HOST;
-  const app = createMultiplayerApp();
-  const server = app.listen(port, host, () => {
+  const service = createMultiplayerApp();
+  const server = createServer(service.app);
+
+  attachWebSocketServer(server, service);
+
+  server.listen(port, host, () => {
     console.log(`Multiplayer service listening on http://${host}:${port}`);
   });
 

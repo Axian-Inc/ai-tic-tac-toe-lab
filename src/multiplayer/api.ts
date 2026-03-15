@@ -20,6 +20,15 @@ function getApiBaseUrl(): string {
   return DEFAULT_API_BASE_URL;
 }
 
+export function getMultiplayerWebSocketUrl(gameId: string): string {
+  const apiBaseUrl = getApiBaseUrl();
+  const websocketBaseUrl = apiBaseUrl.startsWith("https://")
+    ? apiBaseUrl.replace(/^https:\/\//, "wss://")
+    : apiBaseUrl.replace(/^http:\/\//, "ws://");
+
+  return `${websocketBaseUrl}/ws?${new URLSearchParams({ gameId }).toString()}`;
+}
+
 async function readJsonResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     let message = `Request failed with status ${response.status}.`;
