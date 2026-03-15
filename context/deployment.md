@@ -89,3 +89,11 @@ Last updated: 2026-03-15
 - Multiplayer gameplay now adds `POST /games/{id}/resign` as an intentional early-exit endpoint for active games.
 - Resignation updates are delivered through both the existing HTTP detail path (`GET /games/{id}`) and the existing websocket fan-out path so refreshed and subscribed clients observe the same completed state.
 - Local verification for US-35 is covered by `npm run typecheck` and `npm run build`.
+
+### US-36 Local Spectator Flow
+- Multiplayer discovery now includes active-game spectating through the existing backend endpoints:
+  - `GET /games?status=active` for discoverable live matches.
+  - `GET /games/{id}` for initial spectator hydration.
+  - `WS /ws?gameId=...` for live spectator updates.
+- The frontend gameplay route now supports multiplayer spectator session state in browser history and URL query parameters without changing existing player routes.
+- Local verification for US-36 is covered by `npm run typecheck` and `npm run build`.

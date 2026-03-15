@@ -17,10 +17,10 @@ import type {
   MultiplayerMoveAppliedEvent,
   MultiplayerMoveRequest,
   MultiplayerPlayerAssignments,
+  MultiplayerPlayerSession,
   MultiplayerResignedEvent,
   MultiplayerResyncNeededEvent,
   MultiplayerServerEvent,
-  MultiplayerSession,
   MultiplayerGameSummary,
   ResignGameRequest,
   ResignGameResponse,
@@ -92,9 +92,13 @@ function toGameSnapshot(game: MultiplayerGameRecord): MultiplayerGameSnapshot {
   };
 }
 
-function createSession(gameId: string, player: Player): MultiplayerSession {
+function createPlayerSession(
+  gameId: string,
+  player: Player
+): MultiplayerPlayerSession {
   return {
     gameId,
+    role: "player",
     player,
     mode: "multiplayer",
   };
@@ -556,7 +560,7 @@ export function createMultiplayerApp(): MultiplayerService {
     const payload: CreateGameResponse = {
       game: toGameSnapshot(game),
       joinCode: game.id,
-      session: createSession(game.id, "X"),
+      session: createPlayerSession(game.id, "X"),
     };
 
     response.status(201).json(payload);
@@ -632,7 +636,7 @@ export function createMultiplayerApp(): MultiplayerService {
 
     const payload: JoinGameResponse = {
       game: toGameSnapshot(result),
-      session: createSession(result.id, "O"),
+      session: createPlayerSession(result.id, "O"),
     };
 
     response.status(200).json(payload);

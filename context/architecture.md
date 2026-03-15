@@ -162,6 +162,19 @@ Last updated: 2026-03-15
   - Reconciles from the server response instead of mutating local state optimistically.
   - Leaves the board locked once the resignation-completed snapshot is applied.
 
+### Spectate Active Games (US-36)
+- `US-36` reuses the existing multiplayer read model and websocket transport from `US-32` through `US-35` instead of adding a second live-state path:
+  - Discoverable spectate entry uses the existing `GET /games?status=active` lobby listing.
+  - Initial spectator hydration uses the existing `GET /games/{id}` snapshot response.
+  - Live spectator updates use the existing `WS /ws?gameId=...` subscription and existing authoritative snapshot events.
+- Shared multiplayer session contracts in `src/shared/multiplayer.ts` now distinguish between:
+  - Player sessions with an assigned `X` or `O` role.
+  - Spectator sessions with no player seat and no mutation privileges.
+- Multiplayer gameplay in `src/App.tsx` continues to use one route/state model for all multiplayer participants:
+  - Active players retain move submission and resignation controls.
+  - Spectators render the same authoritative board state as read-only, with spectator-specific labels and status/help messaging.
+  - Route recovery continues to work after refresh through multiplayer query parameters, now including spectator sessions.
+
 ### Planned Server-Backed Multiplayer Architecture
 - Introduce a lightweight HTTP server API as the authoritative source of truth for multiplayer games.
 - Keep the shared `Game` domain rules as the core move-validation engine, reused by the server for multiplayer game progression.

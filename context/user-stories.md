@@ -364,6 +364,12 @@ Acceptance criteria:
 ### US-36 Spectate Active Games
 As a spectator, I want to watch a live multiplayer game so that I can observe play without joining as a player.
 
+Status note (2026-03-15):
+- Added a spectator multiplayer session role in the shared client contracts so gameplay can distinguish player-controlled sessions from read-only observers without consuming player slots.
+- Landing page multiplayer discovery now includes a `Spectate Live Game` path backed by existing `GET /games?status=active` and `GET /games/{id}` responses rather than adding a duplicate discovery or hydration endpoint.
+- Gameplay now supports spectator mode in the existing multiplayer route, rendering the authoritative board as read-only while still subscribing to the existing websocket live-update stream.
+- Player-only actions remain restricted to player sessions in the client, so spectators can observe current state and websocket updates but cannot submit moves or resign through the UI.
+
 Deployable increment:
 - The system now supports a third user role without disrupting active player flows.
 - Spectators can observe active games in production even before full replay features are added.

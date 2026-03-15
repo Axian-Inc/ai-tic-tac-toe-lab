@@ -26,21 +26,33 @@ export interface MultiplayerGameSnapshot extends MultiplayerGameSummary {
   completion: MultiplayerCompletion | null;
 }
 
-export interface MultiplayerSession {
+export interface MultiplayerPlayerSession {
   gameId: string;
+  role: "player";
   player: Player;
   mode: "multiplayer";
 }
 
+export interface MultiplayerSpectatorSession {
+  gameId: string;
+  role: "spectator";
+  player: null;
+  mode: "multiplayer";
+}
+
+export type MultiplayerSession =
+  | MultiplayerPlayerSession
+  | MultiplayerSpectatorSession;
+
 export interface CreateGameResponse {
   game: MultiplayerGameSnapshot;
   joinCode: string;
-  session: MultiplayerSession;
+  session: MultiplayerPlayerSession;
 }
 
 export interface JoinGameResponse {
   game: MultiplayerGameSnapshot;
-  session: MultiplayerSession;
+  session: MultiplayerPlayerSession;
 }
 
 export interface GetGameResponse {

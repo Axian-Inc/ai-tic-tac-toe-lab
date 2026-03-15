@@ -14,6 +14,7 @@ import type {
   MultiplayerGameSnapshot,
   MultiplayerGameSummary,
   MultiplayerServerEvent,
+  MultiplayerSpectatorSession,
   MultiplayerSession,
 } from "./shared/multiplayer";
 
@@ -51,22 +52,37 @@ function createMultiplayerGameView(
   };
 }
 
+function createSpectatorSession(gameId: string): MultiplayerSpectatorSession {
+  return {
+    gameId,
+    role: "spectator",
+    player: null,
+    mode: "multiplayer",
+  };
+}
+
 function readSearchMultiplayerSession(search: string): MultiplayerSession | null {
   const query = new URLSearchParams(search);
   const mode = query.get("mode");
   const gameId = query.get("gameId");
+  const role = query.get("role");
   const player = query.get("player");
 
-  if (
-    mode !== "multiplayer" ||
-    !gameId ||
-    (player !== "X" && player !== "O")
-  ) {
+  if (mode !== "multiplayer" || !gameId) {
+    return null;
+  }
+
+  if (role === "spectator") {
+    return createSpectatorSession(gameId);
+  }
+
+  if (player !== "X" && player !== "O") {
     return null;
   }
 
   return {
     gameId,
+    role: "player",
     player,
     mode: "multiplayer",
   };
@@ -103,8 +119,13 @@ function buildGameLocation(path: RoutePath, gameView?: GameView): string {
   const query = new URLSearchParams({
     mode: gameView.session.mode,
     gameId: gameView.session.gameId,
-    player: gameView.session.player,
   });
+
+  if (gameView.session.role === "spectator") {
+    query.set("role", "spectator");
+  } else {
+    query.set("player", gameView.session.player);
+  }
 
   return `${path}?${query.toString()}`;
 }
@@ -161,19 +182,25 @@ function getMultiplayerStatusMessage(
   }
 
   if (game.status === "waiting") {
-    return "Waiting for player O to join this match.";
+    return session.role === "spectator"
+      ? "Waiting for players to start this match."
+      : "Waiting for player O to join this match.";
   }
 
   if (game.state.status.isOver) {
     if (game.completion?.endReason === "resignation") {
-      if (game.completion.loser === session.player) {
+      if (session.role === "player" && game.completion.loser === session.player) {
         return "Game over: You resigned.";
       }
 
-      return "Game over: Opponent resigned.";
+      if (session.role === "player") {
+        return "Game over: Opponent resigned.";
+      }
+
+      return `Game over: Player ${game.completion.loser} resigned.`;
     }
 
-    if (game.state.status.winner === session.player) {
+    if (session.role === "player" && game.state.status.winner === session.player) {
       return "Game over: You win!";
     }
 
@@ -181,7 +208,13 @@ function getMultiplayerStatusMessage(
       return "Game over: It's a draw.";
     }
 
-    return "Game over: Opponent wins.";
+    return session.role === "player"
+      ? "Game over: Opponent wins."
+      : `Game over: Player ${game.state.status.winner} wins.`;
+  }
+
+  if (session.role === "spectator") {
+    return `Live game: Player ${game.state.currentPlayer}'s turn.`;
   }
 
   if (game.state.currentPlayer === session.player) {
@@ -191,8 +224,12 @@ function getMultiplayerStatusMessage(
   return `Opponent turn (${game.state.currentPlayer})`;
 }
 
-function getParticipantLabel(player: Player, sessionPlayer: Player): string {
-  return player === sessionPlayer ? "You" : "Opponent";
+function getParticipantLabel(player: Player, session: MultiplayerSession): string {
+  if (session.role === "spectator") {
+    return `Player ${player}`;
+  }
+
+  return player === session.player ? "You" : "Opponent";
 }
 
 function getLiveSyncLabel(liveSyncState: LiveSyncState): string {
@@ -223,11 +260,15 @@ function LandingPage({
   onOpenMultiplayerGame: (gameView: MultiplayerGameView) => void;
 }) {
   const [isJoinPanelVisible, setIsJoinPanelVisible] = useState<boolean>(false);
+  const [isSpectatePanelVisible, setIsSpectatePanelVisible] = useState<boolean>(false);
   const [waitingGames, setWaitingGames] = useState<MultiplayerGameSummary[]>([]);
+  const [activeGames, setActiveGames] = useState<MultiplayerGameSummary[]>([]);
   const [isLoadingWaitingGames, setIsLoadingWaitingGames] = useState<boolean>(false);
+  const [isLoadingActiveGames, setIsLoadingActiveGames] = useState<boolean>(false);
   const [isCreatingMultiplayerGame, setIsCreatingMultiplayerGame] =
     useState<boolean>(false);
   const [joiningGameId, setJoiningGameId] = useState<string | null>(null);
+  const [spectatingGameId, setSpectatingGameId] = useState<string | null>(null);
   const [multiplayerError, setMultiplayerError] = useState<string>("");
 
   const loadWaitingGames = async () => {
@@ -290,6 +331,46 @@ function LandingPage({
     await loadWaitingGames();
   };
 
+  const loadActiveGames = async () => {
+    setIsLoadingActiveGames(true);
+    setMultiplayerError("");
+
+    try {
+      const response = await listMultiplayerGames("active");
+      setActiveGames(response.games);
+    } catch (error) {
+      setMultiplayerError(
+        error instanceof Error ? error.message : "Unable to load active games."
+      );
+    } finally {
+      setIsLoadingActiveGames(false);
+    }
+  };
+
+  const handleOpenSpectatePanel = async () => {
+    setIsSpectatePanelVisible(true);
+    await loadActiveGames();
+  };
+
+  const handleSpectateMultiplayerGame = async (gameId: string) => {
+    setSpectatingGameId(gameId);
+    setMultiplayerError("");
+
+    try {
+      const response = await getMultiplayerGame(gameId);
+      onOpenMultiplayerGame(
+        createMultiplayerGameView(createSpectatorSession(gameId), response.game)
+      );
+    } catch (error) {
+      setMultiplayerError(
+        error instanceof Error ? error.message : "Unable to spectate that game."
+      );
+      await loadActiveGames();
+    } finally {
+      setSpectatingGameId(null);
+    }
+  };
+
   return (
     <main className="page page-landing">
       <div className="landing-decor landing-decor-left" aria-hidden="true">
@@ -335,6 +416,18 @@ function LandingPage({
             {isLoadingWaitingGames && isJoinPanelVisible
               ? "Loading..."
               : "Join Multiplayer Game"}
+          </button>
+          <button
+            type="button"
+            className="landing-cta landing-cta-ghost"
+            onClick={() => {
+              void handleOpenSpectatePanel();
+            }}
+            disabled={isLoadingActiveGames}
+          >
+            {isLoadingActiveGames && isSpectatePanelVisible
+              ? "Loading..."
+              : "Spectate Live Game"}
           </button>
         </div>
 
@@ -396,6 +489,74 @@ function LandingPage({
                           disabled={isJoining || isCreatingMultiplayerGame}
                         >
                           {isJoining ? "Joining..." : "Join"}
+                        </button>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : null}
+          </section>
+        ) : null}
+
+        {isSpectatePanelVisible ? (
+          <section className="multiplayer-panel" aria-live="polite">
+            <div className="multiplayer-panel-header">
+              <div>
+                <p className="multiplayer-panel-kicker">Live Matches</p>
+                <h2>Active games</h2>
+              </div>
+              <button
+                type="button"
+                className="multiplayer-refresh"
+                onClick={() => {
+                  void loadActiveGames();
+                }}
+                disabled={isLoadingActiveGames}
+              >
+                Refresh
+              </button>
+            </div>
+
+            {multiplayerError ? (
+              <p className="multiplayer-message multiplayer-message-error">
+                {multiplayerError}
+              </p>
+            ) : null}
+
+            {!multiplayerError && activeGames.length === 0 && !isLoadingActiveGames ? (
+              <p className="multiplayer-message">
+                No active games are available to spectate right now.
+              </p>
+            ) : null}
+
+            {activeGames.length > 0 ? (
+              <ul className="multiplayer-game-list">
+                {activeGames.map((game) => {
+                  const isSpectating = spectatingGameId === game.id;
+
+                  return (
+                    <li key={game.id} className="multiplayer-game-card">
+                      <div>
+                        <p className="multiplayer-game-id">{game.id}</p>
+                        <p className="multiplayer-game-meta">
+                          Updated {formatMultiplayerTimestamp(game.updatedAt)}
+                        </p>
+                      </div>
+                      <div className="multiplayer-game-actions">
+                        <div className="multiplayer-game-badge">
+                          <span>{game.status}</span>
+                          <span>Live</span>
+                        </div>
+                        <button
+                          type="button"
+                          className="multiplayer-join-button"
+                          onClick={() => {
+                            void handleSpectateMultiplayerGame(game.id);
+                          }}
+                          disabled={isSpectating || isCreatingMultiplayerGame}
+                        >
+                          {isSpectating ? "Opening..." : "Spectate"}
                         </button>
                       </div>
                     </li>
@@ -469,6 +630,7 @@ function GameplayPage({
   const isXTurn = !isGameOver && displayedGameState.currentPlayer === "X";
   const isOTurn = !isGameOver && displayedGameState.currentPlayer === "O";
   const isLoadingMultiplayerGame = isMultiplayer && multiplayerGame === null;
+  const isSpectatorSession = multiplayerSession?.role === "spectator";
 
   const boardCells = useMemo(
     () =>
@@ -482,6 +644,7 @@ function GameplayPage({
         const isMultiplayerInteractive =
           isMultiplayer &&
           multiplayerGame !== null &&
+          multiplayerSession?.role === "player" &&
           multiplayerGame.status === "active" &&
           !multiplayerGame.state.status.isOver &&
           !isSubmittingMultiplayerMove &&
@@ -500,10 +663,10 @@ function GameplayPage({
       displayedGameState.currentPlayer,
       displayedGameState.status.isOver,
       isMultiplayer,
+      multiplayerSession,
       isResigningMultiplayerGame,
       isSubmittingMultiplayerMove,
       multiplayerGame,
-      multiplayerSession,
     ]
   );
 
@@ -672,6 +835,7 @@ function GameplayPage({
   const handleResignMultiplayerGame = async () => {
     if (
       !multiplayerSession ||
+      multiplayerSession.role !== "player" ||
       !multiplayerGame ||
       multiplayerGame.status !== "active" ||
       multiplayerGame.state.status.isOver ||
@@ -709,6 +873,7 @@ function GameplayPage({
       isMultiplayer &&
       multiplayerGame !== null &&
       multiplayerSession !== null &&
+      multiplayerSession.role === "player" &&
       multiplayerGame.status === "active" &&
       multiplayerGame.state.currentPlayer === multiplayerSession.player &&
       multiplayerGame.state.board[position] === null &&
@@ -927,6 +1092,10 @@ function GameplayPage({
   const multiplayerHelpMessage =
     multiplayerGame === null
       ? "Loading the authoritative multiplayer state from the server."
+      : multiplayerSession?.role === "spectator"
+        ? liveSyncState === "connected"
+          ? "You are spectating this match. The board is read-only and live updates are arriving automatically."
+          : "You are spectating this match. The board is read-only; use Refresh Match if live sync is unavailable."
       : multiplayerGame.status === "waiting"
         ? "Share this match ID with another player. Refresh after they join to see the active session."
         : multiplayerGame.completion?.endReason === "resignation"
@@ -981,7 +1150,11 @@ function GameplayPage({
               </button>
             </div>
             <div className="gameplay-session-meta">
-              <span>You are player {multiplayerSession.player}</span>
+              <span>
+                {multiplayerSession.role === "spectator"
+                  ? "You are spectating"
+                  : `You are player ${multiplayerSession.player}`}
+              </span>
               {multiplayerGame ? <span>Status: {multiplayerGame.status}</span> : null}
               {multiplayerGame ? (
                 <span>Created {formatMultiplayerTimestamp(multiplayerGame.createdAt)}</span>
@@ -1010,7 +1183,7 @@ function GameplayPage({
             <span className="player-x">X</span>
             <span>
               {multiplayerSession
-                ? getParticipantLabel("X", multiplayerSession.player)
+                ? getParticipantLabel("X", multiplayerSession)
                 : "You"}
             </span>
           </p>
@@ -1021,7 +1194,7 @@ function GameplayPage({
             <span className="player-o">O</span>
             <span>
               {multiplayerSession
-                ? getParticipantLabel("O", multiplayerSession.player)
+                ? getParticipantLabel("O", multiplayerSession)
                 : "CPU"}
             </span>
           </p>
@@ -1059,6 +1232,7 @@ function GameplayPage({
         <div className="gameplay-controls">
           {isMultiplayer &&
           multiplayerGame &&
+          multiplayerSession?.role === "player" &&
           multiplayerGame.status === "active" &&
           !multiplayerGame.state.status.isOver ? (
             <button
@@ -1086,7 +1260,7 @@ function GameplayPage({
             className="gameplay-control gameplay-control-secondary"
             onClick={onExitGame}
           >
-            {isGameOver ? "Home" : "Quit"}
+            {isGameOver || isSpectatorSession ? "Home" : "Quit"}
           </button>
         </div>
       </section>
