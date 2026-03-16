@@ -364,6 +364,25 @@ body,
   color: #ffb38b;
 }
 
+.multiplayer-discovery-group {
+  margin-top: 1rem;
+}
+
+.multiplayer-discovery-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.multiplayer-discovery-count {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 .multiplayer-game-list {
   list-style: none;
   margin: 0.9rem 0 0;

@@ -39,7 +39,7 @@ interface MultiplayerGameView {
 
 type GameView = SinglePlayerGameView | MultiplayerGameView;
 type LiveSyncState = "idle" | "connecting" | "connected" | "reconnecting" | "unavailable";
-type MultiplayerModalView = "create" | "join" | "spectate";
+type MultiplayerModalView = "create" | "join";
 
 const SINGLE_PLAYER_GAME_VIEW: SinglePlayerGameView = {
   kind: "singleplayer",
@@ -277,6 +277,12 @@ function getMultiplayerHostLabel(game: MultiplayerGameSnapshot): string {
   return game.hostName;
 }
 
+function getDiscoveryGameTimestampLabel(game: MultiplayerGameSummary): string {
+  return game.status === "waiting"
+    ? `Created ${formatMultiplayerTimestamp(game.createdAt)}`
+    : `Updated ${formatMultiplayerTimestamp(game.updatedAt)}`;
+}
+
 function getLiveSyncLabel(liveSyncState: LiveSyncState): string {
   if (liveSyncState === "connected") {
     return "Live sync connected";
@@ -356,6 +362,28 @@ function LandingPage({
     }
   };
 
+  const loadDiscoveryGames = async () => {
+    setIsLoadingWaitingGames(true);
+    setIsLoadingActiveGames(true);
+    setMultiplayerError("");
+
+    try {
+      const [waitingResponse, activeResponse] = await Promise.all([
+        listMultiplayerGames("waiting"),
+        listMultiplayerGames("active"),
+      ]);
+      setWaitingGames(waitingResponse.games);
+      setActiveGames(activeResponse.games);
+    } catch (error) {
+      setMultiplayerError(
+        error instanceof Error ? error.message : "Unable to load available games."
+      );
+    } finally {
+      setIsLoadingWaitingGames(false);
+      setIsLoadingActiveGames(false);
+    }
+  };
+
   const handleCreateMultiplayerGame = async () => {
     const request = {
       playerName: normalizeMultiplayerModalInput(playerName),
@@ -407,28 +435,7 @@ function LandingPage({
 
   const handleOpenJoinPanel = async () => {
     setMultiplayerModalView("join");
-    await loadWaitingGames();
-  };
-
-  const loadActiveGames = async () => {
-    setIsLoadingActiveGames(true);
-    setMultiplayerError("");
-
-    try {
-      const response = await listMultiplayerGames("active");
-      setActiveGames(response.games);
-    } catch (error) {
-      setMultiplayerError(
-        error instanceof Error ? error.message : "Unable to load active games."
-      );
-    } finally {
-      setIsLoadingActiveGames(false);
-    }
-  };
-
-  const handleOpenSpectatePanel = async () => {
-    setMultiplayerModalView("spectate");
-    await loadActiveGames();
+    await loadDiscoveryGames();
   };
 
   const handleSpectateMultiplayerGame = async (gameId: string) => {
@@ -444,7 +451,7 @@ function LandingPage({
       setMultiplayerError(
         error instanceof Error ? error.message : "Unable to spectate that game."
       );
-      await loadActiveGames();
+      await loadDiscoveryGames();
     } finally {
       setSpectatingGameId(null);
     }
@@ -597,15 +604,6 @@ function LandingPage({
               >
                 Join
               </button>
-              <button
-                type="button"
-                className={`multiplayer-mode-button ${multiplayerModalView === "spectate" ? "multiplayer-mode-button-active" : ""}`}
-                onClick={() => {
-                  void handleOpenSpectatePanel();
-                }}
-              >
-                Spectate
-              </button>
             </div>
 
             {multiplayerError ? (
@@ -666,16 +664,16 @@ function LandingPage({
               <section className="multiplayer-panel multiplayer-modal-panel" aria-live="polite">
                 <div className="multiplayer-panel-header">
                   <div>
-                    <p className="multiplayer-panel-kicker">Multiplayer Lobby</p>
-                    <h2>Waiting games</h2>
+                    <p className="multiplayer-panel-kicker">Discover Matches</p>
+                    <h2>Join or spectate a multiplayer game</h2>
                   </div>
                   <button
                     type="button"
                     className="multiplayer-refresh"
                     onClick={() => {
-                      void loadWaitingGames();
+                      void loadDiscoveryGames();
                     }}
-                    disabled={isLoadingWaitingGames}
+                    disabled={isLoadingWaitingGames || isLoadingActiveGames}
                   >
                     Refresh
                   </button>
@@ -683,113 +681,103 @@ function LandingPage({
 
                 {!multiplayerError &&
                 waitingGames.length === 0 &&
-                !isLoadingWaitingGames ? (
+                activeGames.length === 0 &&
+                !isLoadingWaitingGames &&
+                !isLoadingActiveGames ? (
                   <p className="multiplayer-message">
-                    No waiting games yet. Start one to create a joinable lobby.
+                    No multiplayer games are available right now. Refresh to check
+                    again or create a new match.
                   </p>
                 ) : null}
 
                 {waitingGames.length > 0 ? (
-                  <ul className="multiplayer-game-list">
-                    {waitingGames.map((game) => {
-                      const isJoining = joiningGameId === game.id;
+                  <section className="multiplayer-discovery-group">
+                    <div className="multiplayer-discovery-header">
+                      <p className="multiplayer-panel-kicker">Joinable Games</p>
+                      <span className="multiplayer-discovery-count">
+                        {waitingGames.length} waiting
+                      </span>
+                    </div>
+                    <ul className="multiplayer-game-list">
+                      {waitingGames.map((game) => {
+                        const isJoining = joiningGameId === game.id;
 
-                      return (
-                        <li key={game.id} className="multiplayer-game-card">
-                          <div>
-                            <p className="multiplayer-game-name">{game.name}</p>
-                            <p className="multiplayer-game-id">{game.id}</p>
-                            <p className="multiplayer-game-meta">
-                              Hosted by {game.hostName} · Created{" "}
-                              {formatMultiplayerTimestamp(game.createdAt)}
-                            </p>
-                          </div>
-                          <div className="multiplayer-game-actions">
-                            <div className="multiplayer-game-badge">
-                              <span>{game.status}</span>
-                              <span>{game.openSeatCount} seat open</span>
+                        return (
+                          <li key={game.id} className="multiplayer-game-card">
+                            <div>
+                              <p className="multiplayer-game-name">{game.name}</p>
+                              <p className="multiplayer-game-id">{game.id}</p>
+                              <p className="multiplayer-game-meta">
+                                Hosted by {game.hostName} ·{" "}
+                                {getDiscoveryGameTimestampLabel(game)}
+                              </p>
                             </div>
-                            <button
-                              type="button"
-                              className="multiplayer-join-button"
-                              onClick={() => {
-                                void handleJoinMultiplayerGame(game.id);
-                              }}
-                              disabled={isJoining || isCreatingMultiplayerGame}
-                            >
-                              {isJoining ? "Joining..." : "Join"}
-                            </button>
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                ) : null}
-              </section>
-            ) : null}
-
-            {multiplayerModalView === "spectate" ? (
-              <section className="multiplayer-panel multiplayer-modal-panel" aria-live="polite">
-                <div className="multiplayer-panel-header">
-                  <div>
-                    <p className="multiplayer-panel-kicker">Live Matches</p>
-                    <h2>Active games</h2>
-                  </div>
-                  <button
-                    type="button"
-                    className="multiplayer-refresh"
-                    onClick={() => {
-                      void loadActiveGames();
-                    }}
-                    disabled={isLoadingActiveGames}
-                  >
-                    Refresh
-                  </button>
-                </div>
-
-                {!multiplayerError &&
-                activeGames.length === 0 &&
-                !isLoadingActiveGames ? (
-                  <p className="multiplayer-message">
-                    No active games are available to spectate right now.
-                  </p>
+                            <div className="multiplayer-game-actions">
+                              <div className="multiplayer-game-badge">
+                                <span>{game.status}</span>
+                                <span>{game.openSeatCount} seat open</span>
+                              </div>
+                              <button
+                                type="button"
+                                className="multiplayer-join-button"
+                                onClick={() => {
+                                  void handleJoinMultiplayerGame(game.id);
+                                }}
+                                disabled={isJoining || isCreatingMultiplayerGame}
+                              >
+                                {isJoining ? "Joining..." : "Join"}
+                              </button>
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </section>
                 ) : null}
 
                 {activeGames.length > 0 ? (
-                  <ul className="multiplayer-game-list">
-                    {activeGames.map((game) => {
-                      const isSpectating = spectatingGameId === game.id;
+                  <section className="multiplayer-discovery-group">
+                    <div className="multiplayer-discovery-header">
+                      <p className="multiplayer-panel-kicker">Live Games</p>
+                      <span className="multiplayer-discovery-count">
+                        {activeGames.length} active
+                      </span>
+                    </div>
+                    <ul className="multiplayer-game-list">
+                      {activeGames.map((game) => {
+                        const isSpectating = spectatingGameId === game.id;
 
-                      return (
-                        <li key={game.id} className="multiplayer-game-card">
-                          <div>
-                            <p className="multiplayer-game-name">{game.name}</p>
-                            <p className="multiplayer-game-id">{game.id}</p>
-                            <p className="multiplayer-game-meta">
-                              Hosted by {game.hostName} · Updated{" "}
-                              {formatMultiplayerTimestamp(game.updatedAt)}
-                            </p>
-                          </div>
-                          <div className="multiplayer-game-actions">
-                            <div className="multiplayer-game-badge">
-                              <span>{game.status}</span>
-                              <span>Live</span>
+                        return (
+                          <li key={game.id} className="multiplayer-game-card">
+                            <div>
+                              <p className="multiplayer-game-name">{game.name}</p>
+                              <p className="multiplayer-game-id">{game.id}</p>
+                              <p className="multiplayer-game-meta">
+                                Hosted by {game.hostName} ·{" "}
+                                {getDiscoveryGameTimestampLabel(game)}
+                              </p>
                             </div>
-                            <button
-                              type="button"
-                              className="multiplayer-join-button"
-                              onClick={() => {
-                                void handleSpectateMultiplayerGame(game.id);
-                              }}
-                              disabled={isSpectating || isCreatingMultiplayerGame}
-                            >
-                              {isSpectating ? "Opening..." : "Spectate"}
-                            </button>
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
+                            <div className="multiplayer-game-actions">
+                              <div className="multiplayer-game-badge">
+                                <span>{game.status}</span>
+                                <span>Live</span>
+                              </div>
+                              <button
+                                type="button"
+                                className="multiplayer-join-button"
+                                onClick={() => {
+                                  void handleSpectateMultiplayerGame(game.id);
+                                }}
+                                disabled={isSpectating || isCreatingMultiplayerGame}
+                              >
+                                {isSpectating ? "Opening..." : "Spectate"}
+                              </button>
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </section>
                 ) : null}
               </section>
             ) : null}

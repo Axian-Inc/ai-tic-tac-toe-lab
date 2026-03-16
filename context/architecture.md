@@ -202,6 +202,14 @@ Last updated: 2026-03-16
 - Shared validation limits for create-form inputs live in `src/shared/multiplayer.ts` so the modal and backend enforce the same field requirements without duplicate constants.
 - `src/App.tsx` keeps create-state validation and request-failure messaging inside the modal while reusing the existing successful host-navigation path into gameplay as player `X`.
 
+### Join or Spectate Multiplayer Games from Modal (US-40)
+- `US-40` extends the existing modal shell and `US-39` create flow instead of restoring separate landing-page discovery panels or introducing new backend APIs.
+- `src/App.tsx` now keeps one discovery mode in the multiplayer modal that:
+  - Loads waiting and active games together through the existing `GET /games?status=waiting|active` endpoints.
+  - Groups waiting games as joinable entries and active games as spectator-only entries inside the same list surface.
+  - Reuses the existing `POST /games/{id}/join` and spectator `GET /games/{id}` navigation flows so modal actions still enter gameplay with the correct session role.
+- Discovery refresh and explicit empty-state messaging remain local UI behavior layered on top of the existing multiplayer summary endpoints rather than a second discovery model.
+
 ### Planned Server-Backed Multiplayer Architecture
 - Introduce a lightweight HTTP server API as the authoritative source of truth for multiplayer games.
 - Keep the shared `Game` domain rules as the core move-validation engine, reused by the server for multiplayer game progression.

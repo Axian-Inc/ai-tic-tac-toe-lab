@@ -118,3 +118,11 @@ Last updated: 2026-03-16
 - Backend create validation remains part of the same service process and returns modal-safe request errors for invalid or oversized create fields.
 - Created games now retain host and match names in multiplayer summaries/snapshots without changing the existing waiting-game navigation path.
 - Local verification for US-39 is covered by `npm run typecheck` and `npm run build`.
+
+### US-40 Local Multiplayer Discovery Flow
+- The multiplayer modal now uses one discovery tab for both joining and spectating.
+- Discovery refresh reuses the existing backend summary endpoints:
+  - `GET /games?status=waiting` for joinable waiting matches.
+  - `GET /games?status=active` for spectatable live matches.
+- Selecting a waiting game still uses `POST /games/{id}/join`, and selecting an active game still uses `GET /games/{id}` plus spectator session routing.
+- Local verification for US-40 is covered by `npm run typecheck` and `npm run build`.

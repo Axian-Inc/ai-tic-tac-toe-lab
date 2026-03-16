@@ -475,6 +475,11 @@ Acceptance criteria:
 ### US-40 Join or Spectate Multiplayer Games from Modal
 As a player or spectator, I want to discover available games in the multiplayer modal so that I can join a waiting match or spectate an active one from the same setup surface.
 
+Status note (2026-03-16):
+- Consolidated modal discovery into a single `Join` mode that loads waiting and active games together.
+- Grouped waiting games as joinable entries and active games as spectator entries inside the same modal panel.
+- Added shared refresh and explicit no-games messaging without changing the underlying join or spectate backend flows.
+
 Deployable increment:
 - Multiplayer join and spectate discovery are consolidated into the modal instead of spread across separate landing-page actions.
 - Empty-state and refresh behavior become part of the supported multiplayer discovery UX.
