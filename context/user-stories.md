@@ -1,6 +1,6 @@
 # User Stories - Phase 1
 
-Last updated: 2026-03-15
+Last updated: 2026-03-16
 
 ## Epic 1: App Foundation
 
@@ -189,7 +189,7 @@ Acceptance criteria:
 
 # User-stories = Phase 2
 
-Last updated: 2026-03-09
+Last updated: 2026-03-16
 
 ## Sequencing Rule
 - Each story must leave production deployable with no broken routes or blocked single-player flow.
@@ -413,9 +413,75 @@ Acceptance criteria:
 - Completed games retain enough history for replay in the client.
 - Replay data access does not allow mutation of historical game state.
 
-## Epic 10: Timeout and Operational Readiness
+## Epic 10: Multiplayer Access Modal
 
-### US-38 Abandonment Detection and Resolution
+### US-38 Launch Multiplayer Modal from Landing
+As a player, I want multiplayer setup to open in a modal from the landing page so that I can create, join, or spectate without leaving the main screen context.
+
+Deployable increment:
+- The landing page exposes multiplayer through a single `New Multiplayer` entry point instead of separate create/join links.
+- Multiplayer setup becomes a contained overlay flow that preserves the existing landing-page presentation and CPU entry path.
+
+Technical notes:
+- Replace separate landing-page multiplayer entry points with a single `New Multiplayer` action that opens a centered modal matching `context/example-images/phase2/landing page.png` and `context/example-images/phase2/Create multiplayer modal.png`.
+  Meaning and objective: This means the landing page should keep one clear multiplayer call to action and defer the rest of the setup choices into an overlay. The goal is to simplify the first interaction and align the UI structure with the Phase 2 visual reference.
+- Add modal open, close, and escape/cancel behavior that does not disrupt the existing single-player landing-page flow.
+  Meaning and objective: This means users should be able to enter and dismiss multiplayer setup without navigating away or breaking the CPU play path. The goal is to keep the modal lightweight and reversible.
+- Keep player-name capture inside the modal so create, join, and spectate actions can reuse a single multiplayer setup surface.
+  Meaning and objective: This means participant identity input should live in one shared modal form instead of being duplicated across separate routes or panels. The goal is to make multiplayer setup consistent across all multiplayer entry actions.
+
+Acceptance criteria:
+- Landing page exposes a single multiplayer CTA that opens a modal.
+- The modal can be closed without leaving the landing page.
+- Opening and closing the modal does not break the existing single-player CTA.
+- The modal includes shared player-name input for multiplayer flows.
+
+### US-39 Create Multiplayer Game from Modal
+As a player, I want to create a multiplayer game from the modal so that I can host a match without leaving the landing page flow.
+
+Deployable increment:
+- Hosting a new multiplayer session is initiated from the create tab inside the modal.
+- The created game flow stays aligned with the existing backend create endpoint while adopting the new modal-first UX.
+
+Technical notes:
+- Add a `Create` mode in the multiplayer modal, matching `context/example-images/phase2/Create multiplayer modal.png`, with fields for player name and game name.
+  Meaning and objective: This means the modal should provide a dedicated create state where the host can identify themselves and label the game before submitting. The goal is to support intentional match creation with the UI shown in the reference image.
+- Wire modal create submission to the existing multiplayer create flow so successful creation still provisions a waiting game and navigates the host into the multiplayer session as player `X`.
+  Meaning and objective: This means the create modal should change the frontend entry experience, not replace the underlying multiplayer session setup rules. The goal is to preserve the current server-backed behavior while modernizing the entry UI.
+- Surface create-state validation and request failure messaging inside the modal without regressing the deployable waiting-game path introduced earlier.
+  Meaning and objective: This means missing required fields or backend failures should be explained within the modal instead of dropping the user into a broken state. The goal is to keep creation reliable and understandable.
+
+Acceptance criteria:
+- The multiplayer modal includes a create mode with player-name and game-name inputs.
+- Submitting create from the modal calls the existing create-game flow successfully.
+- A successful create action starts a waiting multiplayer game for the host.
+- Validation or backend failures are shown in the modal without breaking the landing page.
+
+### US-40 Join or Spectate Multiplayer Games from Modal
+As a player or spectator, I want to discover available games in the multiplayer modal so that I can join a waiting match or spectate an active one from the same setup surface.
+
+Deployable increment:
+- Multiplayer join and spectate discovery are consolidated into the modal instead of spread across separate landing-page actions.
+- Empty-state and refresh behavior become part of the supported multiplayer discovery UX.
+
+Technical notes:
+- Add a `Join` mode in the multiplayer modal, matching `context/example-images/phase2/Create mulitplayer modal - no games.png`, that lists available games and handles explicit empty-state messaging plus refresh.
+  Meaning and objective: This means the modal should provide a browseable multiplayer list instead of requiring a separate landing-page panel or navigation step. The goal is to centralize multiplayer discovery and support the no-games state shown in the reference image.
+- Update discovery data and UI grouping so waiting games are clearly joinable and active games are clearly spectatable from the same modal list.
+  Meaning and objective: This means the client should distinguish between games a user can join as player `O` and games they can only watch as a spectator. The goal is to support both capabilities from one modal without confusing the available actions.
+- Reuse the existing waiting-game join flow and active-game spectate flow from the modal so the chosen list action enters gameplay with the correct session role and authoritative game context.
+  Meaning and objective: This means modal actions should still land users in the correct multiplayer mode, whether they are joining as a player or entering as a spectator. The goal is to keep backend behavior unchanged while updating how users initiate those flows.
+
+Acceptance criteria:
+- The multiplayer modal includes a join/discovery mode for available games.
+- Waiting games in the modal can be joined as player `O`.
+- Active games in the modal can be entered in spectator mode.
+- When no games are available, the modal shows an explicit empty state.
+- The modal supports refreshing the available-game list.
+
+## Epic 11: Timeout and Operational Readiness
+
+### US-41 Abandonment Detection and Resolution
 As a player, I want abandoned games resolved by the server so that stalled matches do not remain active indefinitely.
 
 Deployable increment:
@@ -439,7 +505,7 @@ Acceptance criteria:
 - Abandonment decisions are broadcast to subscribed clients.
 - Requests made before the timeout threshold do not incorrectly end the game.
 
-### US-39 Phase 2 AWS Deployment and Low-Cost Operations
+### US-42 Phase 2 AWS Deployment and Low-Cost Operations
 As a developer, I want Phase 2 infrastructure and deployment automation updated for multiplayer so that the full system can be shipped and operated cheaply on AWS.
 
 Deployable increment:
