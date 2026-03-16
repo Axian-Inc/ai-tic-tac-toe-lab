@@ -423,6 +423,11 @@ Acceptance criteria:
 ### US-38 Launch Multiplayer Modal from Landing
 As a player, I want multiplayer setup to open in a modal from the landing page so that I can create, join, or spectate without leaving the main screen context.
 
+Status note (2026-03-16):
+- Replaced the separate landing-page multiplayer buttons with one `New Multiplayer` CTA.
+- Added a centered multiplayer modal that can be closed by close button, cancel action, escape key, or backdrop click without leaving the landing page.
+- Moved the existing create, join, and spectate entry behaviors into the modal while adding one shared player-name input for the multiplayer setup surface.
+
 Deployable increment:
 - The landing page exposes multiplayer through a single `New Multiplayer` entry point instead of separate create/join links.
 - Multiplayer setup becomes a contained overlay flow that preserves the existing landing-page presentation and CPU entry path.

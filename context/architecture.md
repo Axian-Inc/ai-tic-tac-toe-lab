@@ -187,6 +187,13 @@ Last updated: 2026-03-16
   - Completed games support step-through replay from the same gameplay route.
   - Player actions remain tied to live authoritative state only; replay mode disables move/resign mutations until the user returns to live view.
 
+### Landing-Page Multiplayer Modal (US-38)
+- `US-38` reuses the existing landing-page multiplayer create/join/spectate handlers from `US-31`, `US-32`, and `US-36` instead of adding new backend APIs or alternate frontend flows.
+- `src/App.tsx` now presents one landing-page multiplayer CTA that opens a centered modal overlay:
+  - The modal preserves the existing single-player CTA and landing-page layout underneath.
+  - Close behavior is reversible through explicit close/cancel actions, escape key handling, and backdrop click handling.
+- The modal keeps one shared player-name input and hosts the existing create, join, and spectate entry surfaces so later modal stories can extend one setup shell without duplicating entry-state management.
+
 ### Planned Server-Backed Multiplayer Architecture
 - Introduce a lightweight HTTP server API as the authoritative source of truth for multiplayer games.
 - Keep the shared `Game` domain rules as the core move-validation engine, reused by the server for multiplayer game progression.

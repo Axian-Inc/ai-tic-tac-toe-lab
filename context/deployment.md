@@ -106,3 +106,9 @@ Last updated: 2026-03-16
   - Retained move/event history survives reconnects while the service process stays up.
   - Retained move/event history is lost if the backend process restarts or is redeployed.
 - Local verification for US-37 is covered by `npm run typecheck` and `npm run build`.
+
+### US-38 Local Multiplayer Modal Launch
+- Landing-page multiplayer entry now starts from a single `New Multiplayer` CTA in the client.
+- The multiplayer setup UI is rendered as a client-side modal overlay; no backend deployment or API configuration changes were required for this story.
+- The modal preserves the existing create/join/spectate network calls while adding local-only open/close/escape handling and shared player-name capture.
+- Local verification for US-38 is covered by `npm run typecheck` and `npm run build`.

@@ -281,8 +281,11 @@ function LandingPage({
   onStartGame: () => void;
   onOpenMultiplayerGame: (gameView: MultiplayerGameView) => void;
 }) {
-  const [isJoinPanelVisible, setIsJoinPanelVisible] = useState<boolean>(false);
-  const [isSpectatePanelVisible, setIsSpectatePanelVisible] = useState<boolean>(false);
+  const [isMultiplayerModalOpen, setIsMultiplayerModalOpen] = useState<boolean>(false);
+  const [multiplayerModalView, setMultiplayerModalView] = useState<
+    "create" | "join" | "spectate"
+  >("create");
+  const [playerName, setPlayerName] = useState<string>("");
   const [waitingGames, setWaitingGames] = useState<MultiplayerGameSummary[]>([]);
   const [activeGames, setActiveGames] = useState<MultiplayerGameSummary[]>([]);
   const [isLoadingWaitingGames, setIsLoadingWaitingGames] = useState<boolean>(false);
@@ -292,6 +295,7 @@ function LandingPage({
   const [joiningGameId, setJoiningGameId] = useState<string | null>(null);
   const [spectatingGameId, setSpectatingGameId] = useState<string | null>(null);
   const [multiplayerError, setMultiplayerError] = useState<string>("");
+  const playerNameInputRef = useRef<HTMLInputElement | null>(null);
 
   const loadWaitingGames = async () => {
     setIsLoadingWaitingGames(true);
@@ -311,7 +315,6 @@ function LandingPage({
 
   const handleCreateMultiplayerGame = async () => {
     setIsCreatingMultiplayerGame(true);
-    setIsJoinPanelVisible(true);
     setMultiplayerError("");
 
     try {
@@ -349,7 +352,7 @@ function LandingPage({
   };
 
   const handleOpenJoinPanel = async () => {
-    setIsJoinPanelVisible(true);
+    setMultiplayerModalView("join");
     await loadWaitingGames();
   };
 
@@ -370,7 +373,7 @@ function LandingPage({
   };
 
   const handleOpenSpectatePanel = async () => {
-    setIsSpectatePanelVisible(true);
+    setMultiplayerModalView("spectate");
     await loadActiveGames();
   };
 
@@ -392,6 +395,38 @@ function LandingPage({
       setSpectatingGameId(null);
     }
   };
+
+  const closeMultiplayerModal = () => {
+    setIsMultiplayerModalOpen(false);
+    setMultiplayerError("");
+  };
+
+  const handleOpenMultiplayerModal = () => {
+    setIsMultiplayerModalOpen(true);
+    setMultiplayerModalView("create");
+    setMultiplayerError("");
+  };
+
+  useEffect(() => {
+    if (!isMultiplayerModalOpen) {
+      return;
+    }
+
+    playerNameInputRef.current?.focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsMultiplayerModalOpen(false);
+        setMultiplayerError("");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isMultiplayerModalOpen]);
 
   return (
     <main className="page page-landing">
@@ -420,174 +455,11 @@ function LandingPage({
           <button
             type="button"
             className="landing-cta landing-cta-secondary"
-            onClick={() => {
-              void handleCreateMultiplayerGame();
-            }}
-            disabled={isCreatingMultiplayerGame}
+            onClick={handleOpenMultiplayerModal}
           >
-            {isCreatingMultiplayerGame ? "Creating..." : "Start Multiplayer Game"}
-          </button>
-          <button
-            type="button"
-            className="landing-cta landing-cta-ghost"
-            onClick={() => {
-              void handleOpenJoinPanel();
-            }}
-            disabled={isLoadingWaitingGames}
-          >
-            {isLoadingWaitingGames && isJoinPanelVisible
-              ? "Loading..."
-              : "Join Multiplayer Game"}
-          </button>
-          <button
-            type="button"
-            className="landing-cta landing-cta-ghost"
-            onClick={() => {
-              void handleOpenSpectatePanel();
-            }}
-            disabled={isLoadingActiveGames}
-          >
-            {isLoadingActiveGames && isSpectatePanelVisible
-              ? "Loading..."
-              : "Spectate Live Game"}
+            New Multiplayer
           </button>
         </div>
-
-        {isJoinPanelVisible ? (
-          <section className="multiplayer-panel" aria-live="polite">
-            <div className="multiplayer-panel-header">
-              <div>
-                <p className="multiplayer-panel-kicker">Multiplayer Lobby</p>
-                <h2>Waiting games</h2>
-              </div>
-              <button
-                type="button"
-                className="multiplayer-refresh"
-                onClick={() => {
-                  void loadWaitingGames();
-                }}
-                disabled={isLoadingWaitingGames}
-              >
-                Refresh
-              </button>
-            </div>
-
-            {multiplayerError ? (
-              <p className="multiplayer-message multiplayer-message-error">
-                {multiplayerError}
-              </p>
-            ) : null}
-
-            {!multiplayerError && waitingGames.length === 0 && !isLoadingWaitingGames ? (
-              <p className="multiplayer-message">
-                No waiting games yet. Start one to create a joinable lobby.
-              </p>
-            ) : null}
-
-            {waitingGames.length > 0 ? (
-              <ul className="multiplayer-game-list">
-                {waitingGames.map((game) => {
-                  const isJoining = joiningGameId === game.id;
-
-                  return (
-                    <li key={game.id} className="multiplayer-game-card">
-                      <div>
-                        <p className="multiplayer-game-id">{game.id}</p>
-                        <p className="multiplayer-game-meta">
-                          Created {formatMultiplayerTimestamp(game.createdAt)}
-                        </p>
-                      </div>
-                      <div className="multiplayer-game-actions">
-                        <div className="multiplayer-game-badge">
-                          <span>{game.status}</span>
-                          <span>{game.openSeatCount} seat open</span>
-                        </div>
-                        <button
-                          type="button"
-                          className="multiplayer-join-button"
-                          onClick={() => {
-                            void handleJoinMultiplayerGame(game.id);
-                          }}
-                          disabled={isJoining || isCreatingMultiplayerGame}
-                        >
-                          {isJoining ? "Joining..." : "Join"}
-                        </button>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : null}
-          </section>
-        ) : null}
-
-        {isSpectatePanelVisible ? (
-          <section className="multiplayer-panel" aria-live="polite">
-            <div className="multiplayer-panel-header">
-              <div>
-                <p className="multiplayer-panel-kicker">Live Matches</p>
-                <h2>Active games</h2>
-              </div>
-              <button
-                type="button"
-                className="multiplayer-refresh"
-                onClick={() => {
-                  void loadActiveGames();
-                }}
-                disabled={isLoadingActiveGames}
-              >
-                Refresh
-              </button>
-            </div>
-
-            {multiplayerError ? (
-              <p className="multiplayer-message multiplayer-message-error">
-                {multiplayerError}
-              </p>
-            ) : null}
-
-            {!multiplayerError && activeGames.length === 0 && !isLoadingActiveGames ? (
-              <p className="multiplayer-message">
-                No active games are available to spectate right now.
-              </p>
-            ) : null}
-
-            {activeGames.length > 0 ? (
-              <ul className="multiplayer-game-list">
-                {activeGames.map((game) => {
-                  const isSpectating = spectatingGameId === game.id;
-
-                  return (
-                    <li key={game.id} className="multiplayer-game-card">
-                      <div>
-                        <p className="multiplayer-game-id">{game.id}</p>
-                        <p className="multiplayer-game-meta">
-                          Updated {formatMultiplayerTimestamp(game.updatedAt)}
-                        </p>
-                      </div>
-                      <div className="multiplayer-game-actions">
-                        <div className="multiplayer-game-badge">
-                          <span>{game.status}</span>
-                          <span>Live</span>
-                        </div>
-                        <button
-                          type="button"
-                          className="multiplayer-join-button"
-                          onClick={() => {
-                            void handleSpectateMultiplayerGame(game.id);
-                          }}
-                          disabled={isSpectating || isCreatingMultiplayerGame}
-                        >
-                          {isSpectating ? "Opening..." : "Spectate"}
-                        </button>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : null}
-          </section>
-        ) : null}
 
         <div className="landing-meta" aria-hidden="true">
           <div>
@@ -604,6 +476,251 @@ function LandingPage({
           </div>
         </div>
       </section>
+
+      {isMultiplayerModalOpen ? (
+        <div
+          className="multiplayer-modal-backdrop"
+          role="presentation"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              closeMultiplayerModal();
+            }
+          }}
+        >
+          <section
+            className="multiplayer-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="multiplayer-modal-title"
+          >
+            <div className="multiplayer-modal-header">
+              <h2 id="multiplayer-modal-title">Multiplayer</h2>
+              <button
+                type="button"
+                className="multiplayer-modal-close"
+                onClick={closeMultiplayerModal}
+                aria-label="Close multiplayer setup"
+              >
+                X
+              </button>
+            </div>
+
+            <label className="multiplayer-field">
+              <span className="multiplayer-field-label">Your Name</span>
+              <input
+                ref={playerNameInputRef}
+                type="text"
+                className="multiplayer-text-input"
+                value={playerName}
+                onChange={(event) => {
+                  setPlayerName(event.target.value);
+                }}
+                placeholder="Enter your name here"
+                autoComplete="nickname"
+              />
+            </label>
+
+            <div className="multiplayer-mode-switch" aria-label="Multiplayer actions">
+              <button
+                type="button"
+                className={`multiplayer-mode-button ${multiplayerModalView === "create" ? "multiplayer-mode-button-active" : ""}`}
+                onClick={() => {
+                  setMultiplayerModalView("create");
+                  setMultiplayerError("");
+                }}
+              >
+                Create
+              </button>
+              <button
+                type="button"
+                className={`multiplayer-mode-button ${multiplayerModalView === "join" ? "multiplayer-mode-button-active" : ""}`}
+                onClick={() => {
+                  void handleOpenJoinPanel();
+                }}
+              >
+                Join
+              </button>
+              <button
+                type="button"
+                className={`multiplayer-mode-button ${multiplayerModalView === "spectate" ? "multiplayer-mode-button-active" : ""}`}
+                onClick={() => {
+                  void handleOpenSpectatePanel();
+                }}
+              >
+                Spectate
+              </button>
+            </div>
+
+            {multiplayerError ? (
+              <p className="multiplayer-message multiplayer-message-error">
+                {multiplayerError}
+              </p>
+            ) : null}
+
+            {multiplayerModalView === "create" ? (
+              <section className="multiplayer-panel multiplayer-modal-panel" aria-live="polite">
+                <div className="multiplayer-panel-header">
+                  <div>
+                    <p className="multiplayer-panel-kicker">Host a Match</p>
+                    <h2>Create a new multiplayer game</h2>
+                  </div>
+                </div>
+                <p className="multiplayer-message">
+                  Start a waiting match and share the match ID with another player.
+                </p>
+                <div className="multiplayer-modal-actions">
+                  <button
+                    type="button"
+                    className="landing-cta multiplayer-modal-submit"
+                    onClick={() => {
+                      void handleCreateMultiplayerGame();
+                    }}
+                    disabled={isCreatingMultiplayerGame}
+                  >
+                    {isCreatingMultiplayerGame ? "Creating..." : "Create Game"}
+                  </button>
+                  <button
+                    type="button"
+                    className="multiplayer-refresh multiplayer-modal-cancel"
+                    onClick={closeMultiplayerModal}
+                    disabled={isCreatingMultiplayerGame}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </section>
+            ) : null}
+
+            {multiplayerModalView === "join" ? (
+              <section className="multiplayer-panel multiplayer-modal-panel" aria-live="polite">
+                <div className="multiplayer-panel-header">
+                  <div>
+                    <p className="multiplayer-panel-kicker">Multiplayer Lobby</p>
+                    <h2>Waiting games</h2>
+                  </div>
+                  <button
+                    type="button"
+                    className="multiplayer-refresh"
+                    onClick={() => {
+                      void loadWaitingGames();
+                    }}
+                    disabled={isLoadingWaitingGames}
+                  >
+                    Refresh
+                  </button>
+                </div>
+
+                {!multiplayerError &&
+                waitingGames.length === 0 &&
+                !isLoadingWaitingGames ? (
+                  <p className="multiplayer-message">
+                    No waiting games yet. Start one to create a joinable lobby.
+                  </p>
+                ) : null}
+
+                {waitingGames.length > 0 ? (
+                  <ul className="multiplayer-game-list">
+                    {waitingGames.map((game) => {
+                      const isJoining = joiningGameId === game.id;
+
+                      return (
+                        <li key={game.id} className="multiplayer-game-card">
+                          <div>
+                            <p className="multiplayer-game-id">{game.id}</p>
+                            <p className="multiplayer-game-meta">
+                              Created {formatMultiplayerTimestamp(game.createdAt)}
+                            </p>
+                          </div>
+                          <div className="multiplayer-game-actions">
+                            <div className="multiplayer-game-badge">
+                              <span>{game.status}</span>
+                              <span>{game.openSeatCount} seat open</span>
+                            </div>
+                            <button
+                              type="button"
+                              className="multiplayer-join-button"
+                              onClick={() => {
+                                void handleJoinMultiplayerGame(game.id);
+                              }}
+                              disabled={isJoining || isCreatingMultiplayerGame}
+                            >
+                              {isJoining ? "Joining..." : "Join"}
+                            </button>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : null}
+              </section>
+            ) : null}
+
+            {multiplayerModalView === "spectate" ? (
+              <section className="multiplayer-panel multiplayer-modal-panel" aria-live="polite">
+                <div className="multiplayer-panel-header">
+                  <div>
+                    <p className="multiplayer-panel-kicker">Live Matches</p>
+                    <h2>Active games</h2>
+                  </div>
+                  <button
+                    type="button"
+                    className="multiplayer-refresh"
+                    onClick={() => {
+                      void loadActiveGames();
+                    }}
+                    disabled={isLoadingActiveGames}
+                  >
+                    Refresh
+                  </button>
+                </div>
+
+                {!multiplayerError &&
+                activeGames.length === 0 &&
+                !isLoadingActiveGames ? (
+                  <p className="multiplayer-message">
+                    No active games are available to spectate right now.
+                  </p>
+                ) : null}
+
+                {activeGames.length > 0 ? (
+                  <ul className="multiplayer-game-list">
+                    {activeGames.map((game) => {
+                      const isSpectating = spectatingGameId === game.id;
+
+                      return (
+                        <li key={game.id} className="multiplayer-game-card">
+                          <div>
+                            <p className="multiplayer-game-id">{game.id}</p>
+                            <p className="multiplayer-game-meta">
+                              Updated {formatMultiplayerTimestamp(game.updatedAt)}
+                            </p>
+                          </div>
+                          <div className="multiplayer-game-actions">
+                            <div className="multiplayer-game-badge">
+                              <span>{game.status}</span>
+                              <span>Live</span>
+                            </div>
+                            <button
+                              type="button"
+                              className="multiplayer-join-button"
+                              onClick={() => {
+                                void handleSpectateMultiplayerGame(game.id);
+                              }}
+                              disabled={isSpectating || isCreatingMultiplayerGame}
+                            >
+                              {isSpectating ? "Opening..." : "Spectate"}
+                            </button>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : null}
+              </section>
+            ) : null}
+          </section>
+        </div>
+      ) : null}
     </main>
   );
 }
