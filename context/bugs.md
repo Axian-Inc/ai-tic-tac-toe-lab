@@ -1,6 +1,6 @@
 # Bugs
 
-Last updated: 2026-03-09
+Last updated: 2026-03-16
 
 This file tracks active and resolved product defects discovered during development and testing.
 
@@ -43,4 +43,9 @@ This file tracks active and resolved product defects discovered during developme
 
 ### Resolved
 
-- None.
+#### BUG-004 Multiplayer Shows Quit Alongside Resign
+- Reported: 2026-03-16
+- Resolved: 2026-03-16
+- Related stories: US-13, US-35
+- Root cause: The shared gameplay secondary control rendered `Quit` for active player sessions without excluding the multiplayer flow that already exposed `Resign`.
+- Resolution: Updated gameplay controls so active multiplayer player sessions show only `Resign`, while the shared `Quit`/`Home` control remains unchanged for single-player and other non-active multiplayer states.

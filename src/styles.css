@@ -442,6 +442,58 @@ body,
   color: var(--text-muted);
 }
 
+.gameplay-history-card {
+  margin-top: 0.95rem;
+  padding-top: 0.95rem;
+  border-top: 1px solid rgba(124, 137, 166, 0.24);
+}
+
+.gameplay-history-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.gameplay-history-title {
+  margin-top: 0.2rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.gameplay-history-retention {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.86rem;
+  text-align: right;
+}
+
+.gameplay-history-summary {
+  margin-top: 0.65rem;
+  color: #d9e6fb;
+  font-size: 0.94rem;
+}
+
+.gameplay-history-meta {
+  margin-top: 0.55rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 0.9rem;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+.gameplay-history-controls {
+  margin-top: 0.8rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.gameplay-history-button {
+  width: 100%;
+}
+
 .title-x {
   color: #83d8dd;
 }
@@ -715,6 +767,14 @@ body,
 
   .gameplay-session-header {
     flex-direction: column;
+  }
+
+  .gameplay-history-header {
+    flex-direction: column;
+  }
+
+  .gameplay-history-retention {
+    text-align: left;
   }
 
   .landing-meta {

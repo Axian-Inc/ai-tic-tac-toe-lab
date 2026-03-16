@@ -393,6 +393,11 @@ Acceptance criteria:
 ### US-37 Replay and Catch-Up Data Retention
 As a player or spectator, I want enough history stored to catch up to live games and replay completed games so that game progression is understandable after reconnects.
 
+Status note (2026-03-16):
+- Multiplayer game snapshots now retain ordered lifecycle events for create/join/complete milestones alongside the existing ordered move history in `state.moves`.
+- The gameplay screen now includes replay/catch-up controls that derive intermediate board states from retained move history without mutating the live authoritative snapshot.
+- Phase 2 retention is explicitly documented as in-memory only for the current single-process deployment, so replay/catch-up history survives reconnects but not backend restarts.
+
 Deployable increment:
 - Live games become recoverable after reconnect.
 - Completed games can be viewed as replays without affecting active gameplay reliability.

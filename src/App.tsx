@@ -10,7 +10,9 @@ import {
   resignMultiplayerGame,
   submitMultiplayerMove,
 } from "./multiplayer/api";
+import { buildMultiplayerReplayFrames } from "./multiplayer/replay";
 import type {
+  MultiplayerGameEvent,
   MultiplayerGameSnapshot,
   MultiplayerGameSummary,
   MultiplayerServerEvent,
@@ -250,6 +252,26 @@ function getLiveSyncLabel(liveSyncState: LiveSyncState): string {
   }
 
   return "Live sync idle";
+}
+
+function getReplayEventSummary(event: MultiplayerGameEvent): string {
+  if (event.type === "game-created") {
+    return `Player ${event.player} created the match.`;
+  }
+
+  if (event.type === "player-joined") {
+    return `Player ${event.player} joined the match.`;
+  }
+
+  if (event.completion.endReason === "resignation") {
+    return `Completed by resignation. Player ${event.completion.loser} resigned.`;
+  }
+
+  if (event.completion.endReason === "draw") {
+    return "Completed as a draw.";
+  }
+
+  return `Completed with player ${event.completion.winner} winning.`;
 }
 
 function LandingPage({
@@ -620,10 +642,20 @@ function GameplayPage({
     useState<boolean>(false);
   const [multiplayerError, setMultiplayerError] = useState<string>("");
   const [liveSyncState, setLiveSyncState] = useState<LiveSyncState>("idle");
+  const [replayFrameIndex, setReplayFrameIndex] = useState<number | null>(null);
 
-  const displayedGameState = multiplayerGame?.state ?? singlePlayerGameState;
+  const replayFrames = useMemo(
+    () => (multiplayerGame ? buildMultiplayerReplayFrames(multiplayerGame) : []),
+    [multiplayerGame]
+  );
+  const replayFrame =
+    replayFrameIndex !== null ? replayFrames[replayFrameIndex] ?? null : null;
+  const isReplayActive = replayFrame !== null;
+  const displayedGameState = replayFrame?.state ?? multiplayerGame?.state ?? singlePlayerGameState;
   const statusMessage =
-    multiplayerSession && isMultiplayer
+    isReplayActive && replayFrame
+      ? `Replay: ${replayFrame.description}`
+      : multiplayerSession && isMultiplayer
       ? getMultiplayerStatusMessage(multiplayerGame, multiplayerSession)
       : getSinglePlayerStatusMessage(displayedGameState);
   const isGameOver = displayedGameState.status.isOver;
@@ -631,6 +663,12 @@ function GameplayPage({
   const isOTurn = !isGameOver && displayedGameState.currentPlayer === "O";
   const isLoadingMultiplayerGame = isMultiplayer && multiplayerGame === null;
   const isSpectatorSession = multiplayerSession?.role === "spectator";
+  const isActiveMultiplayerPlayerGame =
+    isMultiplayer &&
+    multiplayerGame !== null &&
+    multiplayerSession?.role === "player" &&
+    multiplayerGame.status === "active" &&
+    !multiplayerGame.state.status.isOver;
 
   const boardCells = useMemo(
     () =>
@@ -644,6 +682,7 @@ function GameplayPage({
         const isMultiplayerInteractive =
           isMultiplayer &&
           multiplayerGame !== null &&
+          !isReplayActive &&
           multiplayerSession?.role === "player" &&
           multiplayerGame.status === "active" &&
           !multiplayerGame.state.status.isOver &&
@@ -663,6 +702,7 @@ function GameplayPage({
       displayedGameState.currentPlayer,
       displayedGameState.status.isOver,
       isMultiplayer,
+      isReplayActive,
       multiplayerSession,
       isResigningMultiplayerGame,
       isSubmittingMultiplayerMove,
@@ -817,6 +857,26 @@ function GameplayPage({
     );
   };
 
+  useEffect(() => {
+    if (!isMultiplayer) {
+      setReplayFrameIndex(null);
+      return;
+    }
+
+    if (replayFrameIndex === null) {
+      return;
+    }
+
+    if (replayFrames.length === 0) {
+      setReplayFrameIndex(null);
+      return;
+    }
+
+    if (replayFrameIndex >= replayFrames.length) {
+      setReplayFrameIndex(replayFrames.length - 1);
+    }
+  }, [isMultiplayer, replayFrameIndex, replayFrames]);
+
   const handleRefreshMultiplayerGame = async () => {
     setIsRefreshingMultiplayerGame(true);
     setMultiplayerError("");
@@ -839,6 +899,7 @@ function GameplayPage({
       !multiplayerGame ||
       multiplayerGame.status !== "active" ||
       multiplayerGame.state.status.isOver ||
+      isReplayActive ||
       isResigningMultiplayerGame
     ) {
       return;
@@ -874,6 +935,7 @@ function GameplayPage({
       multiplayerGame !== null &&
       multiplayerSession !== null &&
       multiplayerSession.role === "player" &&
+      !isReplayActive &&
       multiplayerGame.status === "active" &&
       multiplayerGame.state.currentPlayer === multiplayerSession.player &&
       multiplayerGame.state.board[position] === null &&
@@ -1092,6 +1154,10 @@ function GameplayPage({
   const multiplayerHelpMessage =
     multiplayerGame === null
       ? "Loading the authoritative multiplayer state from the server."
+      : isReplayActive
+        ? multiplayerSession?.role === "player"
+          ? "You are viewing retained history. Return to live before making moves or resigning."
+          : "You are viewing retained history. Return to live to resume following the match in real time."
       : multiplayerSession?.role === "spectator"
         ? liveSyncState === "connected"
           ? "You are spectating this match. The board is read-only and live updates are arriving automatically."
@@ -1103,6 +1169,12 @@ function GameplayPage({
         : liveSyncState === "connected"
           ? "Moves are validated by the server and live updates are arriving automatically."
           : "Moves are validated by the server. If live sync is unavailable, use Refresh Match to pull the latest state.";
+  const isReplayAvailable = replayFrames.length > 1;
+  const lastReplayFrameIndex = replayFrames.length - 1;
+  const latestHistoryEvent =
+    multiplayerGame && multiplayerGame.history.events.length > 0
+      ? multiplayerGame.history.events[multiplayerGame.history.events.length - 1]
+      : null;
 
   return (
     <main className="page page-gameplay" aria-label="Gameplay board">
@@ -1173,6 +1245,87 @@ function GameplayPage({
                 {multiplayerError}
               </p>
             ) : null}
+            {multiplayerGame && isReplayAvailable ? (
+              <section className="gameplay-history-card" aria-label="Replay and catch-up">
+                <div className="gameplay-history-header">
+                  <div>
+                    <p className="gameplay-session-kicker">Replay and Catch-Up</p>
+                    <p className="gameplay-history-title">
+                      {isReplayActive
+                        ? `${replayFrame.label} of ${replayFrames[lastReplayFrameIndex].label}`
+                        : "Viewing live state"}
+                    </p>
+                  </div>
+                  <p className="gameplay-history-retention">
+                    Retention: {multiplayerGame.history.retention.mode} only
+                  </p>
+                </div>
+                <p className="gameplay-history-summary">
+                  {isReplayActive
+                    ? replayFrame.description
+                    : `${multiplayerGame.state.moves.length} recorded moves available for catch-up and replay.`}
+                </p>
+                <p className="gameplay-history-meta">
+                  <span>{multiplayerGame.history.events.length} lifecycle events retained</span>
+                  {latestHistoryEvent ? (
+                    <span>{getReplayEventSummary(latestHistoryEvent)}</span>
+                  ) : null}
+                </p>
+                <div className="gameplay-history-controls">
+                  <button
+                    type="button"
+                    className="multiplayer-refresh gameplay-history-button"
+                    onClick={() => {
+                      setReplayFrameIndex(0);
+                    }}
+                  >
+                    Start
+                  </button>
+                  <button
+                    type="button"
+                    className="multiplayer-refresh gameplay-history-button"
+                    onClick={() => {
+                      setReplayFrameIndex((current) => {
+                        if (current === null) {
+                          return Math.max(lastReplayFrameIndex - 1, 0);
+                        }
+
+                        return Math.max(current - 1, 0);
+                      });
+                    }}
+                    disabled={replayFrameIndex === 0}
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    className="multiplayer-refresh gameplay-history-button"
+                    onClick={() => {
+                      setReplayFrameIndex((current) => {
+                        if (current === null) {
+                          return lastReplayFrameIndex;
+                        }
+
+                        return Math.min(current + 1, lastReplayFrameIndex);
+                      });
+                    }}
+                    disabled={replayFrameIndex === lastReplayFrameIndex}
+                  >
+                    Next
+                  </button>
+                  <button
+                    type="button"
+                    className="multiplayer-refresh gameplay-history-button"
+                    onClick={() => {
+                      setReplayFrameIndex(null);
+                    }}
+                    disabled={!isReplayActive}
+                  >
+                    Return to Live
+                  </button>
+                </div>
+              </section>
+            ) : null}
           </section>
         ) : null}
 
@@ -1230,18 +1383,14 @@ function GameplayPage({
         </section>
 
         <div className="gameplay-controls">
-          {isMultiplayer &&
-          multiplayerGame &&
-          multiplayerSession?.role === "player" &&
-          multiplayerGame.status === "active" &&
-          !multiplayerGame.state.status.isOver ? (
+          {isActiveMultiplayerPlayerGame ? (
             <button
               type="button"
               className="gameplay-control gameplay-control-primary"
               onClick={() => {
                 void handleResignMultiplayerGame();
               }}
-              disabled={isResigningMultiplayerGame}
+              disabled={isResigningMultiplayerGame || isReplayActive}
             >
               {isResigningMultiplayerGame ? "Resigning..." : "Resign"}
             </button>
@@ -1255,13 +1404,15 @@ function GameplayPage({
               Play Again
             </button>
           ) : null}
-          <button
-            type="button"
-            className="gameplay-control gameplay-control-secondary"
-            onClick={onExitGame}
-          >
-            {isGameOver || isSpectatorSession ? "Home" : "Quit"}
-          </button>
+          {!isActiveMultiplayerPlayerGame ? (
+            <button
+              type="button"
+              className="gameplay-control gameplay-control-secondary"
+              onClick={onExitGame}
+            >
+              {isGameOver || isSpectatorSession ? "Home" : "Quit"}
+            </button>
+          ) : null}
         </div>
       </section>
     </main>

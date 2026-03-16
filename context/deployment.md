@@ -1,6 +1,6 @@
 # Deployment
 
-Last updated: 2026-03-15
+Last updated: 2026-03-16
 
 ## Phase 1
 
@@ -97,3 +97,12 @@ Last updated: 2026-03-15
   - `WS /ws?gameId=...` for live spectator updates.
 - The frontend gameplay route now supports multiplayer spectator session state in browser history and URL query parameters without changing existing player routes.
 - Local verification for US-36 is covered by `npm run typecheck` and `npm run build`.
+
+### US-37 Local Replay and Catch-Up Retention
+- Multiplayer replay and catch-up continue to use the existing backend detail and websocket surfaces:
+  - `GET /games/{id}` returns ordered move history via `game.state.moves` plus retained lifecycle events via `game.history.events`.
+  - `WS /ws?gameId=...` continues to push authoritative snapshots that include the same retained history metadata.
+- Phase 2 retention remains in-memory for the current single-process backend deployment:
+  - Retained move/event history survives reconnects while the service process stays up.
+  - Retained move/event history is lost if the backend process restarts or is redeployed.
+- Local verification for US-37 is covered by `npm run typecheck` and `npm run build`.

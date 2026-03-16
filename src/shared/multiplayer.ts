@@ -24,6 +24,7 @@ export interface MultiplayerGameSnapshot extends MultiplayerGameSummary {
   players: MultiplayerPlayerAssignments;
   state: GameState;
   completion: MultiplayerCompletion | null;
+  history: MultiplayerGameHistory;
 }
 
 export interface MultiplayerPlayerSession {
@@ -81,6 +82,42 @@ export interface MultiplayerCompletion {
   winner: Player | null;
   loser: Player | null;
   completedAt: string;
+}
+
+export interface MultiplayerHistoryRetention {
+  mode: "process-memory";
+  survivesServiceRestart: false;
+}
+
+export interface MultiplayerGameCreatedEvent {
+  type: "game-created";
+  sequence: number;
+  occurredAt: string;
+  player: Player;
+}
+
+export interface MultiplayerPlayerJoinedEvent {
+  type: "player-joined";
+  sequence: number;
+  occurredAt: string;
+  player: Player;
+}
+
+export interface MultiplayerGameCompletedEvent {
+  type: "game-completed";
+  sequence: number;
+  occurredAt: string;
+  completion: MultiplayerCompletion;
+}
+
+export type MultiplayerGameEvent =
+  | MultiplayerGameCreatedEvent
+  | MultiplayerPlayerJoinedEvent
+  | MultiplayerGameCompletedEvent;
+
+export interface MultiplayerGameHistory {
+  retention: MultiplayerHistoryRetention;
+  events: MultiplayerGameEvent[];
 }
 
 export interface MultiplayerConnectionReadyEvent {

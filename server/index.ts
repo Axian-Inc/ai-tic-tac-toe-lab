@@ -11,6 +11,7 @@ import type {
   ListGamesResponse,
   MultiplayerCompletion,
   MultiplayerConnectionReadyEvent,
+  MultiplayerGameEvent,
   MultiplayerGameOverEvent,
   MultiplayerGameSnapshot,
   MultiplayerGameStatus,
@@ -38,6 +39,10 @@ const SUPPORTED_GAME_STATUSES: ReadonlySet<MultiplayerGameStatus> = new Set([
 ]);
 
 const serviceStartedAt = new Date().toISOString();
+const MULTIPLAYER_HISTORY_RETENTION = {
+  mode: "process-memory",
+  survivesServiceRestart: false,
+} as const;
 
 interface MultiplayerGameRecord {
   id: string;
@@ -47,6 +52,7 @@ interface MultiplayerGameRecord {
   game: Game;
   players: MultiplayerPlayerAssignments;
   completion: MultiplayerCompletion | null;
+  historyEvents: MultiplayerGameEvent[];
 }
 
 interface MultiplayerService {
@@ -54,6 +60,11 @@ interface MultiplayerService {
   gameStore: InMemoryMultiplayerGameStore;
   websocketHub: MultiplayerWebSocketHub;
 }
+
+type MultiplayerGameEventInput =
+  | Omit<Extract<MultiplayerGameEvent, { type: "game-created" }>, "sequence">
+  | Omit<Extract<MultiplayerGameEvent, { type: "player-joined" }>, "sequence">
+  | Omit<Extract<MultiplayerGameEvent, { type: "game-completed" }>, "sequence">;
 
 function toGameSummary(game: MultiplayerGameRecord): MultiplayerGameSummary {
   const openSeatCount = game.players.O === null ? 1 : 0;
@@ -89,6 +100,19 @@ function toGameSnapshot(game: MultiplayerGameRecord): MultiplayerGameSnapshot {
     },
     state: snapshotState,
     completion: game.completion ? { ...game.completion } : null,
+    history: {
+      retention: MULTIPLAYER_HISTORY_RETENTION,
+      events: game.historyEvents.map((event) => {
+        if (event.type === "game-completed") {
+          return {
+            ...event,
+            completion: { ...event.completion },
+          };
+        }
+
+        return { ...event };
+      }),
+    },
   };
 }
 
@@ -137,6 +161,16 @@ function createCompletionFromCurrentGame(
     loser: getOpponent(status.winner),
     completedAt,
   };
+}
+
+function appendHistoryEvent(
+  game: MultiplayerGameRecord,
+  event: MultiplayerGameEventInput
+) {
+  game.historyEvents.push({
+    ...event,
+    sequence: game.historyEvents.length + 1,
+  } as MultiplayerGameEvent);
 }
 
 function createWebSocketAcceptKey(key: string): string {
@@ -256,7 +290,14 @@ class InMemoryMultiplayerGameStore {
         O: null,
       },
       completion: null,
+      historyEvents: [],
     };
+
+    appendHistoryEvent(game, {
+      type: "game-created",
+      occurredAt: timestamp,
+      player: "X",
+    });
 
     this.games.set(game.id, game);
 
@@ -288,6 +329,11 @@ class InMemoryMultiplayerGameStore {
     };
     game.status = "active";
     game.updatedAt = timestamp;
+    appendHistoryEvent(game, {
+      type: "player-joined",
+      occurredAt: timestamp,
+      player: "O",
+    });
 
     return game;
   }
@@ -335,6 +381,13 @@ class InMemoryMultiplayerGameStore {
     if (game.game.getStatus().isOver) {
       game.status = "over";
       game.completion = createCompletionFromCurrentGame(game, game.updatedAt);
+      if (game.completion !== null) {
+        appendHistoryEvent(game, {
+          type: "game-completed",
+          occurredAt: game.updatedAt,
+          completion: game.completion,
+        });
+      }
     }
 
     return game;
@@ -371,6 +424,11 @@ class InMemoryMultiplayerGameStore {
       loser: player,
       completedAt,
     };
+    appendHistoryEvent(game, {
+      type: "game-completed",
+      occurredAt: completedAt,
+      completion: game.completion,
+    });
 
     return game;
   }

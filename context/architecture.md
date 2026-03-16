@@ -1,6 +1,6 @@
 # Architecture
 
-Last updated: 2026-03-15
+Last updated: 2026-03-16
 
 ## Phase 1
 
@@ -174,6 +174,18 @@ Last updated: 2026-03-15
   - Active players retain move submission and resignation controls.
   - Spectators render the same authoritative board state as read-only, with spectator-specific labels and status/help messaging.
   - Route recovery continues to work after refresh through multiplayer query parameters, now including spectator sessions.
+
+### Replay and Catch-Up Data Retention (US-37)
+- `US-37` extends the existing multiplayer snapshot returned by `GET /games/{id}` and websocket events instead of introducing a separate replay endpoint:
+  - Ordered move history continues to come from the shared `Game` state (`state.moves`).
+  - Multiplayer game records now also retain ordered lifecycle events for creation, join, and completion.
+- Multiplayer snapshots in `src/shared/multiplayer.ts` now include replay metadata:
+  - `history.events` for lifecycle milestones that explain how the match progressed.
+  - `history.retention` documenting that Phase 2 history retention remains in process memory and does not survive backend restarts.
+- Multiplayer gameplay in `src/App.tsx` derives replay frames from retained move history:
+  - Active games support catch-up review without mutating authoritative live state.
+  - Completed games support step-through replay from the same gameplay route.
+  - Player actions remain tied to live authoritative state only; replay mode disables move/resign mutations until the user returns to live view.
 
 ### Planned Server-Backed Multiplayer Architecture
 - Introduce a lightweight HTTP server API as the authoritative source of truth for multiplayer games.
