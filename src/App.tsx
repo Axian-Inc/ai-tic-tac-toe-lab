@@ -520,7 +520,7 @@ function LandingPage({
             className="landing-cta landing-cta-secondary"
             onClick={handleOpenMultiplayerModal}
           >
-            New Multiplayer
+            Multiplayer
           </button>
         </div>
 
@@ -701,6 +701,7 @@ function LandingPage({
                     <ul className="multiplayer-game-list">
                       {waitingGames.map((game) => {
                         const isJoining = joiningGameId === game.id;
+                        const isSpectating = spectatingGameId === game.id;
 
                         return (
                           <li key={game.id} className="multiplayer-game-card">
@@ -723,9 +724,23 @@ function LandingPage({
                                 onClick={() => {
                                   void handleJoinMultiplayerGame(game.id);
                                 }}
-                                disabled={isJoining || isCreatingMultiplayerGame}
+                                disabled={
+                                  isJoining || isSpectating || isCreatingMultiplayerGame
+                                }
                               >
                                 {isJoining ? "Joining..." : "Join"}
+                              </button>
+                              <button
+                                type="button"
+                                className="multiplayer-join-button"
+                                onClick={() => {
+                                  void handleSpectateMultiplayerGame(game.id);
+                                }}
+                                disabled={
+                                  isJoining || isSpectating || isCreatingMultiplayerGame
+                                }
+                              >
+                                {isSpectating ? "Opening..." : "Spectate"}
                               </button>
                             </div>
                           </li>

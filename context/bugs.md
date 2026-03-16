@@ -43,6 +43,13 @@ This file tracks active and resolved product defects discovered during developme
 
 ### Resolved
 
+#### BUG-005 Joinable Games Missing Spectate Action
+- Reported: 2026-03-16
+- Resolved: 2026-03-16
+- Related stories: US-36, US-40
+- Root cause: The multiplayer modal discovery view rendered the waiting-games action area with only the join control, even though the existing spectate flow already supported opening any game by ID.
+- Resolution: Added a `Spectate` action next to `Join` for waiting games and reused the existing spectate handler so waiting matches can be observed without claiming the open player seat.
+
 #### BUG-004 Multiplayer Shows Quit Alongside Resign
 - Reported: 2026-03-16
 - Resolved: 2026-03-16
