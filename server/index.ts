@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import express, { type Express } from "express";
 import { Game, type Player } from "../src/shared/game.js";
 import type {
+  CreateGameRequest,
   CreateGameResponse,
   GetGameResponse,
   JoinGameResponse,
@@ -27,6 +28,10 @@ import type {
   ResignGameResponse,
   SubmitMoveResponse,
 } from "../src/shared/multiplayer.js";
+import {
+  MULTIPLAYER_GAME_NAME_MAX_LENGTH,
+  MULTIPLAYER_PLAYER_NAME_MAX_LENGTH,
+} from "../src/shared/multiplayer.js";
 
 const DEFAULT_PORT = 3001;
 const DEFAULT_HOST = "0.0.0.0";
@@ -46,6 +51,7 @@ const MULTIPLAYER_HISTORY_RETENTION = {
 
 interface MultiplayerGameRecord {
   id: string;
+  name: string;
   status: MultiplayerGameStatus;
   createdAt: string;
   updatedAt: string;
@@ -71,9 +77,11 @@ function toGameSummary(game: MultiplayerGameRecord): MultiplayerGameSummary {
 
   return {
     id: game.id,
+    name: game.name,
     status: game.status,
     createdAt: game.createdAt,
     updatedAt: game.updatedAt,
+    hostName: game.players.X.name ?? "Player X",
     openSeatCount,
   };
 }
@@ -171,6 +179,42 @@ function appendHistoryEvent(
     ...event,
     sequence: game.historyEvents.length + 1,
   } as MultiplayerGameEvent);
+}
+
+function normalizeModalTextInput(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function validateCreateGameRequest(
+  payload: unknown
+):
+  | { playerName: string; gameName: string }
+  | { message: string } {
+  const request = payload as Partial<CreateGameRequest> | null;
+  const playerName = normalizeModalTextInput(request?.playerName);
+  const gameName = normalizeModalTextInput(request?.gameName);
+
+  if (playerName.length === 0) {
+    return { message: "Enter your player name to host a multiplayer game." };
+  }
+
+  if (gameName.length === 0) {
+    return { message: "Enter a game name to create a multiplayer game." };
+  }
+
+  if (playerName.length > MULTIPLAYER_PLAYER_NAME_MAX_LENGTH) {
+    return {
+      message: `Player name must be ${MULTIPLAYER_PLAYER_NAME_MAX_LENGTH} characters or fewer.`,
+    };
+  }
+
+  if (gameName.length > MULTIPLAYER_GAME_NAME_MAX_LENGTH) {
+    return {
+      message: `Game name must be ${MULTIPLAYER_GAME_NAME_MAX_LENGTH} characters or fewer.`,
+    };
+  }
+
+  return { playerName, gameName };
 }
 
 function createWebSocketAcceptKey(key: string): string {
@@ -274,10 +318,11 @@ class InMemoryMultiplayerGameStore {
     ).length;
   }
 
-  createWaitingGame(): MultiplayerGameRecord {
+  createWaitingGame(playerName: string, gameName: string): MultiplayerGameRecord {
     const timestamp = new Date().toISOString();
     const game: MultiplayerGameRecord = {
       id: randomUUID(),
+      name: gameName,
       status: "waiting",
       createdAt: timestamp,
       updatedAt: timestamp,
@@ -285,6 +330,7 @@ class InMemoryMultiplayerGameStore {
       players: {
         X: {
           player: "X",
+          name: playerName,
           joinedAt: timestamp,
         },
         O: null,
@@ -602,7 +648,7 @@ export function createMultiplayerApp(): MultiplayerService {
     });
   });
 
-  app.post("/games", (_request, response) => {
+  app.post("/games", (request, response) => {
     response.setHeader("cache-control", "no-store");
 
     if (gameStore.getConcurrentGameCount() >= MAX_CONCURRENT_GAMES) {
@@ -614,7 +660,19 @@ export function createMultiplayerApp(): MultiplayerService {
       return;
     }
 
-    const game = gameStore.createWaitingGame();
+    const validationResult = validateCreateGameRequest(request.body);
+    if ("message" in validationResult) {
+      response.status(400).json({
+        status: "invalid_request",
+        message: validationResult.message,
+      });
+      return;
+    }
+
+    const game = gameStore.createWaitingGame(
+      validationResult.playerName,
+      validationResult.gameName
+    );
     const payload: CreateGameResponse = {
       game: toGameSnapshot(game),
       joinCode: game.id,

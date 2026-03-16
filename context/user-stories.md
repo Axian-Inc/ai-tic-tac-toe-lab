@@ -449,6 +449,11 @@ Acceptance criteria:
 ### US-39 Create Multiplayer Game from Modal
 As a player, I want to create a multiplayer game from the modal so that I can host a match without leaving the landing page flow.
 
+Status note (2026-03-16):
+- Added a dedicated create tab state inside the existing multiplayer modal with required player-name and game-name inputs.
+- Wired create submission to the existing `POST /games` flow so successful creation still opens gameplay as host player `X` in a waiting session.
+- Added shared frontend/backend validation and in-modal error messaging for missing or oversized create fields.
+
 Deployable increment:
 - Hosting a new multiplayer session is initiated from the create tab inside the modal.
 - The created game flow stays aligned with the existing backend create endpoint while adopting the new modal-first UX.

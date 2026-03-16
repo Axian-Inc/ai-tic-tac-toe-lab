@@ -194,6 +194,14 @@ Last updated: 2026-03-16
   - Close behavior is reversible through explicit close/cancel actions, escape key handling, and backdrop click handling.
 - The modal keeps one shared player-name input and hosts the existing create, join, and spectate entry surfaces so later modal stories can extend one setup shell without duplicating entry-state management.
 
+### Create Multiplayer Game from Modal (US-39)
+- `US-39` extends the `US-38` modal shell instead of introducing a second create-game route or a duplicate landing-page host action.
+- The existing `POST /games` flow now accepts a typed create payload shared by frontend and backend:
+  - `playerName` identifies the hosting player for the waiting-game session.
+  - `gameName` labels the created match and is retained in multiplayer summaries and snapshots.
+- Shared validation limits for create-form inputs live in `src/shared/multiplayer.ts` so the modal and backend enforce the same field requirements without duplicate constants.
+- `src/App.tsx` keeps create-state validation and request-failure messaging inside the modal while reusing the existing successful host-navigation path into gameplay as player `X`.
+
 ### Planned Server-Backed Multiplayer Architecture
 - Introduce a lightweight HTTP server API as the authoritative source of truth for multiplayer games.
 - Keep the shared `Game` domain rules as the core move-validation engine, reused by the server for multiplayer game progression.

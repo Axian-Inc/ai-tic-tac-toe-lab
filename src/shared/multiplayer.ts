@@ -2,8 +2,17 @@ import type { GameState, Player } from "./game.js";
 
 export type MultiplayerGameStatus = "waiting" | "active" | "over";
 
+export const MULTIPLAYER_PLAYER_NAME_MAX_LENGTH = 32;
+export const MULTIPLAYER_GAME_NAME_MAX_LENGTH = 48;
+
+export interface CreateGameRequest {
+  playerName: string;
+  gameName: string;
+}
+
 export interface MultiplayerPlayerSlot {
   player: Player;
+  name?: string;
   joinedAt: string;
 }
 
@@ -14,9 +23,11 @@ export interface MultiplayerPlayerAssignments {
 
 export interface MultiplayerGameSummary {
   id: string;
+  name: string;
   status: MultiplayerGameStatus;
   createdAt: string;
   updatedAt: string;
+  hostName: string;
   openSeatCount: number;
 }
 

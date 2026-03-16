@@ -12,12 +12,17 @@ import {
 } from "./multiplayer/api";
 import { buildMultiplayerReplayFrames } from "./multiplayer/replay";
 import type {
+  CreateGameRequest,
   MultiplayerGameEvent,
   MultiplayerGameSnapshot,
   MultiplayerGameSummary,
   MultiplayerServerEvent,
   MultiplayerSpectatorSession,
   MultiplayerSession,
+} from "./shared/multiplayer";
+import {
+  MULTIPLAYER_GAME_NAME_MAX_LENGTH,
+  MULTIPLAYER_PLAYER_NAME_MAX_LENGTH,
 } from "./shared/multiplayer";
 
 type RoutePath = "/" | "/game";
@@ -34,6 +39,7 @@ interface MultiplayerGameView {
 
 type GameView = SinglePlayerGameView | MultiplayerGameView;
 type LiveSyncState = "idle" | "connecting" | "connected" | "reconnecting" | "unavailable";
+type MultiplayerModalView = "create" | "join" | "spectate";
 
 const SINGLE_PLAYER_GAME_VIEW: SinglePlayerGameView = {
   kind: "singleplayer",
@@ -147,6 +153,35 @@ function formatMultiplayerTimestamp(timestamp: string): string {
   }).format(value);
 }
 
+function normalizeMultiplayerModalInput(value: string): string {
+  return value.trim();
+}
+
+function validateCreateMultiplayerRequest(
+  request: CreateGameRequest
+): string | null {
+  const playerName = normalizeMultiplayerModalInput(request.playerName);
+  const gameName = normalizeMultiplayerModalInput(request.gameName);
+
+  if (playerName.length === 0) {
+    return "Enter your player name to host a multiplayer game.";
+  }
+
+  if (gameName.length === 0) {
+    return "Enter a game name to create a multiplayer game.";
+  }
+
+  if (playerName.length > MULTIPLAYER_PLAYER_NAME_MAX_LENGTH) {
+    return `Player name must be ${MULTIPLAYER_PLAYER_NAME_MAX_LENGTH} characters or fewer.`;
+  }
+
+  if (gameName.length > MULTIPLAYER_GAME_NAME_MAX_LENGTH) {
+    return `Game name must be ${MULTIPLAYER_GAME_NAME_MAX_LENGTH} characters or fewer.`;
+  }
+
+  return null;
+}
+
 function getCellLabel(cell: BoardCell): string {
   if (cell === "X") {
     return "X";
@@ -234,6 +269,14 @@ function getParticipantLabel(player: Player, session: MultiplayerSession): strin
   return player === session.player ? "You" : "Opponent";
 }
 
+function getMultiplayerMatchTitle(game: MultiplayerGameSnapshot): string {
+  return game.name;
+}
+
+function getMultiplayerHostLabel(game: MultiplayerGameSnapshot): string {
+  return game.hostName;
+}
+
 function getLiveSyncLabel(liveSyncState: LiveSyncState): string {
   if (liveSyncState === "connected") {
     return "Live sync connected";
@@ -282,10 +325,10 @@ function LandingPage({
   onOpenMultiplayerGame: (gameView: MultiplayerGameView) => void;
 }) {
   const [isMultiplayerModalOpen, setIsMultiplayerModalOpen] = useState<boolean>(false);
-  const [multiplayerModalView, setMultiplayerModalView] = useState<
-    "create" | "join" | "spectate"
-  >("create");
+  const [multiplayerModalView, setMultiplayerModalView] =
+    useState<MultiplayerModalView>("create");
   const [playerName, setPlayerName] = useState<string>("");
+  const [gameName, setGameName] = useState<string>("");
   const [waitingGames, setWaitingGames] = useState<MultiplayerGameSummary[]>([]);
   const [activeGames, setActiveGames] = useState<MultiplayerGameSummary[]>([]);
   const [isLoadingWaitingGames, setIsLoadingWaitingGames] = useState<boolean>(false);
@@ -295,7 +338,7 @@ function LandingPage({
   const [joiningGameId, setJoiningGameId] = useState<string | null>(null);
   const [spectatingGameId, setSpectatingGameId] = useState<string | null>(null);
   const [multiplayerError, setMultiplayerError] = useState<string>("");
-  const playerNameInputRef = useRef<HTMLInputElement | null>(null);
+  const createPlayerNameInputRef = useRef<HTMLInputElement | null>(null);
 
   const loadWaitingGames = async () => {
     setIsLoadingWaitingGames(true);
@@ -314,11 +357,22 @@ function LandingPage({
   };
 
   const handleCreateMultiplayerGame = async () => {
+    const request = {
+      playerName: normalizeMultiplayerModalInput(playerName),
+      gameName: normalizeMultiplayerModalInput(gameName),
+    };
+    const validationError = validateCreateMultiplayerRequest(request);
+
+    if (validationError) {
+      setMultiplayerError(validationError);
+      return;
+    }
+
     setIsCreatingMultiplayerGame(true);
     setMultiplayerError("");
 
     try {
-      const response = await createMultiplayerGame();
+      const response = await createMultiplayerGame(request);
       onOpenMultiplayerGame(
         createMultiplayerGameView(response.session, response.game)
       );
@@ -412,7 +466,9 @@ function LandingPage({
       return;
     }
 
-    playerNameInputRef.current?.focus();
+    if (multiplayerModalView === "create") {
+      createPlayerNameInputRef.current?.focus();
+    }
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -426,7 +482,7 @@ function LandingPage({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isMultiplayerModalOpen]);
+  }, [isMultiplayerModalOpen, multiplayerModalView]);
 
   return (
     <main className="page page-landing">
@@ -508,7 +564,7 @@ function LandingPage({
             <label className="multiplayer-field">
               <span className="multiplayer-field-label">Your Name</span>
               <input
-                ref={playerNameInputRef}
+                ref={createPlayerNameInputRef}
                 type="text"
                 className="multiplayer-text-input"
                 value={playerName}
@@ -517,6 +573,7 @@ function LandingPage({
                 }}
                 placeholder="Enter your name here"
                 autoComplete="nickname"
+                maxLength={MULTIPLAYER_PLAYER_NAME_MAX_LENGTH}
               />
             </label>
 
@@ -565,8 +622,22 @@ function LandingPage({
                     <h2>Create a new multiplayer game</h2>
                   </div>
                 </div>
+                <label className="multiplayer-field multiplayer-field-compact">
+                  <span className="multiplayer-field-label">Game Name</span>
+                  <input
+                    type="text"
+                    className="multiplayer-text-input"
+                    value={gameName}
+                    onChange={(event) => {
+                      setGameName(event.target.value);
+                    }}
+                    placeholder="Friday Lunch Match"
+                    autoComplete="off"
+                    maxLength={MULTIPLAYER_GAME_NAME_MAX_LENGTH}
+                  />
+                </label>
                 <p className="multiplayer-message">
-                  Start a waiting match and share the match ID with another player.
+                  Start a waiting match, then share the match ID with another player.
                 </p>
                 <div className="multiplayer-modal-actions">
                   <button
@@ -626,9 +697,11 @@ function LandingPage({
                       return (
                         <li key={game.id} className="multiplayer-game-card">
                           <div>
+                            <p className="multiplayer-game-name">{game.name}</p>
                             <p className="multiplayer-game-id">{game.id}</p>
                             <p className="multiplayer-game-meta">
-                              Created {formatMultiplayerTimestamp(game.createdAt)}
+                              Hosted by {game.hostName} · Created{" "}
+                              {formatMultiplayerTimestamp(game.createdAt)}
                             </p>
                           </div>
                           <div className="multiplayer-game-actions">
@@ -690,9 +763,11 @@ function LandingPage({
                       return (
                         <li key={game.id} className="multiplayer-game-card">
                           <div>
+                            <p className="multiplayer-game-name">{game.name}</p>
                             <p className="multiplayer-game-id">{game.id}</p>
                             <p className="multiplayer-game-meta">
-                              Updated {formatMultiplayerTimestamp(game.updatedAt)}
+                              Hosted by {game.hostName} · Updated{" "}
+                              {formatMultiplayerTimestamp(game.updatedAt)}
                             </p>
                           </div>
                           <div className="multiplayer-game-actions">
@@ -1325,6 +1400,11 @@ function GameplayPage({
             <div className="gameplay-session-header">
               <div>
                 <p className="gameplay-session-kicker">Multiplayer Match</p>
+                {multiplayerGame ? (
+                  <p className="gameplay-session-title">
+                    {getMultiplayerMatchTitle(multiplayerGame)}
+                  </p>
+                ) : null}
                 <p className="gameplay-session-id">{multiplayerSession.gameId}</p>
               </div>
               <button
@@ -1344,6 +1424,9 @@ function GameplayPage({
                   ? "You are spectating"
                   : `You are player ${multiplayerSession.player}`}
               </span>
+              {multiplayerGame ? (
+                <span>Hosted by {getMultiplayerHostLabel(multiplayerGame)}</span>
+              ) : null}
               {multiplayerGame ? <span>Status: {multiplayerGame.status}</span> : null}
               {multiplayerGame ? (
                 <span>Created {formatMultiplayerTimestamp(multiplayerGame.createdAt)}</span>

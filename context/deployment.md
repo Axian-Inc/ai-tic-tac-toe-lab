@@ -112,3 +112,9 @@ Last updated: 2026-03-16
 - The multiplayer setup UI is rendered as a client-side modal overlay; no backend deployment or API configuration changes were required for this story.
 - The modal preserves the existing create/join/spectate network calls while adding local-only open/close/escape handling and shared player-name capture.
 - Local verification for US-38 is covered by `npm run typecheck` and `npm run build`.
+
+### US-39 Local Multiplayer Create Flow
+- The multiplayer modal create tab now submits required `playerName` and `gameName` fields to the existing `POST /games` endpoint.
+- Backend create validation remains part of the same service process and returns modal-safe request errors for invalid or oversized create fields.
+- Created games now retain host and match names in multiplayer summaries/snapshots without changing the existing waiting-game navigation path.
+- Local verification for US-39 is covered by `npm run typecheck` and `npm run build`.

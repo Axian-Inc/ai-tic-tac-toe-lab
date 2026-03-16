@@ -1,4 +1,5 @@
 import type {
+  CreateGameRequest,
   CreateGameResponse,
   GetGameResponse,
   JoinGameResponse,
@@ -50,12 +51,15 @@ async function readJsonResponse<T>(response: Response): Promise<T> {
   return (await response.json()) as T;
 }
 
-export async function createMultiplayerGame(): Promise<CreateGameResponse> {
+export async function createMultiplayerGame(
+  payload: CreateGameRequest
+): Promise<CreateGameResponse> {
   const response = await fetch(`${getApiBaseUrl()}/games`, {
     method: "POST",
     headers: {
       "content-type": "application/json",
     },
+    body: JSON.stringify(payload),
   });
 
   return readJsonResponse<CreateGameResponse>(response);

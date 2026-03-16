@@ -209,6 +209,10 @@ body,
   text-align: left;
 }
 
+.multiplayer-field-compact {
+  margin-top: 0.9rem;
+}
+
 .multiplayer-field-label {
   color: var(--text-muted);
   font-size: 0.82rem;
@@ -379,6 +383,12 @@ body,
   background: rgba(20, 28, 46, 0.82);
 }
 
+.multiplayer-game-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
 .multiplayer-game-actions {
   display: flex;
   align-items: center;
@@ -526,6 +536,13 @@ body,
   font-weight: 800;
   color: var(--text-main);
   word-break: break-all;
+}
+
+.gameplay-session-title {
+  margin-top: 0.2rem;
+  font-size: 1.08rem;
+  font-weight: 700;
+  color: var(--text-main);
 }
 
 .gameplay-session-refresh {
