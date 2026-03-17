@@ -1,13 +1,16 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import type { Mark, MarkSelection, BoardCell, GameSession, GameState } from './types';
+import {
+  createSession,
+  createInitialGameState,
+  validateMove,
+  makeMove,
+  determineOutcome,
+  getRandomStartingPlayer,
+  getCpuMove,
+} from './game';
 
-type Mark = 'X' | 'O';
-type MarkSelection = Mark | 'Random';
-
-type GameSession = {
-  playerMark: Mark;
-  cpuMark: Mark;
-  selection: MarkSelection;
-};
+type SquareUiState = 'playable' | 'occupied' | 'unavailable';
 
 const MARK_OPTIONS: Array<{
   value: MarkSelection;
@@ -31,95 +34,311 @@ const MARK_OPTIONS: Array<{
   },
 ];
 
-function resolvePlayerMark(selection: MarkSelection): Mark {
-  if (selection === 'Random') {
-    return Math.random() < 0.5 ? 'X' : 'O';
+function getStatusText(currentTurn: Mark, session: GameSession, phase: GameState['phase']) {
+  if (phase === 'finished') {
+    return 'Round complete. You can rematch or quit to landing.';
   }
 
-  return selection;
+  return currentTurn === session.playerMark
+    ? 'Your turn. Choose a highlighted square.'
+    : "CPU's turn. Player input is locked.";
 }
 
-function getCpuMark(playerMark: Mark): Mark {
-  return playerMark === 'X' ? 'O' : 'X';
+function getFeedbackText(validation: ReturnType<typeof validateMove>): string {
+  if (validation.success) {
+    return 'Move accepted. The board is now locked while the CPU turn is pending.';
+  }
+
+  return validation.reason === 'occupied'
+    ? 'Illegal move blocked. Occupied squares are unavailable.'
+    : "Illegal move blocked. Wait until it's your turn.";
+}
+
+function getOutcomeFeedback(outcome: ReturnType<typeof determineOutcome>): string {
+  if (outcome.status === 'won') {
+    return outcome.winner === 'X'
+      ? 'X wins the round! Ready for a rematch?'
+      : 'O wins the round! Ready for a rematch?';
+  }
+
+  if (outcome.status === 'draw') {
+    return 'The round ended in a draw! Ready for a rematch?';
+  }
+
+  return '';
+}
+
+function getInitialFeedbackText(session: GameSession): string {
+  return session.startingPlayer === 'cpu'
+    ? 'CPU opens this round. Player input stays locked until its move lands.'
+    : 'Playable squares glow on hover. Occupied or locked squares stay muted.';
+}
+
+function getSquareUiState(cell: BoardCell, currentTurn: Mark, playerMark: Mark): SquareUiState {
+  if (cell) {
+    return 'occupied';
+  }
+
+  if (currentTurn !== playerMark) {
+    return 'unavailable';
+  }
+
+  return 'playable';
+}
+
+function getMarkClasses(mark: Mark) {
+  if (mark === 'X') {
+    return 'text-cyan-300 drop-shadow-[0_0_22px_rgba(34,211,238,0.65)]';
+  }
+
+  return 'text-orange-400 drop-shadow-[0_0_22px_rgba(251,146,60,0.65)]';
 }
 
 function App() {
   const [selection, setSelection] = useState<MarkSelection>('X');
   const [session, setSession] = useState<GameSession | null>(null);
+  const [gameState, setGameState] = useState<GameState | null>(null);
+
+  useEffect(() => {
+    if (!session || !gameState) {
+      return;
+    }
+
+    if (gameState.phase !== 'active' || gameState.currentTurn !== session.cpuMark) {
+      return;
+    }
+
+    const cpuMoveIndex = getCpuMove(gameState.board);
+
+    if (cpuMoveIndex === null) {
+      const outcome = determineOutcome(gameState.board);
+
+      setGameState({
+        ...gameState,
+        phase: outcome.status === 'active' ? 'finished' : 'finished',
+        winner: outcome.status === 'won' ? outcome.winner : null,
+        statusText: getStatusText(session.playerMark, session, 'finished'),
+        feedbackText:
+          outcome.status === 'active'
+            ? 'No legal CPU move remained. Round closed.'
+            : getOutcomeFeedback(outcome),
+      });
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setGameState((currentState) => {
+        if (
+          !currentState ||
+          currentState.phase !== 'active' ||
+          currentState.currentTurn !== session.cpuMark
+        ) {
+          return currentState;
+        }
+
+        const { newBoard, nextTurn, newMoveHistory } = makeMove(
+          currentState.board,
+          cpuMoveIndex,
+          session.cpuMark,
+          currentState.moveHistory,
+        );
+        const outcome = determineOutcome(newBoard);
+
+        if (outcome.status === 'active') {
+          return {
+            board: newBoard,
+            currentTurn: nextTurn,
+            moveHistory: newMoveHistory,
+            statusText: getStatusText(nextTurn, session, 'active'),
+            feedbackText: 'CPU moved. Your highlighted squares are live again.',
+            phase: 'active',
+            winner: null,
+          };
+        }
+
+        return {
+          board: newBoard,
+          currentTurn: session.playerMark,
+          moveHistory: newMoveHistory,
+          statusText: getStatusText(session.playerMark, session, 'finished'),
+          feedbackText: getOutcomeFeedback(outcome),
+          phase: 'finished',
+          winner: outcome.status === 'won' ? outcome.winner : null,
+        };
+      });
+    }, 250);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [session, gameState]);
 
   const startGame = () => {
-    const playerMark = resolvePlayerMark(selection);
+    const nextSession = createSession(selection);
+    const initialGameState = createInitialGameState(nextSession);
 
-    setSession({
-      playerMark,
-      cpuMark: getCpuMark(playerMark),
-      selection,
+    setSession(nextSession);
+    setGameState({
+      ...initialGameState,
+      statusText: getStatusText(initialGameState.currentTurn, nextSession, initialGameState.phase),
+      feedbackText: getInitialFeedbackText(nextSession),
     });
   };
 
-  if (session) {
+  const handleSquareActivate = (index: number) => {
+    if (!session || !gameState) {
+      return;
+    }
+
+    const validation = validateMove(
+      gameState.board,
+      index,
+      gameState.currentTurn,
+      session.playerMark,
+    );
+
+    if (!validation.success) {
+      setGameState({
+        ...gameState,
+        feedbackText: getFeedbackText(validation),
+        statusText: getStatusText(gameState.currentTurn, session, gameState.phase),
+      });
+      return;
+    }
+
+    const { newBoard, nextTurn, newMoveHistory } = makeMove(
+      gameState.board,
+      index,
+      session.playerMark,
+      gameState.moveHistory,
+    );
+    const outcome = determineOutcome(newBoard);
+
+    if (outcome.status === 'active') {
+      setGameState({
+        board: newBoard,
+        currentTurn: nextTurn,
+        moveHistory: newMoveHistory,
+        statusText: getStatusText(nextTurn, session, 'active'),
+        feedbackText: getFeedbackText({ success: true }),
+        phase: 'active',
+        winner: null,
+      });
+    } else if (outcome.status === 'won') {
+      setGameState({
+        board: newBoard,
+        currentTurn: session.playerMark,
+        moveHistory: newMoveHistory,
+        statusText: getStatusText(session.playerMark, session, 'finished'),
+        feedbackText: getOutcomeFeedback(outcome),
+        phase: 'finished',
+        winner: outcome.winner,
+      });
+    } else if (outcome.status === 'draw') {
+      setGameState({
+        board: newBoard,
+        currentTurn: session.playerMark,
+        moveHistory: newMoveHistory,
+        statusText: getStatusText(session.playerMark, session, 'finished'),
+        feedbackText: getOutcomeFeedback(outcome),
+        phase: 'finished',
+        winner: null,
+      });
+    }
+  };
+
+  const startRematch = () => {
+    if (!session) {
+      return;
+    }
+
+    const nextSession = createSession(session.selection, {
+      roundNumber: session.roundNumber + 1,
+      startingPlayer: getRandomStartingPlayer(),
+    });
+    const initialGameState = createInitialGameState(nextSession);
+
+    setSession(nextSession);
+    setGameState({
+      ...initialGameState,
+      statusText: getStatusText(initialGameState.currentTurn, nextSession, initialGameState.phase),
+      feedbackText: getInitialFeedbackText(nextSession),
+    });
+  };
+
+  const quitToLanding = () => {
+    setSession(null);
+    setGameState(null);
+  };
+
+  if (session && gameState) {
     return (
-      <main className="min-h-screen bg-[radial-gradient(circle_at_top,_#fef3c7,_transparent_32%),linear-gradient(180deg,_#fff7ed_0%,_#fffbeb_44%,_#f8fafc_100%)] px-6 py-10 text-slate-950">
-        <div className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-5xl flex-col gap-8">
-          <section className="rounded-[2rem] border border-amber-200/80 bg-white/85 p-8 shadow-[0_24px_80px_-40px_rgba(120,53,15,0.45)] backdrop-blur">
-            <p className="inline-flex w-fit items-center rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold tracking-wide text-emerald-800 uppercase">
-              Game Session Ready
+      <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
+        <div className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-4xl flex-col items-center justify-center gap-8">
+          <div className="text-center">
+            <p className="text-sm font-semibold tracking-[0.3em] text-amber-300 uppercase">
+              Round {session.roundNumber}
             </p>
-            <div className="mt-6 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-              <div className="max-w-2xl">
-                <h1 className="text-4xl font-black tracking-tight text-balance sm:text-5xl">
-                  Your Tic-Tac-Toe matchup is locked in.
-                </h1>
-                <p className="mt-4 text-lg leading-8 text-slate-700">
-                  This story covers the landing-to-game handoff, so the started view exposes the
-                  resolved marks that the next gameplay stories will consume.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSession(null)}
-                className="rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
-              >
-                Back to landing
-              </button>
-            </div>
-          </section>
+            <p className="mt-2 text-xl font-bold">{gameState.statusText}</p>
+            {gameState.feedbackText && (
+              <p className="mt-1 text-sm text-slate-400">{gameState.feedbackText}</p>
+            )}
+          </div>
 
-          <section className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
-            <article className="rounded-[2rem] bg-slate-950 p-8 text-white shadow-[0_30px_70px_-40px_rgba(15,23,42,0.85)]">
-              <p className="text-sm font-semibold tracking-[0.3em] text-amber-300 uppercase">
-                Match Setup
-              </p>
-              <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                <div className="rounded-3xl bg-white/8 p-5">
-                  <p className="text-sm text-slate-300">Selected option</p>
-                  <p className="mt-2 text-3xl font-black">{session.selection}</p>
-                </div>
-                <div className="rounded-3xl bg-white/8 p-5">
-                  <p className="text-sm text-slate-300">Resolved player mark</p>
-                  <p className="mt-2 text-3xl font-black">{session.playerMark}</p>
-                </div>
-                <div className="rounded-3xl bg-white/8 p-5">
-                  <p className="text-sm text-slate-300">CPU mark</p>
-                  <p className="mt-2 text-3xl font-black">{session.cpuMark}</p>
-                </div>
-                <div className="rounded-3xl bg-white/8 p-5">
-                  <p className="text-sm text-slate-300">Status</p>
-                  <p className="mt-2 text-3xl font-black">Ready</p>
-                </div>
-              </div>
-            </article>
+          <div className="grid grid-cols-3 gap-3">
+            {gameState.board.map((cell, index) => {
+              const uiState = getSquareUiState(cell, gameState.currentTurn, session.playerMark);
 
-            <article className="rounded-[2rem] border border-slate-200 bg-white/90 p-8 shadow-[0_24px_60px_-44px_rgba(15,23,42,0.45)]">
-              <h2 className="text-xl font-bold text-slate-950">QA verification</h2>
-              <ul className="mt-5 space-y-3 text-sm leading-7 text-slate-600">
-                <li>The landing screen transitioned successfully into a started game state.</li>
-                <li>The player mark is visible for explicit and random selections.</li>
-                <li>The CPU mark is always the opposite of the player mark.</li>
-                <li>No board play is implemented here; later stories own gameplay behavior.</li>
-              </ul>
-            </article>
-          </section>
+              return (
+                <button
+                  key={index}
+                  type="button"
+                  disabled={uiState !== 'playable'}
+                  onClick={() => handleSquareActivate(index)}
+                  className={`aspect-square flex items-center justify-center rounded-xl text-5xl font-black transition ${
+                    uiState === 'playable'
+                      ? 'bg-amber-300/20 text-amber-100 hover:bg-amber-300/30'
+                      : uiState === 'occupied'
+                        ? 'bg-slate-700 text-slate-400'
+                        : 'bg-slate-800 text-slate-600'
+                  }`}
+                >
+                  {cell && <span className={getMarkClasses(cell)}>{cell}</span>}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex flex-wrap justify-center gap-3">
+            {gameState.phase === 'active' ? (
+              <>
+                <button
+                  type="button"
+                  onClick={quitToLanding}
+                  className="rounded-full border border-orange-300/45 bg-orange-400/10 px-5 py-3 text-sm font-semibold text-orange-100 transition hover:border-orange-200 hover:bg-orange-400/18"
+                >
+                  Quit to landing
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={startRematch}
+                  className="rounded-full border border-emerald-300/45 bg-emerald-400/10 px-5 py-3 text-sm font-semibold text-emerald-100 transition hover:border-emerald-200 hover:bg-emerald-400/18"
+                >
+                  Rematch
+                </button>
+                <button
+                  type="button"
+                  onClick={quitToLanding}
+                  className="rounded-full border border-orange-300/45 bg-orange-400/10 px-5 py-3 text-sm font-semibold text-orange-100 transition hover:border-orange-200 hover:bg-orange-400/18"
+                >
+                  Quit to landing
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </main>
     );
@@ -145,7 +364,7 @@ function App() {
               Local-only React app
             </span>
             <span className="rounded-full border border-slate-200 bg-white px-4 py-2">
-              Deterministic CPU planned next
+              Deterministic CPU enabled
             </span>
             <span className="rounded-full border border-slate-200 bg-white px-4 py-2">
               Keyboard-friendly controls

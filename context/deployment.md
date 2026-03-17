@@ -61,3 +61,40 @@ Date: 2026-03-13
 - Verification:
   - `curl.exe -I https://dh0s8gqynjyz6.cloudfront.net` returned `HTTP/1.1 200 OK`.
   - Response headers showed `Last-Modified: Fri, 13 Mar 2026 15:37:01 GMT`.
+
+Date: 2026-03-13
+- Deployed the `TTT-17` board/status update with the standard script:
+  - Command: `powershell -ExecutionPolicy Bypass -File .\scripts\deploy-static.ps1`
+  - Build completed successfully and uploaded the current `dist/` artifacts to bucket `ttt-static-6e555da9`.
+  - CloudFront invalidation created: `IEKQGCSCIHWNJJGLT3YLOD27M5` for distribution `EGW5O3MVJM73U`.
+- Verification:
+  - `curl.exe -I https://dh0s8gqynjyz6.cloudfront.net` returned `HTTP/1.1 200 OK`.
+  - Response headers showed `Last-Modified: Fri, 13 Mar 2026 15:57:19 GMT`.
+
+Date: 2026-03-13
+- Deployed the `TTT-18` legal-move feedback update with the standard script:
+  - Command: `powershell -ExecutionPolicy Bypass -File .\scripts\deploy-static.ps1`
+  - Build completed successfully and uploaded the current `dist/` artifacts to bucket `ttt-static-6e555da9`.
+  - CloudFront invalidation created: `IAJVTA1MHLTKO384A4CNJW2M3H` for distribution `EGW5O3MVJM73U`.
+- Verification:
+  - `curl.exe -I https://dh0s8gqynjyz6.cloudfront.net` returned `HTTP/1.1 200 OK`.
+  - Response headers showed `Last-Modified: Fri, 13 Mar 2026 16:14:01 GMT`.
+
+Date: 2026-03-13
+- Deployed the `TTT-19` quit/rematch update with the standard script:
+  - Command: `powershell -ExecutionPolicy Bypass -File .\scripts\deploy-static.ps1`
+  - Build completed successfully and uploaded the current `dist/` artifacts to bucket `ttt-static-6e555da9`.
+  - CloudFront invalidation created: `IDIKUJVUUKM45H2UUIJLNWN0O3` for distribution `EGW5O3MVJM73U`.
+- Verification:
+  - `curl.exe -I https://dh0s8gqynjyz6.cloudfront.net` returned `HTTP/1.1 200 OK`.
+  - Response headers showed `Last-Modified: Fri, 13 Mar 2026 16:27:40 GMT`.
+
+Date: 2026-03-17
+- Deployed the `TTT-20` game-module regression fix with the manual equivalent of the standard script because PowerShell was unavailable in the current Linux environment:
+  - Build command: `npm run build`
+  - Artifact upload command: `aws s3 sync dist s3://ttt-static-6e555da9 --delete`
+  - CloudFront invalidation command: `aws cloudfront create-invalidation --distribution-id EGW5O3MVJM73U --paths '/*'`
+  - CloudFront invalidation created: `IC5N8DZFX17IWUW2VIG870488A` for distribution `EGW5O3MVJM73U`.
+- Verification:
+  - `curl -I https://dh0s8gqynjyz6.cloudfront.net` returned `HTTP/2 200`.
+  - Response headers showed `Last-Modified: Tue, 17 Mar 2026 16:42:51 GMT`.
