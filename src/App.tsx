@@ -108,7 +108,7 @@ function App() {
       return;
     }
 
-    const cpuMoveIndex = getCpuMove(gameState.board);
+    const cpuMoveIndex = getCpuMove(gameState.board, session.cpuMark);
 
     if (cpuMoveIndex === null) {
       const outcome = determineOutcome(gameState.board);

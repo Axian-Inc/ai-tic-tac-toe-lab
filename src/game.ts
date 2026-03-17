@@ -159,18 +159,37 @@ export function resetGame(session: GameSession): GameCoreState {
 /**
  * Returns the deterministic CPU move for the current board.
  */
-export function getCpuMove(board: BoardCell[]): number | null {
+export function getCpuMove(board: BoardCell[], cpuMark: Mark): number | null {
+  if (determineOutcome(board).status !== 'active') {
+    return null;
+  }
+
+  const winningMove = findWinningMove(board, cpuMark);
+  if (winningMove !== null) {
+    return winningMove;
+  }
+
+  const playerMark = getCpuMark(cpuMark);
+  const blockingMove = findWinningMove(board, playerMark);
+  if (blockingMove !== null) {
+    return blockingMove;
+  }
+
   if (board[4] === null) {
     return 4;
   }
 
-  for (const squareIndex of [0, 2, 6, 8, 1, 3, 5, 7]) {
-    if (board[squareIndex] === null) {
-      return squareIndex;
-    }
+  const oppositeCornerMove = findOppositeCornerMove(board, playerMark);
+  if (oppositeCornerMove !== null) {
+    return oppositeCornerMove;
   }
 
-  return null;
+  const emptyCornerMove = findFirstEmptySquare(board, [0, 2, 6, 8]);
+  if (emptyCornerMove !== null) {
+    return emptyCornerMove;
+  }
+
+  return findFirstEmptySquare(board, [1, 3, 5, 7]);
 }
 
 /**
@@ -188,6 +207,58 @@ function resolvePlayerMark(selection: MarkSelection): Mark {
  */
 function getCpuMark(playerMark: Mark): Mark {
   return playerMark === 'X' ? 'O' : 'X';
+}
+
+function findWinningMove(board: BoardCell[], mark: Mark): number | null {
+  for (const squareIndex of getEmptySquares(board)) {
+    const candidateBoard = [...board];
+    candidateBoard[squareIndex] = mark;
+
+    if (checkWinner(candidateBoard).winner === mark) {
+      return squareIndex;
+    }
+  }
+
+  return null;
+}
+
+function findOppositeCornerMove(board: BoardCell[], opponentMark: Mark): number | null {
+  const oppositeCorners: Array<[number, number]> = [
+    [0, 8],
+    [2, 6],
+    [6, 2],
+    [8, 0],
+  ];
+
+  for (const [occupiedCorner, targetCorner] of oppositeCorners) {
+    if (board[occupiedCorner] === opponentMark && board[targetCorner] === null) {
+      return targetCorner;
+    }
+  }
+
+  return null;
+}
+
+function findFirstEmptySquare(board: BoardCell[], candidates: number[]): number | null {
+  for (const squareIndex of candidates) {
+    if (board[squareIndex] === null) {
+      return squareIndex;
+    }
+  }
+
+  return null;
+}
+
+function getEmptySquares(board: BoardCell[]): number[] {
+  const emptySquares: number[] = [];
+
+  board.forEach((cell, squareIndex) => {
+    if (cell === null) {
+      emptySquares.push(squareIndex);
+    }
+  });
+
+  return emptySquares;
 }
 
 /**

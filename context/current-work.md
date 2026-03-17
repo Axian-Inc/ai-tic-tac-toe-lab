@@ -5,16 +5,26 @@ Date: 2026-03-17
 Track the single active Jira ticket and execution state so work is visible and uninterrupted.
 
 ## Active Ticket
-- Key: TTT-75
-- Summary: TTT-64 Playwright landing mark tests fail: landing UI controls missing (placeholder screen)
+- Key: TTT-21
+- Summary: Deterministic smart-but-beatable CPU
 - Status: IN QA
 
 ## Plan
-1. Await QA validation for the `TTT-75` selector fix.
-2. If QA passes, transition `TTT-75` from `IN QA` to `In Review`.
-3. Keep `TTT-20` under observation separately while it remains in `IN QA`.
+1. Replace the placeholder CPU move selection with the groomed heuristic order in `src/game.ts`.
+2. Add unit-test coverage for CPU win, block, priority order, tie-breaking, illegal-square avoidance, and terminal-state handling.
+3. Validate with test, lint, build, and format checks, then transition `TTT-21` to `IN QA` when implementation is complete.
 
 ## Progress Log
+- 2026-03-17 18:05 UTC - Transitioned Jira ticket `TTT-21` from `Groomed` to `In Progress` and made it the active delivery ticket.
+- 2026-03-17 18:05 UTC - Paused active tracking on `TTT-75`; it remains in `IN QA` awaiting QA validation while `TTT-21` is being implemented.
+- 2026-03-17 18:09 UTC - Implemented the groomed CPU heuristic in `src/game.ts`: immediate win, immediate block, center, opposite corner, empty corner, then empty edge, with deterministic lowest-index tie-breaking within each priority.
+- 2026-03-17 18:09 UTC - Added Vitest-based CPU unit coverage in `src/game.test.ts` and wired `npm run test` into the repository scripts.
+- 2026-03-17 18:09 UTC - Validation passed for `TTT-21`: `npm run test`, `npm run lint`, `npm run build`, and `npm run format:check`.
+- 2026-03-17 18:10 UTC - Added Jira implementation evidence comment to `TTT-21`.
+- 2026-03-17 18:10 UTC - Transitioned Jira ticket `TTT-21` from `In Progress` to `IN QA`.
+- 2026-03-17 18:18 UTC - Rebuilt the app for deployment and uploaded `dist/` to `s3://ttt-static-6e555da9` using `aws s3 sync dist s3://ttt-static-6e555da9 --delete`.
+- 2026-03-17 18:18 UTC - Created CloudFront invalidation `IBC8DG2N5854COCEVQJHSHLZ2F` for distribution `EGW5O3MVJM73U`.
+- 2026-03-17 18:18 UTC - Verified the deployed site at `https://dh0s8gqynjyz6.cloudfront.net`; `curl -I` returned `HTTP/2 200` with `Last-Modified: Tue, 17 Mar 2026 18:18:17 GMT`.
 - 2026-03-17 17:24 UTC - Reviewed `TTT-75`, confirmed the original placeholder-screen diagnosis is stale, and identified the real remaining gap: missing `player-mark` / `cpu-mark` selectors in the started-game view.
 - 2026-03-17 17:24 UTC - Transitioned Jira ticket `TTT-75` from `To Do` to `In Progress`.
 - 2026-03-17 17:25 UTC - Added explicit post-start mark display elements in `src/App.tsx` with `data-testid=\"player-mark\"` and `data-testid=\"cpu-mark\"`.
@@ -45,4 +55,4 @@ Track the single active Jira ticket and execution state so work is visible and u
 - None.
 
 ## Next Action
-- Await QA validation on `TTT-75`; if it passes, move it from `IN QA` to `In Review`.
+- Await QA validation on `TTT-21`; if it passes, transition it from `IN QA` to `In Review`.
