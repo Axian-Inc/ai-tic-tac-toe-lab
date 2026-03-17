@@ -311,7 +311,7 @@ function App() {
             </section>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid w-full max-w-md grid-cols-3 gap-3 sm:max-w-lg">
             {gameState.board.map((cell, index) => {
               const uiState = getSquareUiState(cell, gameState.currentTurn, session.playerMark);
 
@@ -321,7 +321,7 @@ function App() {
                   type="button"
                   disabled={uiState !== 'playable'}
                   onClick={() => handleSquareActivate(index)}
-                  className={`aspect-square flex items-center justify-center rounded-xl text-5xl font-black transition ${
+                  className={`flex aspect-square w-full items-center justify-center rounded-xl text-5xl font-black transition ${
                     uiState === 'playable'
                       ? 'bg-amber-300/20 text-amber-100 hover:bg-amber-300/30'
                       : uiState === 'occupied'
