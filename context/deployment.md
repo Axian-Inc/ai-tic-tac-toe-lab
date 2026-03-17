@@ -98,3 +98,13 @@ Date: 2026-03-17
 - Verification:
   - `curl -I https://dh0s8gqynjyz6.cloudfront.net` returned `HTTP/2 200`.
   - Response headers showed `Last-Modified: Tue, 17 Mar 2026 16:42:51 GMT`.
+
+Date: 2026-03-17
+- Deployed the `TTT-75` Playwright selector fix with the manual equivalent of the standard script because PowerShell was unavailable in the current Linux environment:
+  - Build command: `npm run build`
+  - Artifact upload command: `aws s3 sync dist s3://ttt-static-6e555da9 --delete`
+  - CloudFront invalidation command: `aws cloudfront create-invalidation --distribution-id EGW5O3MVJM73U --paths '/*'`
+  - CloudFront invalidation created: `I7O5ABFVF1AZNI8A8NSNCDDG77` for distribution `EGW5O3MVJM73U`.
+- Verification:
+  - `curl -I https://dh0s8gqynjyz6.cloudfront.net` returned `HTTP/2 200`.
+  - Response headers showed `Last-Modified: Tue, 17 Mar 2026 17:30:24 GMT`.

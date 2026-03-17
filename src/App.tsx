@@ -285,6 +285,32 @@ function App() {
             )}
           </div>
 
+          <div className="grid w-full max-w-2xl gap-4 sm:grid-cols-2">
+            <section className="rounded-3xl border border-cyan-300/25 bg-cyan-400/8 p-5 text-center">
+              <p className="text-xs font-semibold tracking-[0.25em] text-cyan-200 uppercase">
+                Player Mark
+              </p>
+              <p
+                data-testid="player-mark"
+                className={`mt-3 text-4xl font-black ${getMarkClasses(session.playerMark)}`}
+              >
+                {session.playerMark}
+              </p>
+            </section>
+
+            <section className="rounded-3xl border border-orange-300/25 bg-orange-400/8 p-5 text-center">
+              <p className="text-xs font-semibold tracking-[0.25em] text-orange-200 uppercase">
+                CPU Mark
+              </p>
+              <p
+                data-testid="cpu-mark"
+                className={`mt-3 text-4xl font-black ${getMarkClasses(session.cpuMark)}`}
+              >
+                {session.cpuMark}
+              </p>
+            </section>
+          </div>
+
           <div className="grid grid-cols-3 gap-3">
             {gameState.board.map((cell, index) => {
               const uiState = getSquareUiState(cell, gameState.currentTurn, session.playerMark);
