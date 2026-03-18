@@ -15,3 +15,5 @@ Date: 2026-02-05
 - 2026-02-12: Added a Playwright-based deployment acceptance test pattern for Terraform lifecycle verification (`plan` -> `apply` -> HTTP checks -> `destroy`) using environment-gated inputs for AWS-backed checks.
 - 2026-03-08: Added Playwright configuration scaffold (`playwright.config.ts`), runner script, POM base class, and completed Playwright install.
 - 2026-03-15: Added a runnable unit-test baseline for pure game/session logic using the Node.js built-in test runner with TypeScript compilation via `tsconfig.unit.json` and `npm run test:unit`.
+- 2026-03-17: Added Vitest unit coverage for CPU decision logic in `src/game.test.ts`, including immediate win, immediate block, heuristic priority order, deterministic tie-breaking, and terminal-state handling.
+- 2026-03-17: Unit-test execution baseline is `npm run test`.
