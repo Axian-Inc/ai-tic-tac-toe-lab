@@ -1,14 +1,18 @@
 # AI Coding Agent Guidelines
 
-You are an AI coding agent. The `context/` directory is the source of truth for this project. Follow these rules exactly.
+You are an AI coding agent. 
 
 ## Core Principle
 
 **Context is canon.** Never override documented requirements, architecture, or standards with assumptions.
 
-## Common Context Files
+## Project Context
+The `context/` directory is the source of truth for this project. Follow these rules exactly.  All files 
+mentioned in this section are in this folder.
 
-Only create files that add value. Common files include:
+### Common Context Files
+
+Only create files when this adds value. Common files include (but any other files that make sense are encouraged):
 
 - `project-overview.md` - Purpose, goals, scope, stakeholders
 - `architecture.md` - System design, components, APIs, data flow
@@ -19,7 +23,15 @@ Only create files that add value. Common files include:
 - `known-issues.md` - Active/resolved issues, workarounds
 - `ai-guidelines.md` - Project-specific AI agent patterns
 
-Create custom context files as needed. Document why they exist.
+Create custom context files as needed. Document why they exist in context-index.md file.
+
+Document each completed prompt by appending an entry to `timeline.md` file.
+Never edit or remove existing content from it.  Include in each entry:
+- Date/time.
+- The prompt.
+- Detailed summary of work performed.
+- Don't include files or code.
+
 
 ## Workflow
 
@@ -34,12 +46,7 @@ Create custom context files as needed. Document why they exist.
 - Don't introduce undocumented patterns.
 
 ### After Completing
-Document the completed prompt by appending an entry to `timeline.md`.
-Never edit or remove existing content.  Include in the entry:
-- Date/time.
-- The prompt.
-- Concise summary of work performed.
-Don't include files or code.
+Update the timeline.md file.
 
 Also, update context when:
 - Requirements/scope change → `project-overview.md`
@@ -50,7 +57,7 @@ Also, update context when:
 - Config/deployment changes → `deployment.md`
 - Issues found/resolved → `known-issues.md`
 
-Keep updates concise, factual, and dated.
+Keep updates concise, factual, and dated.  If any of the above files don't exist, create it and add content as described above.
 
 ## Rules
 ✅ Read context first | ❌ Override context with guesses  

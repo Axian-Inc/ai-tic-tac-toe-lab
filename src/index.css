@@ -1,31 +1,28 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
 :root {
-  --bg: #030914;
-  --bg-2: #061022;
+  --bg: #0f1318;
+  --bg-deep: #0b0f14;
+  --surface: #181c24;
+  --surface-2: #202633;
 
-  --surface: #1a2440;
-  --surface-soft: rgba(18, 28, 49, 0.82);
-  --surface-deep: #0b1120;
+  --text: #e8eef7;
+  --text-muted: #9aa6c7;
+  --text-soft: #6f7a92;
 
-  --text: #f4f7ff;
-  --text-muted: #bcc6ea;
-  --text-soft: #8f9cc5;
+  --x-color: #39d0d4;
+  --o-color: #f07a4b;
+  --o-color-strong: #f06a3a;
 
-  --x-color: #4ed6e0;
-  --o-color: #ff7a4a;
-  --o-color-strong: #ff6a3d;
+  --x-glow: rgba(57, 208, 212, 0.28);
+  --o-glow: rgba(240, 122, 75, 0.28);
 
-  --x-glow: rgba(78, 214, 224, 0.22);
-  --o-glow: rgba(255, 122, 74, 0.16);
+  --border: rgba(120, 135, 170, 0.25);
+  --border-strong: rgba(140, 155, 190, 0.35);
 
-  --border: rgba(119, 142, 197, 0.24);
-  --border-strong: rgba(122, 146, 204, 0.34);
+  --shadow-soft: 0 14px 36px rgba(6, 10, 16, 0.45);
 
-  --shadow-soft: 0 10px 28px rgba(2, 8, 22, 0.24);
-  --shadow-panel: 0 24px 70px rgba(2, 8, 22, 0.4);
-
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 16px;
   line-height: 1.5;
   color: var(--text);
@@ -51,9 +48,9 @@ body {
   margin: 0;
   min-height: 100vh;
   background:
-    radial-gradient(circle at 18% 18%, rgba(78, 214, 224, 0.06), transparent 26%),
-    radial-gradient(circle at 82% 78%, rgba(255, 122, 74, 0.06), transparent 28%),
-    linear-gradient(180deg, #020814 0%, #030914 38%, #020713 100%);
+    radial-gradient(900px 520px at 16% 20%, rgba(57, 208, 212, 0.08), transparent 60%),
+    radial-gradient(900px 520px at 86% 35%, rgba(240, 122, 75, 0.08), transparent 60%),
+    linear-gradient(180deg, #0b0f14 0%, #0f1318 60%, #0b0f14 100%);
   color: var(--text);
 }
 
@@ -92,7 +89,7 @@ ol {
 
 h1 {
   margin-bottom: 0;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 p {
@@ -100,6 +97,6 @@ p {
 }
 
 ::selection {
-  background: rgba(78, 214, 224, 0.22);
+  background: rgba(57, 208, 212, 0.2);
   color: var(--text);
 }

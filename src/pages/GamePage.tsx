@@ -73,22 +73,29 @@ const GamePage = ({ game, onUpdateGame, onQuit }: GamePageProps) => {
   return (
     <section className="game">
       <header className="game__header">
-        <div>
-          <p className="game__eyebrow">Match status</p>
-          <h1>{status}</h1>
-        </div>
-        <div className="game__actions">
-          <button
-            className="btn"
-            onClick={handleCpuMove}
-            disabled={game.currentPlayer !== 'O' || game.winner !== null || game.isDraw}
+        <p className="game__title">
+          Tic <span>Tac</span> Toe
+        </p>
+        <div className="game__status" aria-label="Matchup">
+          <span
+            className={`game__status-pill ${
+              game.currentPlayer === 'X' ? 'game__status-pill--active' : ''
+            }`}
           >
-            CPU Move
-          </button>
-          <button className="btn btn--ghost" onClick={onQuit}>
-            Quit
-          </button>
+            <span className="game__status-letter">X</span>
+            <span className="game__status-role">You</span>
+          </span>
+          <span className="game__status-divider">VS</span>
+          <span
+            className={`game__status-pill ${
+              game.currentPlayer === 'O' ? 'game__status-pill--active' : ''
+            }`}
+          >
+            <span className="game__status-letter">O</span>
+            <span className="game__status-role">CPU</span>
+          </span>
         </div>
+        <p className="game__subtitle">{status}</p>
       </header>
 
       <Board board={game.board} canPlayAt={canPlayAt} onSelect={handleSelect} />
@@ -97,14 +104,25 @@ const GamePage = ({ game, onUpdateGame, onQuit }: GamePageProps) => {
         <div className="game__alert">Try Again</div>
       )}
 
-      <div className="game__footer">
-        <div className="game__meta">
-          <span>Player: X</span>
-          <span>CPU: O</span>
-          <span>Moves: {game.moveHistory.length}</span>
-        </div>
-        <button className="btn btn--primary" onClick={handleRematch}>
-          Rematch
+      <div className="game__actions">
+        <button className="btn btn--ghost" onClick={handleRematch}>
+          <span className="btn__icon" aria-hidden="true">
+            ↻
+          </span>
+          Play Again
+        </button>
+        <button className="btn btn--ghost" onClick={onQuit}>
+          <span className="btn__icon" aria-hidden="true">
+            ⌂
+          </span>
+          Home
+        </button>
+        <button
+          className="btn btn--ghost btn--inline"
+          onClick={handleCpuMove}
+          disabled={game.currentPlayer !== 'O' || game.winner !== null || game.isDraw}
+        >
+          CPU Move
         </button>
       </div>
     </section>

@@ -5,26 +5,38 @@ type LandingPageProps = {
 const LandingPage = ({ onStart }: LandingPageProps) => {
   return (
     <section className="landing">
-      <div className="landing__hero">
-        <div className="landing__badge">Axian LnD Lab</div>
-        <h1>Tic Tac Toe</h1>
-        <p className="landing__subtitle">
-          A crisp, deterministic match against a CPU that only moves when you say so.
-        </p>
-        <div className="landing__actions">
-          <button className="btn btn--primary" onClick={onStart}>
-            Play
-          </button>
-          <div className="landing__note">You are X. CPU is O.</div>
-        </div>
+      <div className="landing__logo" aria-hidden="true">
+        <span className="landing__logo-x">X</span>
+        <span className="landing__logo-divider">|</span>
+        <span className="landing__logo-o">O</span>
       </div>
-      <div className="landing__card">
-        <div className="landing__card-header">How it works</div>
-        <ul className="landing__list">
-          <li>Click a square to place X.</li>
-          <li>Press CPU Move to let O respond.</li>
-          <li>Rematch and Quit are available after each game.</li>
-        </ul>
+      <h1 className="landing__title">
+        Tic <span>Tac</span> Toe
+      </h1>
+      <p className="landing__subtitle">
+        The classic game of X's and O's. Can you beat the CPU?
+      </p>
+      <div className="landing__cta">
+        <button className="btn btn--primary" onClick={onStart}>
+          <span className="btn__icon" aria-hidden="true">
+            ▶
+          </span>
+          Play vs CPU
+        </button>
+      </div>
+      <div className="landing__stats" aria-label="Matchup">
+        <div className="landing__stat">
+          <span className="landing__stat-label">X</span>
+          <span className="landing__stat-value">You</span>
+        </div>
+        <div className="landing__stat landing__stat--vs">
+          <span className="landing__stat-label">VS</span>
+          <span className="landing__stat-value">Battle</span>
+        </div>
+        <div className="landing__stat">
+          <span className="landing__stat-label">O</span>
+          <span className="landing__stat-value">CPU</span>
+        </div>
       </div>
     </section>
   )
