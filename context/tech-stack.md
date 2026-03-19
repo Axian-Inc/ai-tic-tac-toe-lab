@@ -1,6 +1,6 @@
 # Tech Stack
 
-Date: 2026-03-18
+Date: 2026-03-19
 
 Frontend:
 - React 19
@@ -13,3 +13,10 @@ Styling:
 Testing:
 - Vitest
 - Playwright
+
+Infrastructure:
+- Terraform
+- AWS CLI
+
+Automation:
+- Bash deployment scripts in `/scripts`

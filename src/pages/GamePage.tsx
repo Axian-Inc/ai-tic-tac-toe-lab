@@ -53,7 +53,12 @@ const GamePage = ({ game, onUpdateGame, onQuit }: GamePageProps) => {
   }
 
   useEffect(() => {
-    if (!game.winner || game.winner === lastOutcomeRef.current) return
+    if (!game.winner) {
+      lastOutcomeRef.current = null
+      return
+    }
+
+    if (game.winner === lastOutcomeRef.current) return
     lastOutcomeRef.current = game.winner
 
     if (game.winner === 'X') {
@@ -63,6 +68,11 @@ const GamePage = ({ game, onUpdateGame, onQuit }: GamePageProps) => {
         spread: 70,
         origin: { y: 0.6 },
       })
+      window.dispatchEvent(
+        new CustomEvent('tic-tac-toe:player-win-effects', {
+          detail: { confetti: true, sound: 'win' },
+        }),
+      )
     }
 
     if (game.winner === 'O') {

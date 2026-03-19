@@ -283,6 +283,7 @@ So that deployment is repeatable.
 
 ### Tasks
 
+* Make sure that terraform works in `stanb` workspace and never in the default workspace. Report this.
 * Create S3 bucket
 * Enable static hosting
 * Configure public policy

@@ -22,19 +22,20 @@ Mar 18, 2026:
 
   Please, create a prompt for Codex CLI to convert the UI.  And update or create new stylesheets.  I'm attaching also two currently used stylesheets.
   * ChatGPT generated a prompt for Codex and new App.css and index.css
+Mar 19, 2026:
+* 2 hrs: Finished tweaking UI layout/styling to match the provided target screenshots
+* xxx hrs: 
 
 
 ## SCRAP
 
-The following is a list of a couple of UI changes that I'd like you to do make the app closer to the target screenshots that
-I mentioned in one of the previous prompts:
+I have noticed the following bug in the app.  When I open the Game page from
+the landing page and win the game, I get a nice confeti + sound effect as 
+it was expected.
+However, when after that I click Play Again and then win again, there is no
+confeti+sound.  There is only "You Win!" message above the board game.
 
-Landing Page:
-* Right now, the big X and O showing in the background or partially covered by the ellements in the center of the screen.
-  Move them father way and place more or less on the top-left to bottom-right diagonal.
-* There right now three elements wrapped rectangles with rounded corners.  Please, change them as follows:
-  * Remove the rectangle so that they don't look like buttons
-  * Make the font used in them bigger - about the same size as the font of Tic Tac Toe title.
+So, please first create a playwright test for this scenario and make sure it fails.
+Then, fix the bug and rerun the test.  It should pass now.
 
-Game Page:
-* The Play Again and Home buttons miss icons.
+Do all of this locally.  There is no needto deploy to AWS for now.

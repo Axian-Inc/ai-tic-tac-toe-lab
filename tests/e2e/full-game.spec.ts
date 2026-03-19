@@ -40,20 +40,15 @@ const findWinningLine = (): Position[] => {
   return result
 }
 
-test('plays a full deterministic game and wins', async ({ page }) => {
-  test.setTimeout(60000)
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
-  await page.getByRole('button', { name: 'Play' }).click()
-  await expect(page.getByRole('heading', { name: 'Your turn.' })).toBeVisible()
-  const board = page.getByRole('grid', { name: 'Tic tac toe board' })
-  await expect(board).toBeVisible()
-  await expect(board.locator('button')).toHaveCount(9)
-
+const playWinningGame = async (
+  page: Parameters<typeof test>[0]['page'],
+  board: ReturnType<Parameters<typeof expect>[0]['locator']>,
+) => {
   const winningMoves = findWinningLine()
   let state = createGame()
 
   for (const move of winningMoves) {
-    await board.locator(`[data-testid=\"square-${move.row}-${move.col}\"]`).click()
+    await board.locator(`[data-testid="square-${move.row}-${move.col}"]`).click()
     state = makeMove(state, move)
 
     if (state.winner || state.isDraw) break
@@ -65,6 +60,93 @@ test('plays a full deterministic game and wins', async ({ page }) => {
 
     if (state.winner || state.isDraw) break
   }
+}
 
-  await expect(page.getByRole('heading', { name: 'You win!' })).toBeVisible()
+test('plays a full deterministic game and wins', async ({ page }) => {
+  test.setTimeout(60000)
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.getByRole('button', { name: 'Play' }).click()
+  await expect(page.getByText('Your turn.', { exact: true })).toBeVisible()
+  const board = page.getByRole('grid', { name: 'Tic tac toe board' })
+  await expect(board).toBeVisible()
+  await expect(board.locator('button')).toHaveCount(9)
+
+  await playWinningGame(page, board)
+
+  await expect(page.getByText('You win!', { exact: true })).toBeVisible()
+})
+
+test('replays win effects after Play Again and a second win', async ({ page }) => {
+  test.setTimeout(60000)
+
+  await page.addInitScript(() => {
+    class FakeAudioContext {
+      state: AudioContextState = 'running'
+      currentTime = 0
+      destination = {}
+
+      resume() {
+        return Promise.resolve()
+      }
+
+      createOscillator() {
+        const oscillator = {
+          type: 'sine' as OscillatorType,
+          frequency: {
+            setValueAtTime: () => undefined,
+            linearRampToValueAtTime: () => undefined,
+          },
+          connect: () => undefined,
+          start: () => {
+            if (oscillator.type === 'sine') {
+              window.__winSoundCount = (window.__winSoundCount ?? 0) + 1
+            }
+          },
+          stop: () => undefined,
+        }
+
+        return oscillator
+      }
+
+      createGain() {
+        return {
+          gain: {
+            setValueAtTime: () => undefined,
+            exponentialRampToValueAtTime: () => undefined,
+          },
+          connect: () => undefined,
+        }
+      }
+    }
+
+    window.__winSoundCount = 0
+    window.__winEffectsEventCount = 0
+    window.addEventListener('tic-tac-toe:player-win-effects', () => {
+      window.__winEffectsEventCount = (window.__winEffectsEventCount ?? 0) + 1
+    })
+
+    window.AudioContext = FakeAudioContext as typeof AudioContext
+  })
+
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.getByRole('button', { name: 'Play' }).click()
+
+  const board = page.getByRole('grid', { name: 'Tic tac toe board' })
+  await expect(board).toBeVisible()
+
+  await playWinningGame(page, board)
+  await expect(page.getByText('You win!', { exact: true })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Play Again' }).click()
+  await expect(page.getByText('Your turn.', { exact: true })).toBeVisible()
+
+  await playWinningGame(page, board)
+  await expect(page.getByText('You win!', { exact: true })).toBeVisible()
+
+  await expect
+    .poll(() => page.evaluate(() => window.__winSoundCount))
+    .toBe(2)
+  await expect
+    .poll(() => page.evaluate(() => window.__winEffectsEventCount))
+    .toBe(2)
 })

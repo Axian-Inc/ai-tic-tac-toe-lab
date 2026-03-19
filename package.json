@@ -6,6 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "deploy:s3": "bash scripts/deploy.sh",
+    "deploy:validate": "bash scripts/validate-hosting.sh",
+    "deploy": "bash scripts/deploy-and-validate.sh",
     "lint": "eslint .",
     "test": "vitest",
     "test:run": "vitest run",
