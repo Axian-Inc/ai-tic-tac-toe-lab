@@ -1,5 +1,14 @@
 # Tech Stack
 
+## File Index
+
+This file lists the approved technologies used by the project.
+It covers the frontend framework and language choices.
+It identifies styling, testing, infrastructure, and automation tools.
+It serves as the concise source of truth for major dependencies and tool categories.
+
+## Content
+
 Date: 2026-03-19
 
 Frontend:

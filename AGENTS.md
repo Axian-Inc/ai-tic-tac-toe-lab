@@ -2,13 +2,16 @@
 
 You are an AI coding agent. 
 
+
 ## Core Principle
 
 **Context is canon.** Never override documented requirements, architecture, or standards with assumptions.
 
+
 ## Project Context
-The `context/` directory is the source of truth for this project. Follow these rules exactly.  All files 
-mentioned in this section are in this folder.
+The `context/` directory is the source of truth for this project. Follow these rules exactly. 
+These files all have a section "File Index" at the top with max 10 lines of the text describing 
+file purpose and context.
 
 ### Common Context Files
 
@@ -23,7 +26,7 @@ Only create files when this adds value. Common files include (but any other file
 - `known-issues.md` - Active/resolved issues, workarounds
 - `ai-guidelines.md` - Project-specific AI agent patterns
 
-Create custom context files as needed. Document why they exist in context-index.md file.
+Create custom context files as needed.
 
 Document each completed prompt by appending an entry to `timeline.md` file.
 Never edit or remove existing content from it.  Include in each entry:
@@ -40,10 +43,12 @@ Never edit or remove existing content from it.  Include in each entry:
 2. If task conflicts with context → **STOP** and ask for clarification.
 3. Note missing information; state assumptions if proceeding.
 
+
 ### During Work
 - Follow documented standards and constraints.
 - Stay within documented scope.
 - Don't introduce undocumented patterns.
+
 
 ### After Completing
 Update the timeline.md file.
@@ -52,12 +57,26 @@ Also, update context when:
 - Requirements/scope change → `project-overview.md`
 - Architectural decisions made → `architecture.md`
 - Dependencies added → `tech-stack.md`
+- Project setup → `project-seyup.md`
 - Coding patterns established → `coding-standards.md`
 - Testing approach changes → `testing-strategy.md`
 - Config/deployment changes → `deployment.md`
 - Issues found/resolved → `known-issues.md`
 
-Keep updates concise, factual, and dated.  If any of the above files don't exist, create it and add content as described above.
+Keep updates concise, factual, and dated.  
+If any of the above files don't exist, create it and add content as described above.
+
+All files in context folder should match the following template (<...> are placeholders - expand them):
+# <REPLACE THIS WITH THE FILE DESCRIPTIVE TITLE>
+
+## File Index
+
+<PUT HERE UP TO 10 LINES OF THE TEXT THAT DESCRIBES THE PURPOSE OF THE FILE>
+
+## Content
+
+<THE CONTENT OF THE FILE>
+
 
 ## Rules
 ✅ Read context first | ❌ Override context with guesses  

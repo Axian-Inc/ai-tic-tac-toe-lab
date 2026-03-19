@@ -1,3 +1,14 @@
+# Timeline
+
+## File Index
+
+This file is the chronological record of completed prompts for the project.
+Each entry includes the date and time, the prompt, and a summary of the work performed.
+Entries are appended over time and should not remove prior history.
+It serves as the running audit trail of work completed in the repository.
+
+## Content
+
 - Date/time: 2026-03-18 23:27:35 UTC
   Prompt: Update the React tic-tac-toe UI to match provided landing and game screen screenshots, replacing App.css and index.css as needed.
   Summary: Refreshed global design tokens, typography, and background styling; rebuilt component-level styles for landing, game layout, board, buttons, and states to align with the dark, premium visual direction while preserving layout behavior.
@@ -58,3 +69,15 @@
 - Date/time: 2026-03-19 22:07:00 UTC
   Prompt: Please, create a context/project-setup.md file and put into it all of the details needed to get the app running (locally) if someone clones the repo for the first time.
   Summary: Added a new custom context file with first-time local setup instructions covering prerequisites, dependency installation, how to start the Vite dev server, how to run unit tests, E2E tests, linting, build, and preview commands, and noted that AWS and Terraform are not required for local development. Added a context index file to document why the custom setup guide exists.
+- Date/time: 2026-03-19 22:12:00 UTC
+  Prompt: To each file in the context folder, add a header so that these files all match the following template (<...> are placeholders - expand them:
+  # <REPLACE THIS WITH THE FILE DESCRIPTIVE TITLE>
+
+  ## File Index
+
+  <PUT HERE UP TO 10 LINES OF TEXT THAT DESCRIBES THE CONTENT OF THE FILE>
+
+  ## Content
+
+  <PUT HERE THE CURRENT CONTENT OF THE FILE>
+  Summary: Reformatted every Markdown file in the `context/` directory to the requested common template with a descriptive title, a short file index section, and a content section containing the file's existing material. Preserved the existing context information and timeline history while normalizing the structure across all context files.

@@ -1,5 +1,14 @@
 # Project Overview
 
+## File Index
+
+This file defines the project's purpose, goals, scope, and stakeholders.
+It explains the product focus of the tic-tac-toe app.
+It records infrastructure and deployment goals that are in scope.
+It also marks game-logic changes as out of scope unless explicitly required.
+
+## Content
+
 Date: 2026-03-19
 
 Purpose: Provide a React-based AI tic-tac-toe app with a polished UI and repeatable static-site deployment infrastructure.

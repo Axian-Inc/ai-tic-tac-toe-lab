@@ -1,5 +1,15 @@
 # Architecture
 
+## File Index
+
+This file summarizes the app's high-level architecture.
+It describes the major UI and state-management components.
+It records where infrastructure code lives in the repository.
+It captures the main data flow between the app shell and the game page.
+It also documents the Terraform workspace guard requirement.
+
+## Content
+
 Date: 2026-03-19
 
 Overview:

@@ -1,5 +1,15 @@
 # Project Setup
 
+## File Index
+
+This file explains how to get the app running locally after a fresh clone.
+It lists prerequisites and optional tooling for local development.
+It covers dependency installation and how to start the Vite dev server.
+It documents the most common local commands for tests, linting, build, and preview.
+It also notes that AWS and Terraform are not required for local app development.
+
+## Content
+
 Date: 2026-03-19
 
 Use this file when setting up the app locally for the first time after cloning the repository.

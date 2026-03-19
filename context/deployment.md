@@ -1,5 +1,15 @@
 # Deployment
 
+## File Index
+
+This file documents deployment-related commands and constraints.
+It covers the local build and preview commands for the app.
+It records where Terraform infrastructure lives.
+It states the required Terraform workspace for infrastructure work.
+It lists the script-based deployment and hosting validation commands.
+
+## Content
+
 Date: 2026-03-19
 
 Notes:
