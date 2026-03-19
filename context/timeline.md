@@ -55,3 +55,6 @@
 
   Do all of this locally.  There is no needto deploy to AWS for now.
   Summary: Added a Playwright regression that wins a game, uses `Play Again`, wins again, and verifies the win effects fire twice across the two games. Confirmed the regression failed locally before the fix because the second win did not retrigger the effect path. Fixed the rematch bug by resetting the previously handled winner state when a fresh game starts, added a deterministic browser event emitted when player win effects fire so the regression can verify the confetti-plus-sound effect path reliably in Playwright, and reran the Playwright file locally to confirm both the original deterministic win test and the new rematch regression pass.
+- Date/time: 2026-03-19 22:07:00 UTC
+  Prompt: Please, create a context/project-setup.md file and put into it all of the details needed to get the app running (locally) if someone clones the repo for the first time.
+  Summary: Added a new custom context file with first-time local setup instructions covering prerequisites, dependency installation, how to start the Vite dev server, how to run unit tests, E2E tests, linting, build, and preview commands, and noted that AWS and Terraform are not required for local development. Added a context index file to document why the custom setup guide exists.
