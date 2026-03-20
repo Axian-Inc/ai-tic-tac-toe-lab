@@ -1,0 +1,3 @@
+log=reports/ui-20260320T042606Z.log
+html=reports/ui-20260320T042606Z-html
+results=test-results/ui-20260320T042606Z

@@ -20,6 +20,28 @@ npm run build
 
 The initial app scaffold renders `Coming Soon` as the primary heading.
 
+## Unit Tests
+
+Use the unit test runner helper to compile the TypeScript unit tests and execute them with Node's built-in test runner.
+
+### Run all unit tests
+
+```powershell
+bash scripts/run_unit_tests.sh
+```
+
+### Run a single unit test file
+
+```powershell
+bash scripts/run_unit_tests.sh tests/unit/ttt-65-markSelection.test.ts
+```
+
+You can also run the default unit-test script with:
+
+```powershell
+npm run test:unit
+```
+
 ## Tailwind Setup (TTT-14)
 
 Tailwind CSS is configured for the Vite app using the official Vite plugin.

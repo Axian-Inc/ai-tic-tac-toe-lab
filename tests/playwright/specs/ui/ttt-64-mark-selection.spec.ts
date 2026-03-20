@@ -5,7 +5,12 @@ const optionLabels = ["X", "O", "Random"] as const;
 type OptionLabel = (typeof optionLabels)[number];
 
 async function resolveOptionLocator(page: import("@playwright/test").Page, label: OptionLabel) {
-  const exact = new RegExp(`^${label}$`, "i");
+  const exact =
+    label === "X"
+      ? /play as x/i
+      : label === "O"
+        ? /play as o/i
+        : /random draw|random/i;
   const radio = page.getByRole("radio", { name: exact });
   if ((await radio.count()) > 0) {
     return radio.first();
@@ -20,6 +25,11 @@ async function resolveOptionLocator(page: import("@playwright/test").Page, label
 }
 
 async function isOptionSelected(locator: import("@playwright/test").Locator) {
+  const inputType = await locator.getAttribute("type");
+  if (inputType === "radio" || inputType === "checkbox") {
+    return locator.isChecked();
+  }
+
   const ariaChecked = await locator.getAttribute("aria-checked");
   if (ariaChecked !== null) {
     return ariaChecked === "true";
@@ -31,7 +41,7 @@ async function isOptionSelected(locator: import("@playwright/test").Locator) {
   }
 
   throw new Error(
-    "Option is missing aria-checked or aria-pressed. Provide a semantic state for selection.",
+    "Option is missing a native checked state or aria-checked/aria-pressed semantic state.",
   );
 }
 

@@ -17,3 +17,4 @@ Date: 2026-02-05
 - 2026-03-15: Added a runnable unit-test baseline for pure game/session logic using the Node.js built-in test runner with TypeScript compilation via `tsconfig.unit.json` and `npm run test:unit`.
 - 2026-03-17: Added Vitest unit coverage for CPU decision logic in `src/game.test.ts`, including immediate win, immediate block, heuristic priority order, deterministic tie-breaking, and terminal-state handling.
 - 2026-03-17: Unit-test execution baseline is `npm run test`.
+- 2026-03-20: Playwright UI/API runs and unit-test runs now emit timestamped report logs under `reports/` using `ui-`, `api-`, and `unit-` prefixes, with Playwright HTML artifacts stored under matching timestamped directories.

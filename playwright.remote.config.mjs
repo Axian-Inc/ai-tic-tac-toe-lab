@@ -1,6 +1,10 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const baseURL = "https://dh0s8gqynjyz6.cloudfront.net";
+const reportPrefix = process.env.TEST_REPORT_PREFIX ?? "ui";
+const reportTimestamp =
+  process.env.TEST_REPORT_TIMESTAMP ?? new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+const reportBase = `${reportPrefix}-${reportTimestamp}`;
 
 export default defineConfig({
   testDir: "./tests/playwright",
@@ -9,7 +13,8 @@ export default defineConfig({
   expect: {
     timeout: 5_000,
   },
-  reporter: [["list"], ["html", { open: "never" }]],
+  reporter: [["list"], ["html", { open: "never", outputFolder: `playwright-report/${reportBase}-html` }]],
+  outputDir: `playwright-report/${reportBase}-results`,
   retries: process.env.CI ? 2 : 0,
   use: {
     baseURL,

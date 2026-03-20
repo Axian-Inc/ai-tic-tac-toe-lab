@@ -1,0 +1,3 @@
+log=reports/api-20260320T042501Z.log
+html=reports/api-20260320T042501Z-html
+results=test-results/api-20260320T042501Z

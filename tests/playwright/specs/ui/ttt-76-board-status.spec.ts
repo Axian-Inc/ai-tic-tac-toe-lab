@@ -14,6 +14,7 @@ async function boardLocator(page: Page) {
   return firstVisibleLocator([
     page.getByRole("grid", { name: /tic[- ]?tac[- ]?toe board|game board|board/i }),
     page.getByTestId("game-board"),
+    page.locator("main div").filter({ has: page.locator("button") }).nth(3),
   ]);
 }
 
@@ -21,6 +22,7 @@ async function statusLocator(page: Page) {
   return firstVisibleLocator([
     page.getByRole("status"),
     page.getByTestId("game-status"),
+    page.getByText(/your turn|cpu's turn|round complete|wins the round|draw/i),
   ]);
 }
 
@@ -45,6 +47,13 @@ async function boardSquares(page: Page) {
     return roleSquares;
   }
 
+  const mainButtons = page
+    .locator("main button")
+    .filter({ hasNotText: /quit to landing|rematch|sound/i });
+  if ((await mainButtons.count()) === 9) {
+    return mainButtons;
+  }
+
   const gridCells = board.getByRole("gridcell");
   if ((await gridCells.count()) === 9) {
     return gridCells;
@@ -66,9 +75,13 @@ async function ensureBoardFlowAvailable(page: Page) {
     .getByRole("grid", { name: /tic[- ]?tac[- ]?toe board|game board|board/i })
     .count();
   const boardTestIdCount = await page.getByTestId("game-board").count();
+  const fallbackBoardButtons = await page
+    .locator("main button")
+    .filter({ hasNotText: /quit to landing|rematch|sound/i })
+    .count();
 
   test.fixme(
-    boardCount === 0 && boardTestIdCount === 0,
+    boardCount === 0 && boardTestIdCount === 0 && fallbackBoardButtons !== 9,
     "Blocked until the TTT-17 in-game board/status UI is implemented in the app.",
   );
 }
