@@ -81,3 +81,12 @@ It serves as the running audit trail of work completed in the repository.
 
   <PUT HERE THE CURRENT CONTENT OF THE FILE>
   Summary: Reformatted every Markdown file in the `context/` directory to the requested common template with a descriptive title, a short file index section, and a content section containing the file's existing material. Preserved the existing context information and timeline history while normalizing the structure across all context files.
+- Date/time: 2026-03-20 22:28:59 UTC
+  Prompt: I have instructions as a text file (docs/phase-2/raw-instructions.md). This is scraped html file and doesn't have list markers and other md formatting. If this is not well leggible, let me know before proceeding and I'll provide a file with formatting. The screenshot files for new and updated screens are in docs/phase-2/target-screenshot folder. The first task is to create detailed user stories (in a single file) in docs/phase-2 folder.
+  Summary: Read the Phase 2 raw instructions, created a new detailed user stories document for multiplayer scope in `docs/phase-2`, and updated the project overview to reflect the new multiplayer server/client and infrastructure scope.
+- Date/time: 2026-03-20 23:46:33 UTC
+  Prompt: The images are in @docs/phase-2/target-screenshot folder. Can you expand the user stories for UI to one story per screen that has to be created or updated and point in the story to the corresponding screenshot?
+  Summary: Reworked the Phase 2 UI user stories into separate screen-specific stories for the landing multiplayer entry, multiplayer create modal, and multiplayer join modal, each referencing the corresponding target screenshot and acceptance criteria.
+- Date/time: 2026-03-20 23:55:56 UTC
+  Prompt: Please, rename all Phase 2 stories to P2.1, P2.2, P2.3 etc. (P stands for "Phase")
+  Summary: Renamed the Phase 2 user story headings to the requested P2.x numbering scheme.

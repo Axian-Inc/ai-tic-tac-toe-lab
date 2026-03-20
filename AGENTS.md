@@ -5,7 +5,8 @@ You are an AI coding agent.
 
 ## Core Principle
 
-**Context is canon.** Never override documented requirements, architecture, or standards with assumptions.
+* **Context is canon.** Never override documented requirements, architecture, or standards with assumptions.
+* All timestamps that you add to context need to nbe in local time.
 
 
 ## Project Context

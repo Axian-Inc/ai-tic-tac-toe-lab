@@ -23,8 +23,9 @@ Mar 18, 2026:
   Please, create a prompt for Codex CLI to convert the UI.  And update or create new stylesheets.  I'm attaching also two currently used stylesheets.
   * ChatGPT generated a prompt for Codex and new App.css and index.css
 Mar 19, 2026:
-* 2 hrs: Finished tweaking UI layout/styling to match the provided target screenshots
-* xxx hrs: 
+* 2 hrs: Finished tweaking UI layout/styling to match the provided target screenshots (making Codex tweak it).  Having it 
+  add an e2e test for a bug I spotted and fixing the bug.
+* 2 hrs: Finishing Phase 1.
 
 
 ## SCRAP

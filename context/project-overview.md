@@ -10,6 +10,7 @@ It also marks game-logic changes as out of scope unless explicitly required.
 ## Content
 
 Date: 2026-03-19
+Update: 2026-03-19 - Phase 2 scope adds multiplayer server + client delivery (HTTP + WebSocket), new multiplayer UI flows, and supporting AWS infrastructure/testing.
 
 Purpose: Provide a React-based AI tic-tac-toe app with a polished UI and repeatable static-site deployment infrastructure.
 
@@ -21,6 +22,7 @@ Goals:
 
 Scope:
 - UI layout and styling in React components and CSS.
+- Multiplayer server with HTTP API + WebSocket updates, plus client UI to create/join multiplayer games.
 - Terraform configuration for AWS S3 website hosting in the `stanb` workspace.
 - No changes to game logic unless explicitly required.
 
