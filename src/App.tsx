@@ -10,7 +10,7 @@ function resolveRoute(pathname: string): RoutePath {
 
 function LandingPage({ onStartGame }: { onStartGame: () => void }) {
   return (
-    <main className="page page-landing">
+    <main className="page page-landing" data-testid="landing-page">
       <div className="landing-decor landing-decor-left" aria-hidden="true">
         X
       </div>
@@ -28,7 +28,12 @@ function LandingPage({ onStartGame }: { onStartGame: () => void }) {
         <p className="landing-intro">
           The classic game of X&apos;s and O&apos;s. Can you beat the CPU?
         </p>
-        <button type="button" className="landing-cta" onClick={onStartGame}>
+        <button
+          type="button"
+          className="landing-cta"
+          onClick={onStartGame}
+          data-testid="start-game-button"
+        >
           Play vs CPU
         </button>
 
@@ -297,7 +302,11 @@ function GameplayPage({ onExitGame }: { onExitGame: () => void }) {
   }, []);
 
   return (
-    <main className="page page-gameplay" aria-label="Gameplay board">
+    <main
+      className="page page-gameplay"
+      aria-label="Gameplay board"
+      data-testid="gameplay-page"
+    >
       <section className="gameplay-shell">
         {isConfettiVisible ? (
           <div className="confetti-layer" aria-hidden="true" key={confettiBurstId}>
@@ -343,6 +352,7 @@ function GameplayPage({ onExitGame }: { onExitGame: () => void }) {
           className={`gameplay-status ${isGameOver ? "gameplay-status-over" : "gameplay-status-active"}`}
           role="status"
           aria-live="polite"
+          data-testid="game-status"
         >
           {statusMessage}
         </p>
@@ -353,6 +363,7 @@ function GameplayPage({ onExitGame }: { onExitGame: () => void }) {
         <section
           className={`game-board ${isGameOver ? "game-board-over" : ""}`}
           aria-label="Tic Tac Toe board"
+          data-testid="game-board"
         >
           {boardCells.map(({ cell, index, isInteractive }) => (
             <button
@@ -362,6 +373,7 @@ function GameplayPage({ onExitGame }: { onExitGame: () => void }) {
               onClick={() => handleCellClick(index)}
               disabled={!isInteractive}
               aria-label={`Cell ${index + 1}${cell ? `, marked ${cell}` : ""}${!isInteractive ? ", unavailable" : ", available"}`}
+              data-testid={`board-cell-${index}`}
             >
               {getCellLabel(cell)}
             </button>
@@ -374,6 +386,7 @@ function GameplayPage({ onExitGame }: { onExitGame: () => void }) {
               type="button"
               className="gameplay-control gameplay-control-primary"
               onClick={handlePlayAgain}
+              data-testid="play-again-button"
             >
               Play Again
             </button>
@@ -382,6 +395,7 @@ function GameplayPage({ onExitGame }: { onExitGame: () => void }) {
             type="button"
             className="gameplay-control gameplay-control-secondary"
             onClick={onExitGame}
+            data-testid="exit-game-button"
           >
             {isGameOver ? "Home" : "Quit"}
           </button>
