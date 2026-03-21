@@ -15,6 +15,7 @@ Date: 2026-03-19
 Current:
 - Unit tests via Vitest: `npm run test:run`
 - End-to-end tests via Playwright: `npx playwright test tests/e2e/full-game.spec.ts`
+- Multiplayer server unit + flow tests via Vitest: `npm run test:run`
 
 Priorities:
 - Validate game logic and board interactions.

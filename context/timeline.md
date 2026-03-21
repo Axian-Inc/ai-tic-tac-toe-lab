@@ -90,3 +90,12 @@ It serves as the running audit trail of work completed in the repository.
 - Date/time: 2026-03-20 23:55:56 UTC
   Prompt: Please, rename all Phase 2 stories to P2.1, P2.2, P2.3 etc. (P stands for "Phase")
   Summary: Renamed the Phase 2 user story headings to the requested P2.x numbering scheme.
+- Date/time: 2026-03-20 23:59:57 UTC
+  Prompt: Please, execute story P2.1
+  Summary: Implemented the multiplayer HTTP server create-game endpoint with in-memory storage, added the corresponding games listing endpoint for waiting games, introduced a server start script, and updated context documentation for the new backend component and setup steps.
+- Date/time: 2026-03-21 00:15:22 UTC
+  Prompt: I'd like to do two types of tests for the server: unit tests. Yes, also the stateful flow tests. Yes, please.
+  Summary: Added unit and stateful flow tests for the multiplayer server, refactored the server to export testable helpers and a createServer factory, and updated testing strategy documentation accordingly.
+- Date/time: 2026-03-21 00:22:34 UTC
+  Prompt: I ran `npm run test:run` but it ran only the non-server tests.
+  Summary: Expanded Vitest include patterns to pick up server-side test files under `server/__tests__`.

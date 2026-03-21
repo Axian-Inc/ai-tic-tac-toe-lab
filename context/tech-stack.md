@@ -29,3 +29,6 @@ Infrastructure:
 
 Automation:
 - Bash deployment scripts in `/scripts`
+
+Backend:
+- Node.js HTTP server (no framework) for multiplayer API endpoints

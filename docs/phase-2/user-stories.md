@@ -9,6 +9,9 @@ It defines acceptance criteria for each story.
 
 ## Content
 
+As you implement stories, create tests to cover new or updated logic.  For UI, unit tests and some e2e tests.
+For the server, unit and stateful flow tests.
+
 ### P2.1: Create a Multiplayer Game (Server)
 As a player, I want to create a new multiplayer game so another player can join and we can start playing.
 

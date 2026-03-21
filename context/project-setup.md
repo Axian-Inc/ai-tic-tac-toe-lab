@@ -55,6 +55,18 @@ If you need the dev server reachable on all interfaces, use:
 npm run dev -- --host 0.0.0.0 --port 5173
 ```
 
+Start the multiplayer API server (separate process):
+
+```bash
+npm run server
+```
+
+Default server URL:
+
+```text
+http://localhost:5174
+```
+
 ## Common Local Commands
 
 Run unit tests once:

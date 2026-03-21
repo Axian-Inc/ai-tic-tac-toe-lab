@@ -7,7 +7,10 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     pool: 'forks',
-    include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    include: [
+      'src/**/*.{test,spec}.{ts,tsx}',
+      'server/**/*.{test,spec}.{js,ts}',
+    ],
     exclude: ['**/node_modules/**', '**/node_modules.old/**'],
   },
 })
