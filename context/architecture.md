@@ -1,14 +1,16 @@
 # Architecture
 
-Last updated: 2026-03-21
+Last updated: 2026-03-22
 
 ## Test Automation Foundation
 - Unit test execution is handled by Vitest using the Vite config, with `jsdom` enabled so logic tests and future React rendering tests share one runner.
 - Browser automation is handled by Playwright against the local Vite app using a dedicated `playwright.config.ts`.
+- Playwright discovery now includes both browser specs in `tests/e2e/` and isolated runner-based specs in `tests/unit/`.
 - Automation-stable selectors are exposed through `data-testid` attributes on landing/gameplay controls, board container, status text, and board cells.
 - Initial framework coverage includes:
   - `src/game/Game.test.ts` for core logic regression checks.
   - `tests/e2e/gameplay.spec.ts` for landing-to-gameplay smoke coverage.
+  - `tests/unit/cpu.spec.ts` for deterministic CPU move-selection coverage through the Playwright runner.
 
 ## Game State Module
 - Added `src/game/Game.ts` as the centralized state container for core Tic-Tac-Toe data.

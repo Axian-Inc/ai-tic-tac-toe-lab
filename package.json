@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run --coverage",
     "test:watch": "vitest",
-    "test:ui": "playwright test",
+    "test:ui": "playwright test tests/e2e",
+    "test:unit": "playwright test tests/unit",
     "test:ui:headed": "playwright test --headed",
     "aws:s3:setup": "bash scripts/aws/setup-s3-website.sh",
     "aws:s3:deploy": "bash scripts/aws/deploy-s3-website.sh"

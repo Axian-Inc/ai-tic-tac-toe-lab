@@ -1,1 +1,1 @@
-{"root":["./src/App.tsx","./src/main.tsx","./src/game/Game.ts","./src/game/cpu.ts"],"version":"5.9.3"}
+{"root":["./src/App.tsx","./src/main.tsx","./src/game/Game.test.ts","./src/game/Game.ts","./src/game/cpu.ts","./src/test/setup.ts"],"version":"5.9.3"}
