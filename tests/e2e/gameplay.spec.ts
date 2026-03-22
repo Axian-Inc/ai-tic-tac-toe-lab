@@ -4,7 +4,7 @@ test("player can start a game and place the opening move", async ({ page }) => {
   await page.goto("/");
 
   await expect(page.getByTestId("landing-page")).toBeVisible();
-  await page.getByTestId("start-game-button").click();
+  await page.getByRole("button", { name: "Play vs CPU" }).click();
 
   await expect(page).toHaveURL(/\/game$/);
   await expect(page.getByTestId("gameplay-page")).toBeVisible();
