@@ -19,7 +19,10 @@ This folder is the root for Playwright UI and API tests.
 - Browser artifacts are saved under `playwright-report/<prefix>-<timestamp>-results`.
 
 Run UI tests
-`PLAYWRIGHT_BASE_URL=https://dh0s8gqynjyz6.cloudfront.net bash scripts/run_playwright_ui.sh test -- tests/playwright/specs/ui`
+`bash scripts/run_playwright_ui.sh test -- tests/playwright/specs/ui`
+
+Override UI target URL
+`PLAYWRIGHT_BASE_URL=http://127.0.0.1:5173 bash scripts/run_playwright_ui.sh test -- tests/playwright/specs/ui`
 
 Run API tests
 `bash scripts/run_playwright_api.sh test -- tests/playwright/specs/api`

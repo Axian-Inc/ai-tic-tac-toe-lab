@@ -70,20 +70,6 @@ async function ensureBoardFlowAvailable(page: Page) {
   if (playButtonCount > 0) {
     await playButton.first().click();
   }
-
-  const boardCount = await page
-    .getByRole("grid", { name: /tic[- ]?tac[- ]?toe board|game board|board/i })
-    .count();
-  const boardTestIdCount = await page.getByTestId("game-board").count();
-  const fallbackBoardButtons = await page
-    .locator("main button")
-    .filter({ hasNotText: /quit to landing|rematch|sound/i })
-    .count();
-
-  test.fixme(
-    boardCount === 0 && boardTestIdCount === 0 && fallbackBoardButtons !== 9,
-    "Blocked until the TTT-17 in-game board/status UI is implemented in the app.",
-  );
 }
 
 test.describe("TTT-76 TTT-17 board and status scenarios", () => {

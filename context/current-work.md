@@ -5,14 +5,14 @@ Date: 2026-03-10
 Track the single active Jira ticket and execution state so work is visible and uninterrupted.
 
 ## Active Ticket
-- Key: None
-- Summary: None
-- Status: Idle
+- Key: TTT-79
+- Summary: Selecting X and starting a game can leave the landing screen visible instead of showing the board
+- Status: In Progress
 
 ## Plan
-1. Select next Jira ticket.
-2. Review `context/` docs and Jira acceptance criteria.
-3. Update this tracker with the new active plan.
+1. Add a focused Playwright UI spec for the Play-as-X start flow regression.
+2. Run the new spec against the default CloudFront UI target.
+3. Record whether the deployed app reproduces the reported defect.
 
 ## Progress Log
 - 2026-02-16: Initialized tracking template.
@@ -113,10 +113,18 @@ Track the single active Jira ticket and execution state so work is visible and u
 - 2026-03-15 19:06 UTC - Added `tests/playwright/specs/ui/ttt-77-legal-move-feedback.spec.ts` with five legal-move and visual-feedback scenarios for `TTT-18`, using runtime `fixme` gating so the spec stays green until the board interaction UI exists.
 - 2026-03-15 19:07 UTC - Validated the new spec with `npx eslint tests/playwright/specs/ui/ttt-77-legal-move-feedback.spec.ts` and `scripts/run_playwright_ui.sh test -- tests/playwright/specs/ui/ttt-77-legal-move-feedback.spec.ts`; result was 5 skipped scenarios because the current app does not yet implement the `TTT-18` board interaction UI.
 - 2026-03-15 19:07 UTC - Added Jira evidence comment to `TTT-77`, transitioned the ticket from `In Progress` to `IN QA`, and reset local tracking to idle.
+- 2026-03-22 18:11 UTC - Reopened `TTT-77` from `IN QA` to `In Progress` to remove stale `fixme` gating from the Playwright spec and rerun the targeted test.
+- 2026-03-22 18:11 UTC - Confirmed the current app surface in `src/App.tsx` is still a placeholder and does not yet expose the `TTT-18` board interaction UI, so removing the gate will surface real failures rather than skips.
+- 2026-03-22 18:14 UTC - Removed the stale runtime `fixme` gate from `tests/playwright/specs/ui/ttt-77-legal-move-feedback.spec.ts` and reran the targeted Playwright spec.
+- 2026-03-22 18:14 UTC - `scripts/run_playwright_ui.sh test -- tests/playwright/specs/ui/ttt-77-legal-move-feedback.spec.ts` now fails 5/5 scenarios against the current placeholder app because no board grid, playable squares, or inline game-status UI exists yet.
+- 2026-03-22 18:37 UTC - Reopened `TTT-76` from `IN QA` to `In Progress` to remove stale `fixme` gating from the Playwright spec and rerun the targeted board/status test.
+- 2026-03-22 18:37 UTC - Default Playwright UI target now points to CloudFront, so TTT-76 will be rerun against the deployed site instead of localhost.
+- 2026-03-22 18:50 UTC - Reopened `TTT-78` from `IN QA` to `In Progress` to remove all remaining `fixme` gates from the game-module UI validation spec.
+- 2026-03-22 19:25 UTC - Paused `TTT-78` by transitioning it back to `IN QA`, then reopened `TTT-79` to `In Progress` as the single active ticket.
 
 ## Blockers/Risks
 - AWS credentials are not configured in the current shell.
 - PowerShell is not installed, so `scripts/deploy-static.ps1` cannot run here.
 
 ## Next Action
-- Select the next Jira ticket and update this tracker.
+- Create and run the new TTT-79 Playwright UI regression spec against CloudFront.

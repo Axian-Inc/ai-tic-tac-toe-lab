@@ -18,3 +18,4 @@ Date: 2026-02-05
 - 2026-03-17: Added Vitest unit coverage for CPU decision logic in `src/game.test.ts`, including immediate win, immediate block, heuristic priority order, deterministic tie-breaking, and terminal-state handling.
 - 2026-03-17: Unit-test execution baseline is `npm run test`.
 - 2026-03-20: Playwright UI/API runs and unit-test runs now emit timestamped report logs under `reports/` using `ui-`, `api-`, and `unit-` prefixes, with Playwright HTML artifacts stored under matching timestamped directories.
+- 2026-03-22: Default Playwright UI target URL changed to `https://dh0s8gqynjyz6.cloudfront.net`; local UI runs now require `PLAYWRIGHT_BASE_URL=http://127.0.0.1:5173` and only start the local Vite web server when a localhost base URL is selected.

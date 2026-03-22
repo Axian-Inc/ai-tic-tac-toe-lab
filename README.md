@@ -75,6 +75,9 @@ npx playwright install
 npm run test:pw
 ```
 
+By default, Playwright UI runs target `https://dh0s8gqynjyz6.cloudfront.net`.
+Set `PLAYWRIGHT_BASE_URL=http://127.0.0.1:5173` if you want to run UI tests against a local Vite session instead.
+
 ```powershell
 scripts/run_playwright_ui.sh ui -- tests/playwright
 ```
