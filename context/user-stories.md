@@ -1,6 +1,6 @@
 # User Stories - Phase 1
 
-Last updated: 2026-03-16
+Last updated: 2026-03-21
 
 ## Epic 1: App Foundation
 
@@ -186,6 +186,10 @@ Acceptance criteria:
 - Tests cover turn switching.
 - Tests cover win detection for representative lines.
 - Tests cover draw detection and post-game move blocking.
+- A unit test runner is configured for local and CI execution of TypeScript game-logic tests.
+- Coverage reporting is available for the core game logic module.
+- A Playwright UI automation framework is configured to run browser-based smoke tests against the local app.
+- Stable automation selectors are available for critical gameplay interactions.
 
 # User-stories = Phase 2
 

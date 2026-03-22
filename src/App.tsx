@@ -492,7 +492,7 @@ function LandingPage({
   }, [isMultiplayerModalOpen, multiplayerModalView]);
 
   return (
-    <main className="page page-landing">
+    <main className="page page-landing" data-testid="landing-page">
       <div className="landing-decor landing-decor-left" aria-hidden="true">
         X
       </div>
@@ -1372,7 +1372,11 @@ function GameplayPage({
       : null;
 
   return (
-    <main className="page page-gameplay" aria-label="Gameplay board">
+    <main
+      className="page page-gameplay"
+      aria-label="Gameplay board"
+      data-testid="gameplay-page"
+    >
       <section className="gameplay-shell">
         {!isMultiplayer && isConfettiVisible ? (
           <div className="confetti-layer" aria-hidden="true" key={confettiBurstId}>
@@ -1560,6 +1564,7 @@ function GameplayPage({
           className={`gameplay-status ${isGameOver ? "gameplay-status-over" : "gameplay-status-active"}`}
           role="status"
           aria-live="polite"
+          data-testid="game-status"
         >
           {statusMessage}
         </p>
@@ -1570,6 +1575,7 @@ function GameplayPage({
         <section
           className={`game-board ${isGameOver ? "game-board-over" : ""}`}
           aria-label="Tic Tac Toe board"
+          data-testid="game-board"
         >
           {boardCells.map(({ cell, index, isInteractive }) => (
             <button
@@ -1579,6 +1585,7 @@ function GameplayPage({
               onClick={() => handleCellClick(index)}
               disabled={!isInteractive}
               aria-label={`Cell ${index + 1}${cell ? `, marked ${cell}` : ""}${!isInteractive ? ", unavailable" : ", available"}`}
+              data-testid={`board-cell-${index}`}
             >
               {getCellLabel(cell)}
             </button>
@@ -1603,6 +1610,7 @@ function GameplayPage({
               type="button"
               className="gameplay-control gameplay-control-primary"
               onClick={handlePlayAgain}
+              data-testid="play-again-button"
             >
               Play Again
             </button>

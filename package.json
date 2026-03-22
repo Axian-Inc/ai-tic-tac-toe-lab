@@ -8,16 +8,23 @@
     "dev:full": "bash -lc 'npm run dev & npm run server:start & wait'",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "typecheck": "npm run typecheck:app && npm run typecheck:server",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
     "typecheck:app": "tsc --noEmit -p tsconfig.app.json",
     "typecheck:server": "tsc --noEmit -p tsconfig.server.json",
     "server:build": "tsc -p tsconfig.server.json",
     "server:start": "npm run server:build && node dist-server/server/index.js",
+    "test": "vitest run --coverage",
+    "test:watch": "vitest",
+    "test:ui": "playwright test tests/e2e",
+    "test:unit": "playwright test tests/unit",
+    "test:ui:headed": "playwright test --headed",
     "aws:s3:setup": "bash scripts/aws/setup-s3-website.sh",
     "aws:s3:deploy": "bash scripts/aws/deploy-s3-website.sh"
   },
   "dependencies": {
+    "@playwright/test": "^1.58.2",
     "express": "^5.2.1",
+    "playwright": "^1.58.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
@@ -27,7 +34,9 @@
     "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^5.1.4",
+    "@vitest/coverage-v8": "^4.1.0",
+    "jsdom": "^29.0.1",
     "typescript": "^5.6.3",
-    "vite": "^7.3.1"
+    "vite": "^5.4.8"
   }
 }
