@@ -31,6 +31,10 @@ function getCompletionDescription(completion: MultiplayerCompletion): string {
     return `Game ended by resignation. Player ${completion.loser} resigned.`;
   }
 
+  if (completion.endReason === "abandonment") {
+    return `Game ended by abandonment. Player ${completion.loser} timed out.`;
+  }
+
   if (completion.endReason === "draw") {
     return "Game ended in a draw.";
   }

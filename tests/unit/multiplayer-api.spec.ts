@@ -1,7 +1,9 @@
 import { expect, test } from "@playwright/test";
 import {
+  checkMultiplayerAbandonment,
   createMultiplayerGame,
   getMultiplayerGame,
+  getMultiplayerGameWithOptions,
   getMultiplayerWebSocketUrlFromBaseUrl,
   joinMultiplayerGame,
   listMultiplayerGames,
@@ -117,6 +119,26 @@ test.describe("multiplayer api helpers", () => {
     expect(requestUrl).toBe("http://localhost:3001/games/game-1");
   });
 
+  test("getMultiplayerGameWithOptions includes reconnect query parameters when provided", async () => {
+    let requestUrl = "";
+    globalThis.fetch = (async (input: RequestInfo | URL) => {
+      requestUrl = String(input);
+      return new Response(JSON.stringify({ game: { id: "game-1" } }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    }) as typeof fetch;
+
+    await getMultiplayerGameWithOptions("game-1", {
+      player: "X",
+      intent: "reconnect",
+    });
+
+    expect(requestUrl).toBe(
+      "http://localhost:3001/games/game-1?player=X&intent=reconnect"
+    );
+  });
+
   test("joinMultiplayerGame POSTs to /games/:id/join", async () => {
     let requestUrl = "";
     let requestInit: RequestInit | undefined;
@@ -175,5 +197,23 @@ test.describe("multiplayer api helpers", () => {
       method: "POST",
       body: JSON.stringify({ player: "O" }),
     });
+  });
+
+  test("checkMultiplayerAbandonment POSTs to /games/:id/abandonment-check", async () => {
+    let requestUrl = "";
+    let requestInit: RequestInit | undefined;
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      requestUrl = String(input);
+      requestInit = init;
+      return new Response(JSON.stringify({ game: {} }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    }) as typeof fetch;
+
+    await checkMultiplayerAbandonment("game-1");
+
+    expect(requestUrl).toBe("http://localhost:3001/games/game-1/abandonment-check");
+    expect(requestInit?.method).toBe("POST");
   });
 });

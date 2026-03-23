@@ -4,6 +4,7 @@ export type MultiplayerGameStatus = "waiting" | "active" | "over";
 
 export const MULTIPLAYER_PLAYER_NAME_MAX_LENGTH = 32;
 export const MULTIPLAYER_GAME_NAME_MAX_LENGTH = 48;
+export const MULTIPLAYER_ABANDONMENT_TIMEOUT_MS = 3 * 60 * 1000;
 
 export interface CreateGameRequest {
   playerName: string;
@@ -36,6 +37,7 @@ export interface MultiplayerGameSnapshot extends MultiplayerGameSummary {
   state: GameState;
   completion: MultiplayerCompletion | null;
   history: MultiplayerGameHistory;
+  activity: MultiplayerGameActivity;
 }
 
 export interface MultiplayerPlayerSession {
@@ -71,6 +73,11 @@ export interface GetGameResponse {
   game: MultiplayerGameSnapshot;
 }
 
+export interface GetGameRequestOptions {
+  player?: Player;
+  intent?: "sync" | "reconnect";
+}
+
 export interface MultiplayerMoveRequest {
   player: Player;
   position: number;
@@ -88,11 +95,23 @@ export interface ResignGameResponse {
   game: MultiplayerGameSnapshot;
 }
 
+export interface AbandonmentCheckResponse {
+  game: MultiplayerGameSnapshot;
+}
+
 export interface MultiplayerCompletion {
-  endReason: "win" | "draw" | "resignation";
+  endReason: "win" | "draw" | "resignation" | "abandonment";
   winner: Player | null;
   loser: Player | null;
   completedAt: string;
+}
+
+export interface MultiplayerGameActivity {
+  lastProgressedAt: string;
+  awaitingPlayer: Player | null;
+  awaitingSince: string | null;
+  abandonmentTimeoutMs: number;
+  abandonmentDeadlineAt: string | null;
 }
 
 export interface MultiplayerHistoryRetention {
@@ -156,6 +175,12 @@ export interface MultiplayerResignedEvent {
   resignedPlayer: Player;
 }
 
+export interface MultiplayerAbandonedEvent {
+  type: "abandoned";
+  game: MultiplayerGameSnapshot;
+  abandonedPlayer: Player;
+}
+
 export interface MultiplayerResyncNeededEvent {
   type: "resync-needed";
   game: MultiplayerGameSnapshot;
@@ -167,6 +192,7 @@ export type MultiplayerServerEvent =
   | MultiplayerMoveAppliedEvent
   | MultiplayerGameOverEvent
   | MultiplayerResignedEvent
+  | MultiplayerAbandonedEvent
   | MultiplayerResyncNeededEvent;
 
 export interface ListGamesResponse {

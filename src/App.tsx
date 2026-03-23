@@ -2,8 +2,10 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import { Game, type BoardCell, type GameState, type Player } from "./game/Game";
 import { getDeterministicCpuMovePosition } from "./game/cpu";
 import {
+  checkMultiplayerAbandonment,
   createMultiplayerGame,
   getMultiplayerGame,
+  getMultiplayerGameWithOptions,
   getMultiplayerWebSocketUrl,
   joinMultiplayerGame,
   listMultiplayerGames,
@@ -237,6 +239,18 @@ function getMultiplayerStatusMessage(
       return `Game over: Player ${game.completion.loser} resigned.`;
     }
 
+    if (game.completion?.endReason === "abandonment") {
+      if (session.role === "player" && game.completion.loser === session.player) {
+        return "Game over: You abandoned the match.";
+      }
+
+      if (session.role === "player") {
+        return "Game over: Opponent abandoned the match.";
+      }
+
+      return `Game over: Player ${game.completion.loser} abandoned the match.`;
+    }
+
     if (session.role === "player" && game.state.status.winner === session.player) {
       return "Game over: You win!";
     }
@@ -303,6 +317,14 @@ function getLiveSyncLabel(liveSyncState: LiveSyncState): string {
   return "Live sync idle";
 }
 
+function formatDurationParts(totalMilliseconds: number): string {
+  const totalSeconds = Math.max(Math.ceil(totalMilliseconds / 1000), 0);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+}
+
 function getReplayEventSummary(event: MultiplayerGameEvent): string {
   if (event.type === "game-created") {
     return `Player ${event.player} created the match.`;
@@ -314,6 +336,10 @@ function getReplayEventSummary(event: MultiplayerGameEvent): string {
 
   if (event.completion.endReason === "resignation") {
     return `Completed by resignation. Player ${event.completion.loser} resigned.`;
+  }
+
+  if (event.completion.endReason === "abandonment") {
+    return `Completed by abandonment. Player ${event.completion.loser} timed out.`;
   }
 
   if (event.completion.endReason === "draw") {
@@ -835,9 +861,12 @@ function GameplayPage({
     useState<boolean>(false);
   const [isResigningMultiplayerGame, setIsResigningMultiplayerGame] =
     useState<boolean>(false);
+  const [isCheckingAbandonment, setIsCheckingAbandonment] =
+    useState<boolean>(false);
   const [multiplayerError, setMultiplayerError] = useState<string>("");
   const [liveSyncState, setLiveSyncState] = useState<LiveSyncState>("idle");
   const [replayFrameIndex, setReplayFrameIndex] = useState<number | null>(null);
+  const [nowTimestamp, setNowTimestamp] = useState<number>(() => Date.now());
 
   const replayFrames = useMemo(
     () => (multiplayerGame ? buildMultiplayerReplayFrames(multiplayerGame) : []),
@@ -864,6 +893,21 @@ function GameplayPage({
     multiplayerSession?.role === "player" &&
     multiplayerGame.status === "active" &&
     !multiplayerGame.state.status.isOver;
+  const abandonmentDeadlineTimestamp = multiplayerGame?.activity.abandonmentDeadlineAt
+    ? Date.parse(multiplayerGame.activity.abandonmentDeadlineAt)
+    : null;
+  const abandonmentRemainingMs =
+    abandonmentDeadlineTimestamp === null
+      ? null
+      : Math.max(abandonmentDeadlineTimestamp - nowTimestamp, 0);
+  const abandonmentCountdownLabel =
+    abandonmentRemainingMs === null
+      ? null
+      : formatDurationParts(abandonmentRemainingMs);
+  const abandonmentAwaitingPlayer = multiplayerGame?.activity.awaitingPlayer ?? null;
+  const isAwaitingLocalPlayerTurn =
+    multiplayerSession?.role === "player" &&
+    abandonmentAwaitingPlayer === multiplayerSession.player;
 
   const boardCells = useMemo(
     () =>
@@ -1041,12 +1085,18 @@ function GameplayPage({
     }
   };
 
-  const syncMultiplayerGame = async () => {
+  const syncMultiplayerGame = async (intent: "sync" | "reconnect" = "sync") => {
     if (!multiplayerSession) {
       return;
     }
 
-    const response = await getMultiplayerGame(multiplayerSession.gameId);
+    const response =
+      multiplayerSession.role === "player"
+        ? await getMultiplayerGameWithOptions(multiplayerSession.gameId, {
+            player: multiplayerSession.player,
+            intent,
+          })
+        : await getMultiplayerGame(multiplayerSession.gameId);
     onUpdateMultiplayerGame(
       createMultiplayerGameView(multiplayerSession, response.game)
     );
@@ -1077,7 +1127,7 @@ function GameplayPage({
     setMultiplayerError("");
 
     try {
-      await syncMultiplayerGame();
+      await syncMultiplayerGame("sync");
     } catch (error) {
       setMultiplayerError(
         error instanceof Error ? error.message : "Unable to refresh multiplayer game."
@@ -1184,7 +1234,7 @@ function GameplayPage({
     }
 
     setMultiplayerError("");
-    void syncMultiplayerGame().catch((error: unknown) => {
+    void syncMultiplayerGame("reconnect").catch((error: unknown) => {
       setMultiplayerError(
         error instanceof Error ? error.message : "Unable to load multiplayer game."
       );
@@ -1233,6 +1283,7 @@ function GameplayPage({
             message.type === "resync-needed" ||
             message.type === "move-applied" ||
             message.type === "resigned" ||
+            message.type === "abandoned" ||
             message.type === "game-over"
           ) {
             onUpdateMultiplayerGame(
@@ -1262,7 +1313,7 @@ function GameplayPage({
 
         clearReconnectTimer();
         reconnectTimerRef.current = window.setTimeout(() => {
-          void syncMultiplayerGame()
+          void syncMultiplayerGame("reconnect")
             .catch(() => {
               if (!isDisposed) {
                 setLiveSyncState("unavailable");
@@ -1316,6 +1367,56 @@ function GameplayPage({
   ]);
 
   useEffect(() => {
+    if (
+      !isMultiplayer ||
+      multiplayerGame === null ||
+      multiplayerGame.status !== "active" ||
+      multiplayerGame.state.status.isOver
+    ) {
+      return;
+    }
+
+    setNowTimestamp(Date.now());
+    const timerId = window.setInterval(() => {
+      setNowTimestamp(Date.now());
+    }, 1000);
+
+    return () => {
+      window.clearInterval(timerId);
+    };
+  }, [isMultiplayer, multiplayerGame]);
+
+  const handleCheckAbandonment = async () => {
+    if (
+      !multiplayerSession ||
+      multiplayerSession.role !== "player" ||
+      !multiplayerGame ||
+      multiplayerGame.status !== "active" ||
+      multiplayerGame.state.status.isOver ||
+      isReplayActive ||
+      isCheckingAbandonment
+    ) {
+      return;
+    }
+
+    setIsCheckingAbandonment(true);
+    setMultiplayerError("");
+
+    try {
+      const response = await checkMultiplayerAbandonment(multiplayerSession.gameId);
+      onUpdateMultiplayerGame(
+        createMultiplayerGameView(multiplayerSession, response.game)
+      );
+    } catch (error) {
+      setMultiplayerError(
+        error instanceof Error ? error.message : "Unable to check for abandonment."
+      );
+    } finally {
+      setIsCheckingAbandonment(false);
+    }
+  };
+
+  useEffect(() => {
     if (isMultiplayer) {
       previousGameOverRef.current = displayedGameState.status.isOver;
       return;
@@ -1359,11 +1460,24 @@ function GameplayPage({
           : "You are spectating this match. The board is read-only; use Refresh Match if live sync is unavailable."
       : multiplayerGame.status === "waiting"
         ? "Share this match ID with another player. Refresh after they join to see the active session."
+        : multiplayerGame.completion?.endReason === "abandonment"
+          ? `This match ended by abandonment. Player ${multiplayerGame.completion.loser} failed to make the required move in time.`
         : multiplayerGame.completion?.endReason === "resignation"
           ? "This match ended by resignation. No additional moves are accepted."
         : liveSyncState === "connected"
           ? "Moves are validated by the server and live updates are arriving automatically."
           : "Moves are validated by the server. If live sync is unavailable, use Refresh Match to pull the latest state.";
+  const abandonmentMessage =
+    multiplayerGame === null ||
+    multiplayerGame.status !== "active" ||
+    multiplayerGame.state.status.isOver ||
+    abandonmentCountdownLabel === null
+      ? null
+      : multiplayerSession?.role === "spectator"
+        ? `Waiting on player ${abandonmentAwaitingPlayer}. Timeout window ends in ${abandonmentCountdownLabel}.`
+        : isAwaitingLocalPlayerTurn
+          ? `Your required move timeout window ends in ${abandonmentCountdownLabel}.`
+          : `Opponent timeout window ends in ${abandonmentCountdownLabel}. You can ask the server to resolve abandonment when it expires.`;
   const isReplayAvailable = replayFrames.length > 1;
   const lastReplayFrameIndex = replayFrames.length - 1;
   const latestHistoryEvent =
@@ -1447,6 +1561,9 @@ function GameplayPage({
               {getLiveSyncLabel(liveSyncState)}
             </p>
             <p className="gameplay-session-help">{multiplayerHelpMessage}</p>
+            {abandonmentMessage ? (
+              <p className="gameplay-session-help">{abandonmentMessage}</p>
+            ) : null}
             {multiplayerError ? (
               <p className="multiplayer-message multiplayer-message-error">
                 {multiplayerError}
@@ -1594,16 +1711,28 @@ function GameplayPage({
 
         <div className="gameplay-controls">
           {isActiveMultiplayerPlayerGame ? (
-            <button
-              type="button"
-              className="gameplay-control gameplay-control-primary"
-              onClick={() => {
-                void handleResignMultiplayerGame();
-              }}
-              disabled={isResigningMultiplayerGame || isReplayActive}
-            >
-              {isResigningMultiplayerGame ? "Resigning..." : "Resign"}
-            </button>
+            <>
+              <button
+                type="button"
+                className="gameplay-control gameplay-control-primary"
+                onClick={() => {
+                  void handleResignMultiplayerGame();
+                }}
+                disabled={isResigningMultiplayerGame || isReplayActive}
+              >
+                {isResigningMultiplayerGame ? "Resigning..." : "Resign"}
+              </button>
+              <button
+                type="button"
+                className="gameplay-control gameplay-control-secondary"
+                onClick={() => {
+                  void handleCheckAbandonment();
+                }}
+                disabled={isCheckingAbandonment || isReplayActive}
+              >
+                {isCheckingAbandonment ? "Checking..." : "Check Timeout"}
+              </button>
+            </>
           ) : null}
           {!isMultiplayer && isGameOver ? (
             <button

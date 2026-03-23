@@ -1,6 +1,6 @@
 # Deployment
 
-Last updated: 2026-03-16
+Last updated: 2026-03-23
 
 ## Phase 1
 
@@ -126,3 +126,12 @@ Last updated: 2026-03-16
   - `GET /games?status=active` for spectatable live matches.
 - Selecting a waiting game still uses `POST /games/{id}/join`, and selecting an active game still uses `GET /games/{id}` plus spectator session routing.
 - Local verification for US-40 is covered by `npm run typecheck` and `npm run build`.
+
+### US-41 Local Abandonment Resolution Flow
+- Active multiplayer snapshots now expose abandonment timing metadata through the existing `GET /games/{id}` response.
+- Reconnect-driven player recovery may call `GET /games/{id}?player=X|O&intent=reconnect` so the backend can refresh the timeout window only for the currently awaited player.
+- Multiplayer timeout resolution adds `POST /games/{id}/abandonment-check`:
+  - Returns the updated authoritative snapshot when the three-minute required-move timeout has expired.
+  - Safely rejects premature checks without ending the game.
+- Abandonment outcomes continue to fan out over the existing websocket channel together with the normal terminal `game-over` snapshot.
+- Local verification for US-41 is covered by `npm run typecheck` and `npx playwright test tests/unit/server.spec.ts tests/unit/multiplayer-api.spec.ts tests/unit/replay.spec.ts --reporter=list --workers=1`.

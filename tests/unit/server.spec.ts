@@ -23,6 +23,17 @@ function createActiveGame(store: InMemoryMultiplayerGameStore): MultiplayerGameR
   return store.get(game.id)!;
 }
 
+function createClock(start: string) {
+  let current = start;
+
+  return {
+    now: () => current,
+    set: (next: string) => {
+      current = next;
+    },
+  };
+}
+
 test.describe("server multiplayer helpers", () => {
   test("InMemoryMultiplayerGameStore.createWaitingGame creates a waiting game with host X assignment and initial history event", () => {
     const store = new InMemoryMultiplayerGameStore();
@@ -41,6 +52,13 @@ test.describe("server multiplayer helpers", () => {
         player: "X",
       },
     ]);
+    expect(game.activity).toEqual({
+      lastProgressedAt: game.createdAt,
+      awaitingPlayer: null,
+      awaitingSince: null,
+      abandonmentTimeoutMs: 180000,
+      abandonmentDeadlineAt: null,
+    });
   });
 
   test("InMemoryMultiplayerGameStore.createWaitingGame increments concurrent game count for waiting games", () => {
@@ -66,6 +84,8 @@ test.describe("server multiplayer helpers", () => {
     expect(activeGame.status).toBe("active");
     expect(activeGame.players.O).not.toBeNull();
     expect(activeGame.players.O?.player).toBe("O");
+    expect(activeGame.activity.awaitingPlayer).toBe("X");
+    expect(activeGame.activity.awaitingSince).toBe(activeGame.updatedAt);
     expect(activeGame.historyEvents.map((event) => event.type)).toEqual([
       "game-created",
       "player-joined",
@@ -159,6 +179,8 @@ test.describe("server multiplayer helpers", () => {
     expect(updated.game.getCurrentPlayer()).toBe("O");
     expect(updated.status).toBe("active");
     expect(updated.completion).toBeNull();
+    expect(updated.activity.awaitingPlayer).toBe("O");
+    expect(updated.activity.awaitingSince).toBe(updated.updatedAt);
   });
 
   test("InMemoryMultiplayerGameStore.submitMove completes a winning game with win completion metadata and history event", () => {
@@ -285,6 +307,71 @@ test.describe("server multiplayer helpers", () => {
       occurredAt: completed.updatedAt,
       completion: completed.completion,
     });
+    expect(completed.activity.awaitingPlayer).toBeNull();
+    expect(completed.activity.abandonmentDeadlineAt).toBeNull();
+  });
+
+  test("InMemoryMultiplayerGameStore.noteReconnect resets the abandonment window only for the awaited player", () => {
+    const clock = createClock("2026-03-23T00:00:00.000Z");
+    const store = new InMemoryMultiplayerGameStore(clock.now);
+    const game = store.createWaitingGame("Host", "Match One");
+
+    clock.set("2026-03-23T00:01:00.000Z");
+    store.joinWaitingGame(game.id);
+
+    const beforeReconnect = store.get(game.id)!;
+    expect(beforeReconnect.activity.awaitingPlayer).toBe("X");
+
+    clock.set("2026-03-23T00:02:30.000Z");
+    store.noteReconnect(game.id, "O");
+    expect(store.get(game.id)!.activity.awaitingSince).toBe("2026-03-23T00:01:00.000Z");
+
+    store.noteReconnect(game.id, "X");
+    expect(store.get(game.id)!.activity.awaitingSince).toBe("2026-03-23T00:02:30.000Z");
+  });
+
+  test("InMemoryMultiplayerGameStore.checkAbandonment returns too_soon before the timeout expires", () => {
+    const clock = createClock("2026-03-23T00:00:00.000Z");
+    const store = new InMemoryMultiplayerGameStore(clock.now);
+    const game = store.createWaitingGame("Host", "Match One");
+
+    clock.set("2026-03-23T00:01:00.000Z");
+    store.joinWaitingGame(game.id);
+    clock.set("2026-03-23T00:03:59.000Z");
+
+    expect(store.checkAbandonment(game.id)).toBe("too_soon");
+    expect(store.get(game.id)!.status).toBe("active");
+  });
+
+  test("InMemoryMultiplayerGameStore.checkAbandonment completes the game after the timeout expires", () => {
+    const clock = createClock("2026-03-23T00:00:00.000Z");
+    const store = new InMemoryMultiplayerGameStore(clock.now);
+    const game = store.createWaitingGame("Host", "Match One");
+
+    clock.set("2026-03-23T00:01:00.000Z");
+    store.joinWaitingGame(game.id);
+    clock.set("2026-03-23T00:04:00.000Z");
+
+    const result = store.checkAbandonment(game.id);
+
+    expect(result).not.toBe("not_found");
+    expect(result).not.toBe("not_active");
+    expect(result).not.toBe("too_soon");
+
+    const completed = store.get(game.id)!;
+    expect(completed.status).toBe("over");
+    expect(completed.completion).toEqual({
+      endReason: "abandonment",
+      winner: "O",
+      loser: "X",
+      completedAt: "2026-03-23T00:04:00.000Z",
+    });
+    expect(completed.historyEvents.at(-1)).toEqual({
+      type: "game-completed",
+      sequence: 3,
+      occurredAt: "2026-03-23T00:04:00.000Z",
+      completion: completed.completion,
+    });
   });
 
   test("validateCreateGameRequest accepts trimmed playerName and gameName values", () => {
@@ -356,12 +443,14 @@ test.describe("server multiplayer helpers", () => {
     if (snapshot.completion) {
       snapshot.completion.completedAt = "changed";
     }
+    snapshot.activity.lastProgressedAt = "changed";
     snapshot.history.events[0].sequence = 999;
 
     const freshSnapshot = toGameSnapshot(game);
     expect(freshSnapshot.players.X.name).toBe("Host");
     expect(freshSnapshot.players.O?.joinedAt).not.toBe("changed");
     expect(freshSnapshot.completion?.completedAt).toBe(game.updatedAt);
+    expect(freshSnapshot.activity.lastProgressedAt).toBe(game.updatedAt);
     expect(freshSnapshot.history.events[0].sequence).toBe(1);
   });
 

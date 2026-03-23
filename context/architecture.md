@@ -1,6 +1,6 @@
 # Architecture
 
-Last updated: 2026-03-22
+Last updated: 2026-03-23
 
 ## Phase 1
 
@@ -219,6 +219,22 @@ Last updated: 2026-03-22
   - Groups waiting games as joinable entries and active games as spectator-only entries inside the same list surface.
   - Reuses the existing `POST /games/{id}/join` and spectator `GET /games/{id}` navigation flows so modal actions still enter gameplay with the correct session role.
 - Discovery refresh and explicit empty-state messaging remain local UI behavior layered on top of the existing multiplayer summary endpoints rather than a second discovery model.
+
+### Abandonment Detection and Resolution (US-41)
+- `US-41` extends the existing multiplayer game record, completion model, and websocket transport rather than adding a second timeout-specific state store.
+- Multiplayer snapshots in `src/shared/multiplayer.ts` now include `activity` metadata for abandonment checks:
+  - `lastProgressedAt` records the last join or valid move that advanced the match.
+  - `awaitingPlayer`, `awaitingSince`, and `abandonmentDeadlineAt` describe whose required move is overdue and when the three-minute timeout window ends.
+- Backend abandonment handling in `server/index.ts` now uses one authoritative path:
+  - Join and valid move processing reset the active-turn abandonment window.
+  - Reconnect-driven `GET /games/{id}` requests may refresh the timeout window only when the currently awaited player reloads with reconnect intent.
+  - `POST /games/{id}/abandonment-check` closes only truly overdue active games, records `endReason = abandonment`, and declares the non-overdue side as winner.
+- Websocket fan-out reuses the existing live-update channel:
+  - Added an `abandoned` event carrying the updated snapshot and timed-out player.
+  - The existing `game-over` event still publishes the final authoritative terminal snapshot for all clients.
+- Multiplayer gameplay in `src/App.tsx` surfaces abandonment state without duplicating existing refresh or session flows:
+  - Active player sessions show a timeout countdown and a `Check Timeout` action that calls the new server endpoint.
+  - Status and replay text distinguish abandonment from wins, draws, and resignations.
 
 ### Planned Server-Backed Multiplayer Architecture
 - Introduce a lightweight HTTP server API as the authoritative source of truth for multiplayer games.

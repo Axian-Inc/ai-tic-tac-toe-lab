@@ -1,7 +1,9 @@
 import type {
+  AbandonmentCheckResponse,
   CreateGameRequest,
   CreateGameResponse,
   GetGameResponse,
+  GetGameRequestOptions,
   JoinGameResponse,
   ListGamesResponse,
   MultiplayerMoveRequest,
@@ -93,7 +95,27 @@ export async function listMultiplayerGames(
 }
 
 export async function getMultiplayerGame(gameId: string): Promise<GetGameResponse> {
-  const response = await fetch(`${getApiBaseUrl()}/games/${gameId}`);
+  return getMultiplayerGameWithOptions(gameId);
+}
+
+export async function getMultiplayerGameWithOptions(
+  gameId: string,
+  options?: GetGameRequestOptions
+): Promise<GetGameResponse> {
+  const query = new URLSearchParams();
+
+  if (options?.player) {
+    query.set("player", options.player);
+  }
+
+  if (options?.intent) {
+    query.set("intent", options.intent);
+  }
+
+  const queryString = query.toString();
+  const response = await fetch(
+    `${getApiBaseUrl()}/games/${gameId}${queryString ? `?${queryString}` : ""}`
+  );
 
   return readJsonResponse<GetGameResponse>(response);
 }
@@ -137,4 +159,14 @@ export async function resignMultiplayerGame(
   });
 
   return readJsonResponse<ResignGameResponse>(response);
+}
+
+export async function checkMultiplayerAbandonment(
+  gameId: string
+): Promise<AbandonmentCheckResponse> {
+  const response = await fetch(`${getApiBaseUrl()}/games/${gameId}/abandonment-check`, {
+    method: "POST",
+  });
+
+  return readJsonResponse<AbandonmentCheckResponse>(response);
 }

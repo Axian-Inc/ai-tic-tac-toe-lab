@@ -31,6 +31,14 @@ function createSnapshot(moves: number[]): MultiplayerGameSnapshot {
       retention: { mode: "process-memory", survivesServiceRestart: false },
       events: [],
     },
+    activity: {
+      lastProgressedAt: "2026-03-23T00:00:00.000Z",
+      awaitingPlayer: moves.length >= 2 ? game.getCurrentPlayer() : null,
+      awaitingSince: moves.length >= 2 ? "2026-03-23T00:00:00.000Z" : null,
+      abandonmentTimeoutMs: 180000,
+      abandonmentDeadlineAt:
+        moves.length >= 2 ? "2026-03-23T00:03:00.000Z" : null,
+    },
   };
 }
 
@@ -122,6 +130,26 @@ test.describe("buildMultiplayerReplayFrames", () => {
       key: "completed",
       label: "Result",
       description: "Game ended by resignation. Player X resigned.",
+    });
+  });
+
+  test("adds a Result frame for an abandonment completion with abandonment description", () => {
+    const snapshot = createSnapshot([0, 4]);
+    snapshot.status = "over";
+    snapshot.completion = {
+      endReason: "abandonment",
+      winner: "O",
+      loser: "X",
+      completedAt: "2026-03-23T00:05:00.000Z",
+    };
+    snapshot.state.status = { winner: "O", isDraw: false, isOver: true };
+
+    const frames = buildMultiplayerReplayFrames(snapshot);
+
+    expect(frames.at(-1)).toMatchObject({
+      key: "completed",
+      label: "Result",
+      description: "Game ended by abandonment. Player X timed out.",
     });
   });
 

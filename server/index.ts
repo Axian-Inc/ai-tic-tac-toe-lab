@@ -5,11 +5,15 @@ import { fileURLToPath } from "node:url";
 import express, { type Express } from "express";
 import { Game, type Player } from "../src/shared/game.js";
 import type {
+  AbandonmentCheckResponse,
   CreateGameRequest,
   CreateGameResponse,
   GetGameResponse,
+  GetGameRequestOptions,
   JoinGameResponse,
   ListGamesResponse,
+  MultiplayerAbandonedEvent,
+  MultiplayerGameActivity,
   MultiplayerCompletion,
   MultiplayerConnectionReadyEvent,
   MultiplayerGameEvent,
@@ -29,6 +33,7 @@ import type {
   SubmitMoveResponse,
 } from "../src/shared/multiplayer.js";
 import {
+  MULTIPLAYER_ABANDONMENT_TIMEOUT_MS,
   MULTIPLAYER_GAME_NAME_MAX_LENGTH,
   MULTIPLAYER_PLAYER_NAME_MAX_LENGTH,
 } from "../src/shared/multiplayer.js";
@@ -59,6 +64,7 @@ export interface MultiplayerGameRecord {
   players: MultiplayerPlayerAssignments;
   completion: MultiplayerCompletion | null;
   historyEvents: MultiplayerGameEvent[];
+  activity: MultiplayerGameActivity;
 }
 
 export interface MultiplayerService {
@@ -121,6 +127,7 @@ export function toGameSnapshot(game: MultiplayerGameRecord): MultiplayerGameSnap
         return { ...event };
       }),
     },
+    activity: { ...game.activity },
   };
 }
 
@@ -179,6 +186,39 @@ export function appendHistoryEvent(
     ...event,
     sequence: game.historyEvents.length + 1,
   } as MultiplayerGameEvent);
+}
+
+function getAbandonmentDeadline(activity: MultiplayerGameActivity): string | null {
+  if (activity.awaitingSince === null) {
+    return null;
+  }
+
+  return new Date(
+    Date.parse(activity.awaitingSince) + activity.abandonmentTimeoutMs
+  ).toISOString();
+}
+
+function setWaitingOrOverActivity(game: MultiplayerGameRecord, lastProgressedAt: string) {
+  game.activity = {
+    lastProgressedAt,
+    awaitingPlayer: null,
+    awaitingSince: null,
+    abandonmentTimeoutMs: MULTIPLAYER_ABANDONMENT_TIMEOUT_MS,
+    abandonmentDeadlineAt: null,
+  };
+}
+
+function setActiveTurnActivity(game: MultiplayerGameRecord, lastProgressedAt: string) {
+  const awaitingPlayer = game.game.getCurrentPlayer();
+  game.activity = {
+    lastProgressedAt,
+    awaitingPlayer,
+    awaitingSince: lastProgressedAt,
+    abandonmentTimeoutMs: MULTIPLAYER_ABANDONMENT_TIMEOUT_MS,
+    abandonmentDeadlineAt: new Date(
+      Date.parse(lastProgressedAt) + MULTIPLAYER_ABANDONMENT_TIMEOUT_MS
+    ).toISOString(),
+  };
 }
 
 function normalizeModalTextInput(value: unknown): string {
@@ -304,6 +344,11 @@ class MultiplayerWebSocketHub {
 
 export class InMemoryMultiplayerGameStore {
   private readonly games = new Map<string, MultiplayerGameRecord>();
+  private readonly now: () => string;
+
+  constructor(now: () => string = () => new Date().toISOString()) {
+    this.now = now;
+  }
 
   list(status?: MultiplayerGameStatus): MultiplayerGameSummary[] {
     return Array.from(this.games.values())
@@ -319,7 +364,7 @@ export class InMemoryMultiplayerGameStore {
   }
 
   createWaitingGame(playerName: string, gameName: string): MultiplayerGameRecord {
-    const timestamp = new Date().toISOString();
+    const timestamp = this.now();
     const game: MultiplayerGameRecord = {
       id: randomUUID(),
       name: gameName,
@@ -337,6 +382,13 @@ export class InMemoryMultiplayerGameStore {
       },
       completion: null,
       historyEvents: [],
+      activity: {
+        lastProgressedAt: timestamp,
+        awaitingPlayer: null,
+        awaitingSince: null,
+        abandonmentTimeoutMs: MULTIPLAYER_ABANDONMENT_TIMEOUT_MS,
+        abandonmentDeadlineAt: null,
+      },
     };
 
     appendHistoryEvent(game, {
@@ -365,7 +417,7 @@ export class InMemoryMultiplayerGameStore {
       return "not_joinable";
     }
 
-    const timestamp = new Date().toISOString();
+    const timestamp = this.now();
     game.players = {
       ...game.players,
       O: {
@@ -375,6 +427,7 @@ export class InMemoryMultiplayerGameStore {
     };
     game.status = "active";
     game.updatedAt = timestamp;
+    setActiveTurnActivity(game, timestamp);
     appendHistoryEvent(game, {
       type: "player-joined",
       occurredAt: timestamp,
@@ -423,10 +476,11 @@ export class InMemoryMultiplayerGameStore {
       return "invalid_move";
     }
 
-    game.updatedAt = new Date().toISOString();
+    game.updatedAt = this.now();
     if (game.game.getStatus().isOver) {
       game.status = "over";
       game.completion = createCompletionFromCurrentGame(game, game.updatedAt);
+      setWaitingOrOverActivity(game, game.updatedAt);
       if (game.completion !== null) {
         appendHistoryEvent(game, {
           type: "game-completed",
@@ -434,6 +488,8 @@ export class InMemoryMultiplayerGameStore {
           completion: game.completion,
         });
       }
+    } else {
+      setActiveTurnActivity(game, game.updatedAt);
     }
 
     return game;
@@ -461,7 +517,7 @@ export class InMemoryMultiplayerGameStore {
       return "player_not_joined";
     }
 
-    const completedAt = new Date().toISOString();
+    const completedAt = this.now();
     game.status = "over";
     game.updatedAt = completedAt;
     game.completion = {
@@ -470,9 +526,86 @@ export class InMemoryMultiplayerGameStore {
       loser: player,
       completedAt,
     };
+    setWaitingOrOverActivity(game, completedAt);
     appendHistoryEvent(game, {
       type: "game-completed",
       occurredAt: completedAt,
+      completion: game.completion,
+    });
+
+    return game;
+  }
+
+  noteReconnect(id: string, player: Player): MultiplayerGameRecord | "not_found" {
+    const game = this.games.get(id);
+
+    if (!game) {
+      return "not_found";
+    }
+
+    if (
+      game.status !== "active" ||
+      game.completion !== null ||
+      game.activity.awaitingPlayer !== player
+    ) {
+      return game;
+    }
+
+    const timestamp = this.now();
+    game.updatedAt = timestamp;
+    game.activity = {
+      ...game.activity,
+      awaitingSince: timestamp,
+      abandonmentDeadlineAt: getAbandonmentDeadline({
+        ...game.activity,
+        awaitingSince: timestamp,
+      }),
+    };
+
+    return game;
+  }
+
+  checkAbandonment(
+    id: string
+  ):
+    | MultiplayerGameRecord
+    | "not_found"
+    | "not_active"
+    | "too_soon" {
+    const game = this.games.get(id);
+
+    if (!game) {
+      return "not_found";
+    }
+
+    if (
+      game.status !== "active" ||
+      game.completion !== null ||
+      game.activity.awaitingPlayer === null ||
+      game.activity.awaitingSince === null
+    ) {
+      return "not_active";
+    }
+
+    const now = this.now();
+    const deadlineAt = game.activity.abandonmentDeadlineAt ?? getAbandonmentDeadline(game.activity);
+
+    if (deadlineAt === null || Date.parse(now) < Date.parse(deadlineAt)) {
+      return "too_soon";
+    }
+
+    game.status = "over";
+    game.updatedAt = now;
+    game.completion = {
+      endReason: "abandonment",
+      winner: getOpponent(game.activity.awaitingPlayer),
+      loser: game.activity.awaitingPlayer,
+      completedAt: now,
+    };
+    setWaitingOrOverActivity(game, now);
+    appendHistoryEvent(game, {
+      type: "game-completed",
+      occurredAt: now,
       completion: game.completion,
     });
 
@@ -530,6 +663,17 @@ function createResignedEvent(
     type: "resigned",
     game: toGameSnapshot(game),
     resignedPlayer,
+  };
+}
+
+function createAbandonedEvent(
+  game: MultiplayerGameRecord,
+  abandonedPlayer: Player
+): MultiplayerAbandonedEvent {
+  return {
+    type: "abandoned",
+    game: toGameSnapshot(game),
+    abandonedPlayer,
   };
 }
 
@@ -707,6 +851,36 @@ export function createMultiplayerApp(): MultiplayerService {
   app.get("/games/:id", (request, response) => {
     response.setHeader("cache-control", "no-store");
 
+    const rawPlayer = request.query.player;
+    const rawIntent = request.query.intent;
+    const requestOptions: GetGameRequestOptions = {};
+
+    if (rawPlayer === "X" || rawPlayer === "O") {
+      requestOptions.player = rawPlayer;
+    }
+
+    if (rawIntent === "sync" || rawIntent === "reconnect") {
+      requestOptions.intent = rawIntent;
+    }
+
+    if (
+      requestOptions.intent === "reconnect" &&
+      requestOptions.player !== undefined
+    ) {
+      const reconnectResult = gameStore.noteReconnect(
+        request.params.id,
+        requestOptions.player
+      );
+
+      if (reconnectResult === "not_found") {
+        response.status(404).json({
+          status: "not_found",
+          message: "Game not found.",
+        });
+        return;
+      }
+    }
+
     const game = gameStore.get(request.params.id);
 
     if (!game) {
@@ -872,6 +1046,58 @@ export function createMultiplayerApp(): MultiplayerService {
     websocketHub.publish(result.id, createGameOverEvent(result));
 
     const payload: ResignGameResponse = {
+      game: toGameSnapshot(result),
+    };
+
+    response.status(200).json(payload);
+  });
+
+  app.post("/games/:id/abandonment-check", (request, response) => {
+    response.setHeader("cache-control", "no-store");
+
+    const currentGame = gameStore.get(request.params.id);
+    const result = gameStore.checkAbandonment(request.params.id);
+
+    if (result === "not_found") {
+      response.status(404).json({
+        status: "not_found",
+        message: "Game not found.",
+      });
+      return;
+    }
+
+    if (result === "not_active") {
+      response.status(409).json({
+        status: "not_active",
+        message: "Only active multiplayer games can be checked for abandonment.",
+      });
+      return;
+    }
+
+    if (result === "too_soon") {
+      const deadlineAt = currentGame?.activity.abandonmentDeadlineAt;
+      const remainingMs =
+        deadlineAt === undefined || deadlineAt === null
+          ? MULTIPLAYER_ABANDONMENT_TIMEOUT_MS
+          : Math.max(Date.parse(deadlineAt) - Date.now(), 0);
+
+      response.status(409).json({
+        status: "too_soon",
+        message:
+          remainingMs > 0
+            ? `The required move timeout has not expired yet. ${Math.ceil(remainingMs / 1000)}s remaining.`
+            : "The required move timeout has not expired yet.",
+      });
+      return;
+    }
+
+    const abandonedPlayer = result.completion?.loser;
+    if (abandonedPlayer !== null && abandonedPlayer !== undefined) {
+      websocketHub.publish(result.id, createAbandonedEvent(result, abandonedPlayer));
+    }
+    websocketHub.publish(result.id, createGameOverEvent(result));
+
+    const payload: AbandonmentCheckResponse = {
       game: toGameSnapshot(result),
     };
 
