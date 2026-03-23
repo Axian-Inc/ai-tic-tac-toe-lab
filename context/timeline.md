@@ -99,3 +99,12 @@ It serves as the running audit trail of work completed in the repository.
 - Date/time: 2026-03-21 00:22:34 UTC
   Prompt: I ran `npm run test:run` but it ran only the non-server tests.
   Summary: Expanded Vitest include patterns to pick up server-side test files under `server/__tests__`.
+- Date/time: 2026-03-21 00:39:11 UTC
+  Prompt: Please, execute stories P2.2 thru P2.4
+  Summary: Implemented server-side join and move endpoints with validation and state transitions, added move application logic with win/draw handling, and expanded multiplayer flow tests to cover joining and move validation.
+- Date/time: 2026-03-23 16:51:37 UTC
+  Prompt: I ran the tests.  And I got "invalif JS syntax" as a result.  Please, correct.
+  Summary: Diagnosed the failing Vitest suites, fixed invalid regex literals in the multiplayer server route matchers, and updated the server module syntax for broader parser compatibility. Re-ran `npm run test:run` to confirm all suites pass.
+- Date/time: 2026-03-23 17:17:40 UTC
+  Prompt: Please, add comments to the server controller to describe the endpoint and its bahavior - everything relevant to the caller.  Commments should be detailed.
+  Summary: Added detailed endpoint documentation comments to the multiplayer server controller handlers and server factory, describing request/response expectations and error behaviors.

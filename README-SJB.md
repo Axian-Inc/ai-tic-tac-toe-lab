@@ -26,6 +26,10 @@ Mar 19, 2026:
 * 2 hrs: Finished tweaking UI layout/styling to match the provided target screenshots (making Codex tweak it).  Having it 
   add an e2e test for a bug I spotted and fixing the bug.
 * 2 hrs: Finishing Phase 1.
+Mar 20, 2026:
+* 2 hrs: Phase 2: User stories + implementing backend stories with tests.
+
+
 
 
 ## SCRAP

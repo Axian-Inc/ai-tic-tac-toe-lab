@@ -16,6 +16,15 @@ const startTestServer = () =>
 describe('multiplayer server flow', () => {
   let baseUrl
   let server
+  const createGame = async (payload = {}) => {
+    const response = await fetch(`${baseUrl}/games`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+
+    return response.json()
+  }
 
   beforeAll(async () => {
     const started = await startTestServer()
@@ -55,5 +64,70 @@ describe('multiplayer server flow', () => {
 
     const payload = await response.json()
     expect(payload.error).toBe('Invalid status filter.')
+  })
+
+  it('joins a waiting game and activates it', async () => {
+    const created = await createGame({ playerName: 'Host' })
+
+    const joinResponse = await fetch(`${baseUrl}/games/${created.gameId}/join`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ playerName: 'Joiner' }),
+    })
+
+    expect(joinResponse.status).toBe(200)
+    const joined = await joinResponse.json()
+
+    expect(joined.game.status).toBe('active')
+    expect(joined.game.players.O).toBe('Joiner')
+  })
+
+  it('rejects joining a non-waiting game', async () => {
+    const created = await createGame({ playerName: 'Host' })
+
+    await fetch(`${baseUrl}/games/${created.gameId}/join`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ playerName: 'Joiner' }),
+    })
+
+    const secondJoin = await fetch(`${baseUrl}/games/${created.gameId}/join`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ playerName: 'Other' }),
+    })
+
+    expect(secondJoin.status).toBe(409)
+    const payload = await secondJoin.json()
+    expect(payload.error).toBe('Game is not available to join.')
+  })
+
+  it('accepts a valid move after joining and rejects invalid moves', async () => {
+    const created = await createGame({ playerName: 'Host' })
+
+    await fetch(`${baseUrl}/games/${created.gameId}/join`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ playerName: 'Joiner' }),
+    })
+
+    const invalidMove = await fetch(`${baseUrl}/games/${created.gameId}/moves`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ move: { row: 0, col: 0, player: 'O' } }),
+    })
+
+    expect(invalidMove.status).toBe(400)
+
+    const validMove = await fetch(`${baseUrl}/games/${created.gameId}/moves`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ move: { row: 0, col: 0, player: 'X' } }),
+    })
+
+    expect(validMove.status).toBe(200)
+    const payload = await validMove.json()
+    expect(payload.game.state.board[0][0]).toBe('X')
+    expect(payload.game.state.currentPlayer).toBe('O')
   })
 })

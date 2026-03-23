@@ -42,7 +42,8 @@ Acceptance Criteria:
 As a player, I want to propose a move and have the server validate it so only legal moves are applied.
 
 Acceptance Criteria:
-1. `POST /games/{id}/moves` accepts a proposed move from a player.
+1. `POST /games/{id}/moves` accepts a proposed move from a player.  The request body specifies the player ID 
+   and the position.
 2. The server validates the move against current game state and turn order.
 3. Invalid moves are rejected with a 400-level response and do not change state.
 4. Valid moves update the game state and are broadcast to listeners.
