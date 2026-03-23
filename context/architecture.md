@@ -236,6 +236,24 @@ Last updated: 2026-03-23
   - Active player sessions show a timeout countdown and a `Check Timeout` action that calls the new server endpoint.
   - Status and replay text distinguish abandonment from wins, draws, and resignations.
 
+### Phase 2 AWS Deployment and Low-Cost Operations (US-42)
+- `US-42` builds on the existing server and client runtime behavior from `US-30` through `US-41`; it does not add new multiplayer game rules, alternate websocket behavior, or a second abandonment path.
+- `infra/multiplayer-service-foundation.yaml` now provisions a deployable backend footprint:
+  - one public EC2 instance running the existing Express and websocket service as a single long-lived process
+  - one versioned S3 bucket for backend release bundles
+  - IAM and Systems Manager access so backend releases can be pushed without SSH access or manual instance mutation
+- Release automation stays split by runtime so frontend and backend remain independently deployable:
+  - `scripts/aws/deploy-multiplayer-service.sh` builds `dist-server/`, uploads a release bundle, and triggers an in-place backend restart through Systems Manager
+  - `scripts/aws/deploy-s3-website.sh` can resolve `BackendBaseUrl` from the backend stack and inject it into `VITE_MULTIPLAYER_API_BASE_URL` during the frontend build
+- Operational model remains intentionally constrained for cost and simplicity:
+  - one backend process handles both HTTP API traffic and websocket fan-out
+  - multiplayer state, replay history, and abandonment tracking remain in process memory and are lost if the backend instance is replaced or restarted
+  - the documented concurrency cap remains 25 waiting or active games, matching the existing in-memory store guardrail in `server/index.ts`
+  - health checks continue to use `GET /health`, and readiness continues to use `GET /ready`
+- Rollback expectations are release-bundle based rather than database-driven:
+  - frontend rollback is the existing S3 asset redeploy path
+  - backend rollback means redeploying a previous release bundle to the same instance because no persistent match state survives process replacement
+
 ### Planned Server-Backed Multiplayer Architecture
 - Introduce a lightweight HTTP server API as the authoritative source of truth for multiplayer games.
 - Keep the shared `Game` domain rules as the core move-validation engine, reused by the server for multiplayer game progression.

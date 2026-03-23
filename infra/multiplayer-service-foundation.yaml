@@ -1,25 +1,39 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: >
-  Foundation placeholder for the Phase 2 multiplayer backend deployment path.
-  This template intentionally provisions no resources yet. It captures the
-  expected service configuration inputs that later Phase 2 infrastructure will
-  build on.
+  Low-cost Phase 2 multiplayer backend infrastructure for ai-tic-tac-toe-lab.
+  Provisions one lightweight EC2 runtime, an S3 deployment bucket, and Systems
+  Manager access so the multiplayer HTTP and websocket service can be shipped
+  independently from the S3-hosted frontend.
 
 Metadata:
   Story:
-    Id: US-30
-    Name: Multiplayer Service Skeleton and Shared Domain
+    Id: US-42
+    Name: Phase 2 AWS Deployment and Low-Cost Operations
 
 Parameters:
   ProjectTag:
     Type: String
     Default: ttt-ms-aj
-    Description: Project tag prefix retained for future backend resources.
+    Description: Naming prefix applied to multiplayer deployment resources.
     AllowedPattern: ".*ttt-ms-aj.*"
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC where the multiplayer runtime should be launched.
+  SubnetId:
+    Type: AWS::EC2::Subnet::Id
+    Description: Public subnet used for the multiplayer runtime.
+  InstanceType:
+    Type: String
+    Default: t3.micro
+    AllowedValues:
+      - t3.micro
+      - t3.small
+      - t3.medium
+    Description: Instance type for the single multiplayer backend runtime.
   ServicePort:
     Type: Number
     Default: 3001
-    Description: Local and deployed HTTP port for the multiplayer service.
+    Description: HTTP and websocket port exposed by the multiplayer service.
   HealthPath:
     Type: String
     Default: /health
@@ -29,13 +43,183 @@ Parameters:
     Default: /ready
     Description: Readiness endpoint path exposed by the multiplayer service.
 
+Resources:
+  MultiplayerDeploymentBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${ProjectTag}-${AWS::AccountId}-${AWS::Region}-multiplayer-bundles"
+      VersioningConfiguration:
+        Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        IgnorePublicAcls: true
+        BlockPublicPolicy: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectTag
+        - Key: Story
+          Value: US-42
+
+  MultiplayerInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${ProjectTag}-${AWS::Region}-multiplayer-ec2-role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      Policies:
+        - PolicyName: MultiplayerDeploymentBucketReadPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                Resource: !Sub "${MultiplayerDeploymentBucket.Arn}/*"
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                Resource: !GetAtt MultiplayerDeploymentBucket.Arn
+
+  MultiplayerInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref MultiplayerInstanceRole
+
+  MultiplayerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Public ingress for the Tic-Tac-Toe multiplayer backend.
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref ServicePort
+          ToPort: !Ref ServicePort
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub "${ProjectTag}-multiplayer-sg"
+        - Key: Project
+          Value: !Ref ProjectTag
+        - Key: Story
+          Value: US-42
+
+  MultiplayerInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: "{{resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64}}"
+      InstanceType: !Ref InstanceType
+      IamInstanceProfile: !Ref MultiplayerInstanceProfile
+      SubnetId: !Ref SubnetId
+      SecurityGroupIds:
+        - !Ref MultiplayerSecurityGroup
+      Tags:
+        - Key: Name
+          Value: !Sub "${ProjectTag}-multiplayer-runtime"
+        - Key: Project
+          Value: !Ref ProjectTag
+        - Key: Story
+          Value: US-42
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -euxo pipefail
+
+          dnf install -y nodejs npm unzip curl
+          mkdir -p /opt/ttt-multiplayer/releases
+
+          cat > /etc/ttt-multiplayer.env <<'EOF'
+          HOST=0.0.0.0
+          PORT=${ServicePort}
+          EOF
+
+          cat > /etc/systemd/system/ttt-multiplayer.service <<'EOF'
+          [Unit]
+          Description=Tic Tac Toe multiplayer backend
+          After=network.target
+
+          [Service]
+          Type=simple
+          User=ec2-user
+          WorkingDirectory=/opt/ttt-multiplayer/current
+          EnvironmentFile=-/etc/ttt-multiplayer.env
+          ExecStart=/usr/bin/npm start
+          Restart=always
+          RestartSec=5
+
+          [Install]
+          WantedBy=multi-user.target
+          EOF
+
+          cat > /usr/local/bin/deploy-ttt-multiplayer.sh <<'EOF'
+          #!/bin/bash
+          set -euo pipefail
+
+          if [[ $# -ne 2 ]]; then
+            echo "Usage: deploy-ttt-multiplayer.sh <s3-bundle-uri> <release-id>" >&2
+            exit 1
+          fi
+
+          BUNDLE_URI="$1"
+          RELEASE_ID="$2"
+          APP_ROOT="/opt/ttt-multiplayer"
+          RELEASE_DIR="${!APP_ROOT}/releases/${!RELEASE_ID}"
+          ARCHIVE_PATH="/tmp/${!RELEASE_ID}.zip"
+
+          rm -rf "${!RELEASE_DIR}"
+          mkdir -p "${!RELEASE_DIR}"
+          aws s3 cp "${!BUNDLE_URI}" "${!ARCHIVE_PATH}"
+          unzip -oq "${!ARCHIVE_PATH}" -d "${!RELEASE_DIR}"
+          cd "${!RELEASE_DIR}"
+          npm ci --omit=dev
+          ln -sfn "${!RELEASE_DIR}" "${!APP_ROOT}/current"
+          rm -f "${!ARCHIVE_PATH}"
+          systemctl daemon-reload
+          systemctl enable ttt-multiplayer.service
+          systemctl restart ttt-multiplayer.service
+          curl --fail --silent "http://127.0.0.1:${ServicePort}${HealthPath}" >/dev/null
+          EOF
+
+          chmod 755 /usr/local/bin/deploy-ttt-multiplayer.sh
+          systemctl daemon-reload
+
+  MultiplayerElasticIp:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      InstanceId: !Ref MultiplayerInstance
+      Tags:
+        - Key: Name
+          Value: !Sub "${ProjectTag}-multiplayer-eip"
+        - Key: Project
+          Value: !Ref ProjectTag
+        - Key: Story
+          Value: US-42
+
 Outputs:
-  PlannedServicePort:
-    Description: Expected HTTP port for the multiplayer service.
-    Value: !Ref ServicePort
-  PlannedHealthEndpoint:
-    Description: Expected health endpoint path.
-    Value: !Ref HealthPath
-  PlannedReadinessEndpoint:
-    Description: Expected readiness endpoint path.
-    Value: !Ref ReadinessPath
+  DeploymentBucketName:
+    Description: S3 bucket that stores deployable backend release bundles.
+    Value: !Ref MultiplayerDeploymentBucket
+  BackendInstanceId:
+    Description: Instance identifier of the multiplayer backend runtime.
+    Value: !Ref MultiplayerInstance
+  BackendBaseUrl:
+    Description: Public base URL for the multiplayer backend.
+    Value: !Sub "http://${MultiplayerElasticIp.PublicIp}:${ServicePort}"
+  BackendHealthUrl:
+    Description: Public health endpoint for the multiplayer backend.
+    Value: !Sub "http://${MultiplayerElasticIp.PublicIp}:${ServicePort}${HealthPath}"
+  BackendReadinessUrl:
+    Description: Public readiness endpoint for the multiplayer backend.
+    Value: !Sub "http://${MultiplayerElasticIp.PublicIp}:${ServicePort}${ReadinessPath}"

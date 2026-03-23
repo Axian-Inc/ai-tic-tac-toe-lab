@@ -1,6 +1,6 @@
 # Bugs
 
-Last updated: 2026-03-16
+Last updated: 2026-03-23
 
 This file tracks active and resolved product defects discovered during development and testing.
 
@@ -42,6 +42,27 @@ This file tracks active and resolved product defects discovered during developme
 - None.
 
 ### Resolved
+
+#### BUG-008 Backend Deploy Fails When Instance Lacks npm
+- Reported: 2026-03-23
+- Resolved: 2026-03-23
+- Related stories: US-42
+- Root cause: The EC2 bootstrap installed `nodejs` but did not guarantee an `npm` binary, while `scripts/aws/deploy-multiplayer-service.sh` executed `npm ci --omit=dev` through Systems Manager.
+- Resolution: Updated the infrastructure bootstrap to install `npm` explicitly and made the backend deploy command resolve or install `npm` on the instance before running the release install step.
+
+#### BUG-007 Backend Deploy Depends on Missing Instance Helper
+- Reported: 2026-03-23
+- Resolved: 2026-03-23
+- Related stories: US-42
+- Root cause: `scripts/aws/deploy-multiplayer-service.sh` invoked `/usr/local/bin/deploy-ttt-multiplayer.sh` through Systems Manager, but that helper existed only when EC2 bootstrap `UserData` had created it on the current instance.
+- Resolution: Updated the backend deploy script to send the full release install and restart steps directly through Systems Manager so releases no longer depend on the preinstalled helper file being present.
+
+#### BUG-006 Backend Deploy Script AWS CLI Parameter Formatting
+- Reported: 2026-03-23
+- Resolved: 2026-03-23
+- Related stories: US-42
+- Root cause: `scripts/aws/deploy-multiplayer-service.sh` passed the Systems Manager `commands` payload through AWS CLI shorthand syntax, which was fragile and could fail with parameter format parsing errors even though the shell script itself parsed correctly.
+- Resolution: Replaced the inline `--parameters` shorthand with a generated JSON parameter file passed via `file://`, matching the intended command payload without relying on brittle nested quoting.
 
 #### BUG-005 Joinable Games Missing Spectate Action
 - Reported: 2026-03-16

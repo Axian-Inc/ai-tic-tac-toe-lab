@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:full": "bash -lc 'npm run dev & npm run server:start & wait'",
+    "start": "node dist-server/server/index.js",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.json",
@@ -19,7 +20,9 @@
     "test:unit": "playwright test tests/unit",
     "test:ui:headed": "playwright test --headed",
     "aws:s3:setup": "bash scripts/aws/setup-s3-website.sh",
-    "aws:s3:deploy": "bash scripts/aws/deploy-s3-website.sh"
+    "aws:s3:deploy": "bash scripts/aws/deploy-s3-website.sh",
+    "aws:backend:setup": "bash scripts/aws/setup-multiplayer-service.sh",
+    "aws:backend:deploy": "bash scripts/aws/deploy-multiplayer-service.sh"
   },
   "dependencies": {
     "@playwright/test": "^1.58.2",

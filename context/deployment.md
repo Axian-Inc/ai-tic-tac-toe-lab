@@ -135,3 +135,33 @@ Last updated: 2026-03-23
   - Safely rejects premature checks without ending the game.
 - Abandonment outcomes continue to fan out over the existing websocket channel together with the normal terminal `game-over` snapshot.
 - Local verification for US-41 is covered by `npm run typecheck` and `npx playwright test tests/unit/server.spec.ts tests/unit/multiplayer-api.spec.ts tests/unit/replay.spec.ts --reporter=list --workers=1`.
+
+### US-42 AWS Deployment and Low-Cost Operations
+- Backend infrastructure command: `npm run aws:backend:setup`
+- Backend release command: `npm run aws:backend:deploy`
+- Frontend release command with backend endpoint injection:
+  - `MULTIPLAYER_STACK_NAME=ttt-ms-aj-multiplayer-service npm run aws:s3:deploy`
+- Backend stack resources:
+  - one public EC2 instance running the Express and websocket multiplayer service
+  - one versioned S3 bucket holding backend release bundles
+  - IAM instance profile and Systems Manager access for non-SSH deployments
+- Backend deployment flow:
+  - `aws:backend:setup` resolves the account's default VPC and subnet, then deploys the CloudFormation stack
+  - `aws:backend:deploy` builds `dist-server/`, uploads a zip bundle to the backend deployment bucket, and invokes a Systems Manager command on the instance to install dependencies and restart the systemd service
+  - The backend deploy command now resolves or installs `npm` on the instance before running `npm ci --omit=dev`, so releases are not blocked by older instances that were launched without the package manager present
+  - The backend deploy command no longer depends on `/usr/local/bin/deploy-ttt-multiplayer.sh` being preinstalled on the instance; it sends the deployment steps directly through Systems Manager for compatibility with already-running EC2 instances
+- Frontend deployment flow:
+  - `aws:s3:deploy` still builds and syncs `dist/` to the website bucket
+  - when `MULTIPLAYER_STACK_NAME` or `MULTIPLAYER_API_BASE_URL` is provided, the script injects the deployed backend URL into `VITE_MULTIPLAYER_API_BASE_URL` so websocket derivation keeps working from the existing client code
+- Operational assumptions:
+  - The low-cost Phase 2 AWS path assumes one always-on instance is enough for the documented cap of 25 concurrent waiting or active games.
+  - Multiplayer state, replay history, and abandonment timers remain in memory only; restarting or replacing the backend loses active game state.
+  - Health endpoint: `GET /health`
+  - Readiness endpoint: `GET /ready`
+  - Rollback expectation: redeploy a prior backend release bundle or prior frontend S3 build; there is no persistent store to migrate or restore in Phase 2.
+- Deployment rerun note:
+  - `npm run aws:s3:setup` and `npm run aws:backend:setup` are intended to be rerunnable because they use CloudFormation deploy/update behavior and should result in either an in-place update or a no-op when there are no changes.
+  - `npm run aws:s3:deploy` is rerunnable and re-syncs the built frontend to the website bucket; because it uses sync deletion semantics, files removed from the current build are also removed from the bucket.
+  - `npm run aws:backend:deploy` is rerunnable but not session-preserving; each run deploys a new backend bundle and restarts the systemd service on the EC2 instance.
+  - Because Phase 2 multiplayer state is in memory only, rerunning the backend deploy or applying infrastructure changes that replace or restart the instance will terminate active multiplayer sessions and discard retained replay/catch-up state.
+- Local verification for US-42 is covered by `npm run typecheck`, `bash -n scripts/aws/common.sh scripts/aws/setup-s3-website.sh scripts/aws/deploy-s3-website.sh scripts/aws/setup-multiplayer-service.sh scripts/aws/deploy-multiplayer-service.sh`, and manual review of `infra/multiplayer-service-foundation.yaml`.
