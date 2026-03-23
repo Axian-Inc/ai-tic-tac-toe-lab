@@ -49,7 +49,7 @@ const MULTIPLAYER_HISTORY_RETENTION = {
   survivesServiceRestart: false,
 } as const;
 
-interface MultiplayerGameRecord {
+export interface MultiplayerGameRecord {
   id: string;
   name: string;
   status: MultiplayerGameStatus;
@@ -61,7 +61,7 @@ interface MultiplayerGameRecord {
   historyEvents: MultiplayerGameEvent[];
 }
 
-interface MultiplayerService {
+export interface MultiplayerService {
   app: Express;
   gameStore: InMemoryMultiplayerGameStore;
   websocketHub: MultiplayerWebSocketHub;
@@ -72,7 +72,7 @@ type MultiplayerGameEventInput =
   | Omit<Extract<MultiplayerGameEvent, { type: "player-joined" }>, "sequence">
   | Omit<Extract<MultiplayerGameEvent, { type: "game-completed" }>, "sequence">;
 
-function toGameSummary(game: MultiplayerGameRecord): MultiplayerGameSummary {
+export function toGameSummary(game: MultiplayerGameRecord): MultiplayerGameSummary {
   const openSeatCount = game.players.O === null ? 1 : 0;
 
   return {
@@ -86,7 +86,7 @@ function toGameSummary(game: MultiplayerGameRecord): MultiplayerGameSummary {
   };
 }
 
-function toGameSnapshot(game: MultiplayerGameRecord): MultiplayerGameSnapshot {
+export function toGameSnapshot(game: MultiplayerGameRecord): MultiplayerGameSnapshot {
   const state = game.game.getState();
   const snapshotState =
     game.completion === null
@@ -144,7 +144,7 @@ function getOpponent(player: Player): Player {
   return player === "X" ? "O" : "X";
 }
 
-function createCompletionFromCurrentGame(
+export function createCompletionFromCurrentGame(
   game: MultiplayerGameRecord,
   completedAt: string
 ): MultiplayerCompletion | null {
@@ -171,7 +171,7 @@ function createCompletionFromCurrentGame(
   };
 }
 
-function appendHistoryEvent(
+export function appendHistoryEvent(
   game: MultiplayerGameRecord,
   event: MultiplayerGameEventInput
 ) {
@@ -185,7 +185,7 @@ function normalizeModalTextInput(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
 }
 
-function validateCreateGameRequest(
+export function validateCreateGameRequest(
   payload: unknown
 ):
   | { playerName: string; gameName: string }
@@ -302,7 +302,7 @@ class MultiplayerWebSocketHub {
   }
 }
 
-class InMemoryMultiplayerGameStore {
+export class InMemoryMultiplayerGameStore {
   private readonly games = new Map<string, MultiplayerGameRecord>();
 
   list(status?: MultiplayerGameStatus): MultiplayerGameSummary[] {

@@ -29,6 +29,7 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
     "@types/express": "^5.0.6",
     "@types/node": "^25.3.2",
     "@types/react": "^18.3.11",

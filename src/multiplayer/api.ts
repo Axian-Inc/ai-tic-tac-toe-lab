@@ -13,9 +13,16 @@ import type {
 
 const DEFAULT_API_BASE_URL = "http://localhost:3001";
 
-function getApiBaseUrl(): string {
-  const configuredBaseUrl = import.meta.env.VITE_MULTIPLAYER_API_BASE_URL;
+type ImportMetaEnvLike = {
+  VITE_MULTIPLAYER_API_BASE_URL?: string;
+};
 
+function getConfiguredApiBaseUrl(): string | undefined {
+  return (import.meta as ImportMeta & { env?: ImportMetaEnvLike }).env
+    ?.VITE_MULTIPLAYER_API_BASE_URL;
+}
+
+export function resolveApiBaseUrl(configuredBaseUrl?: string): string {
   if (typeof configuredBaseUrl === "string" && configuredBaseUrl.trim().length > 0) {
     return configuredBaseUrl.replace(/\/+$/, "");
   }
@@ -23,16 +30,27 @@ function getApiBaseUrl(): string {
   return DEFAULT_API_BASE_URL;
 }
 
-export function getMultiplayerWebSocketUrl(gameId: string): string {
-  const apiBaseUrl = getApiBaseUrl();
-  const websocketBaseUrl = apiBaseUrl.startsWith("https://")
-    ? apiBaseUrl.replace(/^https:\/\//, "wss://")
-    : apiBaseUrl.replace(/^http:\/\//, "ws://");
+function getApiBaseUrl(): string {
+  return resolveApiBaseUrl(getConfiguredApiBaseUrl());
+}
+
+export function getMultiplayerWebSocketUrlFromBaseUrl(
+  apiBaseUrl: string,
+  gameId: string
+): string {
+  const normalizedBaseUrl = resolveApiBaseUrl(apiBaseUrl);
+  const websocketBaseUrl = normalizedBaseUrl.startsWith("https://")
+    ? normalizedBaseUrl.replace(/^https:\/\//, "wss://")
+    : normalizedBaseUrl.replace(/^http:\/\//, "ws://");
 
   return `${websocketBaseUrl}/ws?${new URLSearchParams({ gameId }).toString()}`;
 }
 
-async function readJsonResponse<T>(response: Response): Promise<T> {
+export function getMultiplayerWebSocketUrl(gameId: string): string {
+  return getMultiplayerWebSocketUrlFromBaseUrl(getApiBaseUrl(), gameId);
+}
+
+export async function readJsonResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     let message = `Request failed with status ${response.status}.`;
 
