@@ -2,8 +2,10 @@ import http from 'http'
 import { randomUUID } from 'crypto'
 import { URL, fileURLToPath } from 'url'
 import path from 'path'
+import WebSocket, { WebSocketServer } from 'ws'
 
 const PORT = Number.parseInt(process.env.PORT || '5174', 10)
+const MAX_CONCURRENT_GAMES = 25
 export const VALID_STATUSES = new Set(['waiting', 'active', 'over'])
 
 export const createEmptyBoard = () => [
@@ -128,6 +130,30 @@ const isMoveValid = (game, move) => {
   return game.state.board[move.row][move.col] === null
 }
 
+const isValidPlayer = (player) => player === 'X' || player === 'O'
+
+const resolveResignation = (game, resigningPlayer) => ({
+  ...game,
+  status: 'over',
+  updatedAt: new Date().toISOString(),
+  state: {
+    ...game.state,
+    winner: resigningPlayer === 'X' ? 'O' : 'X',
+    isDraw: false,
+  },
+})
+
+const resolveAbandonment = (game) => ({
+  ...game,
+  status: 'over',
+  updatedAt: new Date().toISOString(),
+  state: {
+    ...game.state,
+    winner: game.state.currentPlayer === 'X' ? 'O' : 'X',
+    isDraw: false,
+  },
+})
+
 const applyMove = (game, move) => {
   const nextBoard = game.state.board.map((row) => [...row])
   nextBoard[move.row][move.col] = move.player
@@ -157,6 +183,106 @@ const json = (res, statusCode, payload) => {
     'Content-Length': Buffer.byteLength(body),
   })
   res.end(body)
+}
+
+const respondUpgradeError = (socket, statusCode, message) => {
+  const body = JSON.stringify({ error: message })
+  socket.write(
+    `HTTP/1.1 ${statusCode} ${http.STATUS_CODES[statusCode]}\r\n` +
+      'Content-Type: application/json; charset=utf-8\r\n' +
+      `Content-Length: ${Buffer.byteLength(body)}\r\n` +
+      'Connection: close\r\n' +
+      '\r\n' +
+      body,
+  )
+  socket.destroy()
+}
+
+// WebSocket protocol for multiplayer updates.
+// Endpoint: WS /ws?gameId=...
+// On connect: sends { type: "game_state", game } to allow catch-up.
+// On valid move: broadcasts { type: "game_update", move, game }.
+// On game end: broadcasts { type: "game_over", game }.
+// On invalid subscription: closes the connection with an error response.
+const createRealtimeHub = ({ games }) => {
+  const wss = new WebSocketServer({ noServer: true })
+  const subscribers = new Map()
+
+  const getSubscribers = (gameId) => {
+    if (!subscribers.has(gameId)) {
+      subscribers.set(gameId, new Set())
+    }
+    return subscribers.get(gameId)
+  }
+
+  const removeSubscriber = (gameId, ws) => {
+    const set = subscribers.get(gameId)
+    if (!set) return
+    set.delete(ws)
+    if (set.size === 0) {
+      subscribers.delete(gameId)
+    }
+  }
+
+  const send = (ws, payload) => {
+    if (ws.readyState !== WebSocket.OPEN) return
+    ws.send(JSON.stringify(payload))
+  }
+
+  const broadcast = (gameId, payload) => {
+    const set = subscribers.get(gameId)
+    if (!set) return
+    for (const ws of set) {
+      send(ws, payload)
+    }
+  }
+
+  const handleUpgrade = (req, socket, head) => {
+    const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`)
+    if (url.pathname !== '/ws') {
+      socket.destroy()
+      return
+    }
+
+    const gameId = url.searchParams.get('gameId')
+    if (!gameId) {
+      respondUpgradeError(socket, 400, 'Missing gameId.')
+      return
+    }
+
+    const game = games.get(gameId)
+    if (!game) {
+      respondUpgradeError(socket, 404, 'Game not found.')
+      return
+    }
+
+    wss.handleUpgrade(req, socket, head, (ws) => {
+      wss.emit('connection', ws, req, { gameId })
+    })
+  }
+
+  wss.on('connection', (ws, _req, client) => {
+    const gameId = client ? client.gameId : null
+    const game = gameId ? games.get(gameId) : null
+    if (!gameId || !game) {
+      send(ws, { type: 'error', error: 'Game not found.' })
+      ws.close(1008, 'Game not found.')
+      return
+    }
+
+    const set = getSubscribers(gameId)
+    set.add(ws)
+    send(ws, { type: 'game_state', game })
+
+    ws.on('close', () => removeSubscriber(gameId, ws))
+  })
+
+  return {
+    handleUpgrade,
+    broadcastGameUpdate: (game, move) =>
+      broadcast(game.id, { type: 'game_update', move, game }),
+    broadcastGameOver: (game) => broadcast(game.id, { type: 'game_over', game }),
+  }
 }
 
 const readJsonBody = (req) =>
@@ -207,6 +333,13 @@ const readJsonBody = (req) =>
 // - 413 if payload exceeds 1 MB.
 // - 500 for unexpected server errors.
 const handleCreateGame = async (req, res, games) => {
+  const activeCount = [...games.values()].filter(
+    (game) => game.status !== 'over',
+  ).length
+  if (activeCount >= MAX_CONCURRENT_GAMES) {
+    return json(res, 429, { error: 'Game capacity reached.' })
+  }
+
   const body = await readJsonBody(req)
   const game = createGameRecord({
     playerName: body && body.playerName,
@@ -241,6 +374,17 @@ const handleListGames = (req, res, url, games) => {
   return json(res, 200, { games: list })
 }
 
+// GET /games/:id
+// Retrieves the full game record, including move history, for replay or inspection.
+// Response:
+// - 200 with { game } on success.
+// - 404 if the game does not exist.
+const handleGetGame = (req, res, games, gameId) => {
+  const game = games.get(gameId)
+  if (!game) return json(res, 404, { error: 'Game not found.' })
+  return json(res, 200, { game })
+}
+
 // POST /games/:id/join
 // Joins a waiting game as player O.
 // Request body (JSON):
@@ -252,7 +396,7 @@ const handleListGames = (req, res, url, games) => {
 // - 400 if JSON payload is invalid.
 // - 413 if payload exceeds 1 MB.
 // - 500 for unexpected server errors.
-const handleJoinGame = async (req, res, games, gameId) => {
+const handleJoinGame = async (req, res, games, gameId, scheduler) => {
   const game = games.get(gameId)
   if (!game) return json(res, 404, { error: 'Game not found.' })
   if (game.status !== 'waiting') {
@@ -278,6 +422,7 @@ const handleJoinGame = async (req, res, games, gameId) => {
   }
 
   games.set(gameId, updated)
+  scheduler.schedule(updated)
 
   return json(res, 200, { game: updated })
 }
@@ -292,7 +437,7 @@ const handleJoinGame = async (req, res, games, gameId) => {
 // - 404 if the game does not exist.
 // - 413 if payload exceeds 1 MB.
 // - 500 for unexpected server errors.
-const handleMove = async (req, res, games, gameId) => {
+const handleMove = async (req, res, games, gameId, realtimeHub, scheduler) => {
   const game = games.get(gameId)
   if (!game) return json(res, 404, { error: 'Game not found.' })
 
@@ -306,6 +451,104 @@ const handleMove = async (req, res, games, gameId) => {
   const updated = applyMove(game, move)
   games.set(gameId, updated)
 
+  realtimeHub.broadcastGameUpdate(updated, move)
+  if (updated.status === 'over') {
+    realtimeHub.broadcastGameOver(updated)
+    scheduler.clear(gameId)
+  } else {
+    scheduler.schedule(updated)
+  }
+
+  return json(res, 200, { game: updated })
+}
+
+const createAbandonmentScheduler = ({ games, timeoutMs, realtimeHub }) => {
+  const timers = new Map()
+
+  const clear = (gameId) => {
+    const existing = timers.get(gameId)
+    if (existing) {
+      clearTimeout(existing)
+      timers.delete(gameId)
+    }
+  }
+
+  const clearAll = () => {
+    for (const timer of timers.values()) {
+      clearTimeout(timer)
+    }
+    timers.clear()
+  }
+
+  const schedule = (game) => {
+    if (!game || game.status !== 'active') return
+
+    clear(game.id)
+
+    const lastActivity = Date.parse(game.updatedAt)
+    const delay = Number.isNaN(lastActivity)
+      ? timeoutMs
+      : Math.max(lastActivity + timeoutMs - Date.now(), 0)
+
+    const timer = setTimeout(() => {
+      const latest = games.get(game.id)
+      if (!latest || latest.status !== 'active') {
+        clear(game.id)
+        return
+      }
+
+      const latestActivity = Date.parse(latest.updatedAt)
+      if (Number.isNaN(latestActivity)) {
+        clear(game.id)
+        return
+      }
+
+      if (Date.now() - latestActivity < timeoutMs) {
+        schedule(latest)
+        return
+      }
+
+      const updated = resolveAbandonment(latest)
+      games.set(latest.id, updated)
+      realtimeHub.broadcastGameOver(updated)
+      clear(latest.id)
+    }, delay)
+
+    timers.set(game.id, timer)
+  }
+
+  return { schedule, clear, clearAll }
+}
+
+// POST /games/:id/resign
+// Resigns an active game on behalf of a player.
+// Request body (JSON):
+// - player: "X" or "O" indicating the resigning player.
+// Response:
+// - 200 with { game } containing the winner and final status.
+// - 400 if the player is missing/invalid or JSON payload is invalid.
+// - 404 if the game does not exist.
+// - 409 if the game is not active.
+// - 413 if payload exceeds 1 MB.
+// - 500 for unexpected server errors.
+const handleResign = async (req, res, games, gameId, realtimeHub, scheduler) => {
+  const game = games.get(gameId)
+  if (!game) return json(res, 404, { error: 'Game not found.' })
+  if (game.status !== 'active') {
+    return json(res, 409, { error: 'Game is not active.' })
+  }
+
+  const body = await readJsonBody(req)
+  const resigningPlayer = body ? body.player : null
+  if (!isValidPlayer(resigningPlayer)) {
+    return json(res, 400, { error: 'Invalid resigning player.' })
+  }
+
+  const updated = resolveResignation(game, resigningPlayer)
+  games.set(gameId, updated)
+  realtimeHub.broadcastGameOver(updated)
+  scheduler.clear(gameId)
+
   return json(res, 200, { game: updated })
 }
 
@@ -313,15 +556,29 @@ const handleMove = async (req, res, games, gameId) => {
 // Routes:
 // - POST /games
 // - GET /games?status=waiting|active|over
+// - GET /games/:id
 // - POST /games/:id/join
 // - POST /games/:id/moves
+// - POST /games/:id/resign
 // Error handling:
 // - Invalid JSON => 400
 // - Payload too large (> 1 MB) => 413
 // - Unknown routes => 404
 // - Unhandled errors => 500
-export const createServer = ({ games = new Map() } = {}) =>
-  http.createServer(async (req, res) => {
+// Options:
+// - games: Map storage for game records.
+// - abandonmentTimeoutMs: milliseconds of inactivity before auto-abandonment.
+export const createServer = ({
+  games = new Map(),
+  abandonmentTimeoutMs = 3 * 60 * 1000,
+} = {}) => {
+  const realtimeHub = createRealtimeHub({ games })
+  const scheduler = createAbandonmentScheduler({
+    games,
+    timeoutMs: abandonmentTimeoutMs,
+    realtimeHub,
+  })
+  const server = http.createServer(async (req, res) => {
     try {
       const url = new URL(
         req.url || '/',
@@ -335,14 +592,38 @@ export const createServer = ({ games = new Map() } = {}) =>
         return handleListGames(req, res, url, games)
       }
 
+      const gameMatch = url.pathname.match(/^\/games\/([^/]+)$/)
+      if (req.method === 'GET' && gameMatch) {
+        return handleGetGame(req, res, games, gameMatch[1])
+      }
+
       const joinMatch = url.pathname.match(/^\/games\/([^/]+)\/join$/)
       if (req.method === 'POST' && joinMatch) {
-        return await handleJoinGame(req, res, games, joinMatch[1])
+        return await handleJoinGame(req, res, games, joinMatch[1], scheduler)
       }
 
       const moveMatch = url.pathname.match(/^\/games\/([^/]+)\/moves$/)
       if (req.method === 'POST' && moveMatch) {
-        return await handleMove(req, res, games, moveMatch[1])
+        return await handleMove(
+          req,
+          res,
+          games,
+          moveMatch[1],
+          realtimeHub,
+          scheduler,
+        )
+      }
+
+      const resignMatch = url.pathname.match(/^\/games\/([^/]+)\/resign$/)
+      if (req.method === 'POST' && resignMatch) {
+        return await handleResign(
+          req,
+          res,
+          games,
+          resignMatch[1],
+          realtimeHub,
+          scheduler,
+        )
       }
 
       return json(res, 404, { error: 'Not found.' })
@@ -358,6 +639,12 @@ export const createServer = ({ games = new Map() } = {}) =>
       return json(res, 500, { error: 'Server error.' })
     }
   })
+
+  server.on('upgrade', realtimeHub.handleUpgrade)
+  server.on('close', scheduler.clearAll)
+
+  return server
+}
 
 export const startServer = (port = PORT) =>
   new Promise((resolve) => {

@@ -5,8 +5,12 @@ You are an AI coding agent.
 
 ## Core Principle
 
-* **Context is canon.** Never override documented requirements, architecture, or standards with assumptions.
-* All timestamps that you add to context need to nbe in local time.
+* **The contents of the /context folder (called "context" below) is cannon for this project.** 
+  Never override context content with assumptions.  Always document in the context all
+  standards, technologies, architecture etc. used in the project - lean toward richer rather than leaner
+  documentation.  If any part of the context becomes obsolete due to changes, mark this fact describing
+  briefly what was the previous state of the things.
+* All timestamps that you insert in the context should be in local time.
 
 
 ## Project Context
@@ -27,7 +31,8 @@ Only create files when this adds value. Common files include (but any other file
 - `known-issues.md` - Active/resolved issues, workarounds
 - `ai-guidelines.md` - Project-specific AI agent patterns
 
-Create custom context files as needed.
+Create other context files if none of the files listed above seems appropriate for some project 
+information that is relevant.
 
 Document each completed prompt by appending an entry to `timeline.md` file.
 Never edit or remove existing content from it.  Include in each entry:
@@ -49,7 +54,11 @@ Never edit or remove existing content from it.  Include in each entry:
 - Follow documented standards and constraints.
 - Stay within documented scope.
 - Don't introduce undocumented patterns.
-
+- Comment all major public methods (e.g. controller endpoints) with all the information 
+  relevant to the caller.
+- Add tests to cover all code with cyclomatic complexity of 3 or more.  But also cover the code
+  that you think is error prone even when the complexity is lower.
+  
 
 ### After Completing
 Update the timeline.md file.

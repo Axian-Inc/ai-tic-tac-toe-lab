@@ -100,7 +100,7 @@ Acceptance Criteria:
 3. Historical game data can be retrieved to replay completed games.
 
 ### P2.11: Single Player Mode Remains Intact (Client)
-As a player, I want single-player gameplay to keep working as in Phase 1 so I can still play locally against the AI.
+As a player, I want single-player gameplay to keep working as in Phase 1 so I can still play locally against the computer.
 
 Acceptance Criteria:
 1. Single-player mode behavior matches Phase 1 requirements.

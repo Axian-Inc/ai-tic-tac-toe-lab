@@ -32,3 +32,4 @@ Automation:
 
 Backend:
 - Node.js HTTP server (no framework) for multiplayer API endpoints
+- WebSocket updates via `ws`

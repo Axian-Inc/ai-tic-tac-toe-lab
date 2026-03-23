@@ -108,3 +108,15 @@ It serves as the running audit trail of work completed in the repository.
 - Date/time: 2026-03-23 17:17:40 UTC
   Prompt: Please, add comments to the server controller to describe the endpoint and its bahavior - everything relevant to the caller.  Commments should be detailed.
   Summary: Added detailed endpoint documentation comments to the multiplayer server controller handlers and server factory, describing request/response expectations and error behaviors.
+- Date/time: 2026-03-23 18:02:20 UTC
+  Prompt: Reread AGENTS.md,  Then, please, implement stories 2.5 and 2.6.
+  Summary: Added WebSocket support for multiplayer updates with snapshot-on-connect, move and game-over broadcasts, and spectator subscriptions. Introduced WebSocket server tests, updated dependencies, and refreshed architecture/tech stack/testing strategy context to reflect real-time updates.
+- Date/time: 2026-03-23 21:12:50 UTC
+  Prompt: Please, add the game shape to the project wherever you decide to be the best.  Then, please, implement stories P2.7 and P2.8.
+  Summary: Documented the multiplayer game object shape in a new context file, added resign and abandonment-check endpoints with real-time broadcast updates, and expanded server flow tests to cover resignation and inactivity-based game termination. Verified the full test suite passes.
+- Date/time: 2026-03-23 21:35:41 UTC
+  Prompt: We need it to be automatic.  Not as an endpoint.  Unless, you want to implement a timer that will issue such a call.
+  Summary: Reworked abandonment handling to run automatically via server-side timers, removed the explicit abandonment-check endpoint, added scheduling/cleanup logic tied to game activity, updated tests to validate automatic abandonment, and documented the updated behavior in game API context.
+- Date/time: 2026-03-23 21:51:50 UTC
+  Prompt: Please, implement P2.9 and P2.10
+  Summary: Added a 25-game concurrent capacity check that returns HTTP 429 when exceeded, implemented a full-game retrieval endpoint for replay/history, expanded server flow tests to cover capacity enforcement and history retrieval, and documented the history endpoint in the game API context.
