@@ -1,6 +1,6 @@
 # Bugs
 
-Last updated: 2026-03-23
+Last updated: 2026-03-24
 
 This file tracks active and resolved product defects discovered during development and testing.
 
@@ -42,6 +42,41 @@ This file tracks active and resolved product defects discovered during developme
 - None.
 
 ### Resolved
+
+#### BUG-013 Backend Deploy Health Check Fails During Normal Startup Delay
+- Reported: 2026-03-24
+- Resolved: 2026-03-24
+- Related stories: US-42
+- Root cause: `scripts/aws/lib/backend-deploy.ts` performed a single immediate `curl` to `/health` right after `systemctl restart`, so a normal short startup delay could mark an otherwise healthy release as failed.
+- Resolution: Updated the deployment health verification step to retry the local `/health` check for a short bounded window before failing the release.
+
+#### BUG-012 Backend Deploy Writes Non-Executable systemd `ExecStart`
+- Reported: 2026-03-24
+- Resolved: 2026-03-24
+- Related stories: US-42
+- Root cause: `scripts/aws/lib/backend-deploy.ts` wrote `ExecStart=${NPM_BIN} start` into the systemd unit, but the unit file was created from a literal heredoc and systemd does not expand that shell variable.
+- Resolution: Updated the generated unit to use `/usr/bin/env npm start`, which systemd can execute directly without relying on shell-variable interpolation.
+
+#### BUG-011 Backend Deploy Fails On Root Lockfile Drift
+- Reported: 2026-03-24
+- Resolved: 2026-03-24
+- Related stories: US-42
+- Root cause: `scripts/aws/lib/backend-deploy.ts` bundled the repo root `package.json` and `package-lock.json`, so backend-only releases still depended on the full app dependency graph and could fail when frontend/test lockfile state drifted.
+- Resolution: Updated the backend deploy bundle to write a backend-only `package.json` containing just the runtime `start` script and backend dependency set, and changed the instance-side install step to install that backend-specific dependency set during deployment.
+
+#### BUG-010 Backend Deploy Fails On Existing Instance Bootstrap Drift
+- Reported: 2026-03-23
+- Resolved: 2026-03-23
+- Related stories: US-42
+- Root cause: `scripts/aws/lib/backend-deploy.ts` assumed the target EC2 instance already had `/etc/ttt-multiplayer.env` and `ttt-multiplayer.service` from initial `UserData`, but CloudFormation updates do not rerun `UserData` on an existing instance.
+- Resolution: Updated the Systems Manager deployment payload to recreate the backend environment file and systemd unit on every release before restart, so deployments no longer depend on first-boot bootstrap state.
+
+#### BUG-009 AWS Deploy Scripts Resolve `infra/dev.yaml` from `dist-scripts`
+- Reported: 2026-03-23
+- Resolved: 2026-03-23
+- Related stories: US-42
+- Root cause: `scripts/aws/lib/config.ts` derived the repository root from a fixed relative path off `import.meta.url`, which resolved to `dist-scripts/` after TypeScript compilation and caused AWS scripts to look for `dev.yaml` in the wrong tree.
+- Resolution: Replaced the fixed relative-path logic with repository root discovery that walks upward for `package.json` and `infra/dev.yaml`, so all compiled and source AWS setup/deploy scripts resolve `infra/dev.yaml` from the repo root.
 
 #### BUG-008 Backend Deploy Fails When Instance Lacks npm
 - Reported: 2026-03-23

@@ -76,13 +76,13 @@ Last updated: 2026-03-23
   - `index.html` as both index and error document to support SPA route refresh behavior.
   - Public read access for website objects through a bucket policy that grants only `s3:GetObject` on bucket objects.
 - Bucket naming is constrained to include `ttt-ms-aj` via CloudFormation parameter validation.
-- Added executable helper script at `scripts/aws/setup-s3-website.sh` to deploy/update the infrastructure with consistent stack and bucket naming.
+- AWS setup automation now runs from `scripts/aws/setup-s3-website.ts`, compiled through npm before execution, to deploy/update the infrastructure with consistent stack and bucket naming.
 
 ### AWS S3 Build and Deploy Workflow
-- Added executable helper script at `scripts/aws/deploy-s3-website.sh` for repeatable production deployments.
+- AWS deploy automation now runs from `scripts/aws/deploy-s3-website.ts`, compiled through npm before execution, for repeatable production deployments.
 - The deploy workflow:
   - Runs the production build before any upload.
-  - Resolves the target bucket from the CloudFormation stack output when `BUCKET_NAME` is not provided.
+  - Reads deployment configuration from `infra/dev.yaml`.
   - Syncs the generated `dist/` artifacts to the S3 website bucket with `aws s3 sync --delete`.
 - Stack and bucket guardrails still require `ttt-ms-aj` in resource names for both explicit and default targets.
 
@@ -243,8 +243,8 @@ Last updated: 2026-03-23
   - one versioned S3 bucket for backend release bundles
   - IAM and Systems Manager access so backend releases can be pushed without SSH access or manual instance mutation
 - Release automation stays split by runtime so frontend and backend remain independently deployable:
-  - `scripts/aws/deploy-multiplayer-service.sh` builds `dist-server/`, uploads a release bundle, and triggers an in-place backend restart through Systems Manager
-  - `scripts/aws/deploy-s3-website.sh` can resolve `BackendBaseUrl` from the backend stack and inject it into `VITE_MULTIPLAYER_API_BASE_URL` during the frontend build
+  - `scripts/aws/deploy-multiplayer-service.ts` builds `dist-server/`, uploads a release bundle, and triggers an in-place backend restart through Systems Manager
+  - `scripts/aws/deploy-s3-website.ts` can resolve `BackendBaseUrl` from the backend stack and inject it into `VITE_MULTIPLAYER_API_BASE_URL` during the frontend build
 - Operational model remains intentionally constrained for cost and simplicity:
   - one backend process handles both HTTP API traffic and websocket fan-out
   - multiplayer state, replay history, and abandonment tracking remain in process memory and are lost if the backend instance is replaced or restarted

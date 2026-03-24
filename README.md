@@ -106,7 +106,7 @@ Configure AWS if needed:
 aws configure
 ```
 
-The default region used by the scripts is `us-west-2`.
+The deployment commands read configuration from `infra/dev.yaml`. The default region in that file is `us-west-2`.
 
 ### 1. Provision the S3 website infrastructure
 
@@ -116,20 +116,11 @@ npm run aws:s3:setup
 
 Default resources:
 
-- Stack name: `ttt-ms-aj-s3-website`
+- Stack name: `ttt-ms-aj-phase2-s3-website`
 - Bucket name: `ttt-ms-aj-tic-tac-toe-site`
 - Region: `us-west-2`
 
 Important: both the stack name and bucket name must include `ttt-ms-aj`.
-
-Optional overrides:
-
-```bash
-BUCKET_NAME=ttt-ms-aj-your-unique-site \
-STACK_NAME=ttt-ms-aj-s3-website-usw2 \
-AWS_REGION=us-west-2 \
-npm run aws:s3:setup
-```
 
 ### 2. Build and deploy the app to S3
 
@@ -140,18 +131,8 @@ npm run aws:s3:deploy
 This command:
 
 - runs `npm run build`
-- resolves the S3 bucket from the CloudFormation stack if `BUCKET_NAME` is not set
+- reads the website bucket and related settings from `infra/dev.yaml`
 - syncs `dist/` to the website bucket with `--delete`
-
-Optional overrides:
-
-```bash
-BUCKET_NAME=ttt-ms-aj-your-unique-site npm run aws:s3:deploy
-```
-
-```bash
-STACK_NAME=ttt-ms-aj-s3-website-usw2 AWS_REGION=us-west-2 npm run aws:s3:deploy
-```
 
 ### Deployment output
 

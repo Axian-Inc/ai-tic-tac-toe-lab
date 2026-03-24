@@ -1,6 +1,7 @@
 node_modules
 dist
 dist-server
+dist-scripts
 .DS_Store
 npm-debug.log*
 coverage

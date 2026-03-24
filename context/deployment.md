@@ -1,26 +1,26 @@
 # Deployment
 
-Last updated: 2026-03-23
+Last updated: 2026-03-24
+
+## Shared AWS Script Configuration
+- AWS helper scripts under `scripts/aws/` now run as TypeScript entrypoints compiled through npm and read deployment settings from `infra/dev.yaml`.
+- Setup and deploy scripts no longer accept CLI flags for stack names, bucket names, region, instance type, or service paths; update `infra/dev.yaml` instead.
+- Remaining runtime-generated values, such as backend release IDs, may still be supplied through environment variables when needed.
 
 ## Phase 1
 
 ### AWS S3 Static Website (US-16)
 - Infrastructure template: `infra/s3-static-website.yaml`
-- Setup script: `scripts/aws/setup-s3-website.sh`
+- Setup script: `scripts/aws/setup-s3-website.ts`
 - npm command: `npm run aws:s3:setup`
 
 ### AWS S3 Build and Deploy (US-17)
-- Deployment script: `scripts/aws/deploy-s3-website.sh`
+- Deployment script: `scripts/aws/deploy-s3-website.ts`
 - npm command: `npm run aws:s3:deploy`
 - Deployment flow:
   - Builds production assets with `npm run build`
-  - Resolves the bucket from stack `ttt-ms-aj-s3-website` by default
+  - Reads the website bucket and related deploy settings from `infra/dev.yaml`
   - Syncs `dist/` to the S3 website bucket with deletion of removed files
-
-### Optional Overrides
-- `BUCKET_NAME=ttt-ms-aj-your-unique-site npm run aws:s3:deploy`
-- `STACK_NAME=ttt-ms-aj-s3-website-usw2 AWS_REGION=us-west-2 npm run aws:s3:deploy`
-- `BUILD_DIR=dist npm run aws:s3:deploy`
 
 ### Deployed Resources
 - CloudFormation stack: `ttt-ms-aj-s3-website`
@@ -140,19 +140,20 @@ Last updated: 2026-03-23
 - Backend infrastructure command: `npm run aws:backend:setup`
 - Backend release command: `npm run aws:backend:deploy`
 - Frontend release command with backend endpoint injection:
-  - `MULTIPLAYER_STACK_NAME=ttt-ms-aj-multiplayer-service npm run aws:s3:deploy`
+  - configure `s3_multiplayer_stack_name` or `s3_multiplayer_api_base_url` in `infra/dev.yaml`, then run `npm run aws:s3:deploy`
 - Backend stack resources:
   - one public EC2 instance running the Express and websocket multiplayer service
   - one versioned S3 bucket holding backend release bundles
   - IAM instance profile and Systems Manager access for non-SSH deployments
 - Backend deployment flow:
   - `aws:backend:setup` resolves the account's default VPC and subnet, then deploys the CloudFormation stack
-  - `aws:backend:deploy` builds `dist-server/`, uploads a zip bundle to the backend deployment bucket, and invokes a Systems Manager command on the instance to install dependencies and restart the systemd service
-  - The backend deploy command now resolves or installs `npm` on the instance before running `npm ci --omit=dev`, so releases are not blocked by older instances that were launched without the package manager present
+  - `aws:backend:deploy` builds `dist-server/`, writes a backend-only package manifest into the release bundle, uploads a zip bundle to the backend deployment bucket, and invokes a Systems Manager command on the instance to install backend dependencies and restart the systemd service
+  - `aws:backend:deploy` now streams step-by-step Systems Manager command output during the instance-side deploy so operators can see progress while the release is running
+  - The backend deploy command now resolves or installs `npm` on the instance before running the backend dependency install step, so releases are not blocked by older instances that were launched without the package manager present
   - The backend deploy command no longer depends on `/usr/local/bin/deploy-ttt-multiplayer.sh` being preinstalled on the instance; it sends the deployment steps directly through Systems Manager for compatibility with already-running EC2 instances
 - Frontend deployment flow:
   - `aws:s3:deploy` still builds and syncs `dist/` to the website bucket
-  - when `MULTIPLAYER_STACK_NAME` or `MULTIPLAYER_API_BASE_URL` is provided, the script injects the deployed backend URL into `VITE_MULTIPLAYER_API_BASE_URL` so websocket derivation keeps working from the existing client code
+  - when `infra/dev.yaml` sets `s3_multiplayer_stack_name` or `s3_multiplayer_api_base_url`, the script injects the deployed backend URL into `VITE_MULTIPLAYER_API_BASE_URL` so websocket derivation keeps working from the existing client code
 - Operational assumptions:
   - The low-cost Phase 2 AWS path assumes one always-on instance is enough for the documented cap of 25 concurrent waiting or active games.
   - Multiplayer state, replay history, and abandonment timers remain in memory only; restarting or replacing the backend loses active game state.
@@ -164,4 +165,4 @@ Last updated: 2026-03-23
   - `npm run aws:s3:deploy` is rerunnable and re-syncs the built frontend to the website bucket; because it uses sync deletion semantics, files removed from the current build are also removed from the bucket.
   - `npm run aws:backend:deploy` is rerunnable but not session-preserving; each run deploys a new backend bundle and restarts the systemd service on the EC2 instance.
   - Because Phase 2 multiplayer state is in memory only, rerunning the backend deploy or applying infrastructure changes that replace or restart the instance will terminate active multiplayer sessions and discard retained replay/catch-up state.
-- Local verification for US-42 is covered by `npm run typecheck`, `bash -n scripts/aws/common.sh scripts/aws/setup-s3-website.sh scripts/aws/deploy-s3-website.sh scripts/aws/setup-multiplayer-service.sh scripts/aws/deploy-multiplayer-service.sh`, and manual review of `infra/multiplayer-service-foundation.yaml`.
+- Local verification for US-42 is covered by `npm run typecheck`, `vitest run scripts/aws/lib/config.test.ts scripts/aws/lib/backend-deploy.test.ts`, and manual review of `infra/multiplayer-service-foundation.yaml`.
