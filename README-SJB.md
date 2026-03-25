@@ -31,7 +31,7 @@ Mar 20, 2026:
 Mar 23, 2026:
 * 2.5 hrs: Phase 2: Finishing server stories and doing UI stories incl. automated tests.  No manual testing done.
 Mar 24, 2026:
-* xxx
+* 1.5 hrs: Manual testing, adding server and UI logs.  Multiplayer mode is basically working.
 
 
 

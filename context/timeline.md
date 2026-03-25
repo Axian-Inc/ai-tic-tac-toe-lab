@@ -152,3 +152,39 @@ It serves as the running audit trail of work completed in the repository.
 - Date/time: 2026-03-25 02:23:59 UTC
   Prompt: Below is a server log.  I don't see the broadcast to the player that created the game that another player joined it. ...
   Summary: Broadcast a game_update on join to notify subscribers, updated WebSocket message typing to allow null move payloads, and ensured join handler uses the realtime hub broadcast.
+- Date/time: 2026-03-25 18:51:01 UTC
+  Prompt: Couple more items to do:
+  1. On the landing page, substitute "Can you beat the CPU" with "Can you challenge the CPU or a friend?"
+  2. On the Multiplayer screen, once a player specifies a name, remember it until they change it.
+  3. New Multiplayer button needs an icon as in the screenshot.
+  4. Remove the Show API Activity chekbox.  I'll controll it only via the env var.
+  5. Remove the rounded square around the "X | O" in the landing page.  Leave only its content there.
+  6. Fix: a player shouldn't be allowed to join the game that they created themselves.
+  7. Re-arrange the multiplayer screen to match closer the screenshot.  Not the styling but labels, order of inputs etc.
+  Summary: Updated landing copy and button icon, removed the API log checkbox, simplified the landing logo styling, persisted multiplayer names and last-created game id in localStorage, prevented joining your own game in the join list, and reordered modal inputs. Updated tests accordingly and verified the suite passes.
+- Date/time: 2026-03-25 19:05:09 UTC
+  Prompt: Couple more items:
+  1. Don't remember the game name in the multiplayer screen.  Once the game has been created, you can forget it locally.
+  2. When a user creates a game, remember their name.  That user is considered already a part of that game.  Don't let that user to join the game.  But allow one of other users join it.  Once tha game is active, don't let players join it.
+  3. When a player enters its name in "Create" mode, it should also be showing in "Join" mode and vice-versa.
+  Summary: Stopped persisting game names locally, synced player name between create and join inputs, stored the last creator name/id to block self-join for that game, and updated modal selection logic accordingly. Updated tests and verified the suite passes.
+- Date/time: 2026-03-25 19:22:20 UTC
+  Prompt: Re-arrange the Multiplayer screen to match its screenshot [Image #1] , including:
+  1. Title: centered - match the text precisely.
+  2. Controlls order.  From the top: player name, Create/Join toggle, game name.
+  3. Input field labels: Left-aligned with the input
+  4. No "Start a live match" label.
+  Summary: Centered the modal title to "Multiplayer", removed the extra subtitle, reordered the modal fields to match the screenshot, and updated styles for the new header layout. Tests were updated and pass.
+- Date/time: 2026-03-25 19:44:55 UTC
+  Prompt: To do:
+  1. Enforce self-join restriction on the server side, too.
+  2. Validate a move on the server side before accepting it.
+  3. Add a feature: when a user is playing, they can click "Resign"; their oponent wins.
+  4. Remove "Try Again".
+  Summary: Added server-side self-join validation based on host name, wired a multiplayer resign action in the UI with API support, and removed the single-player "Try Again" alert. Verified the test suite passes.
+- Date/time: 2026-03-25 19:47:45 UTC
+  Prompt: Please, update the the game object shape if needed in context/game-api.md .
+  Summary: Documented the server-side self-join restriction in the game API context.
+- Date/time: 2026-03-25 19:59:15 UTC
+  Prompt: When a player resigns, show "You rsigned" instead of "You loose" and block the Resign button for this game.  The oponent should see "Your oponent resigned" instead of "You win".
+  Summary: Added an endReason field to the multiplayer game state, set it for win/draw/resign/abandonment on the server, updated multiplayer UI status messaging for resign outcomes, and disabled the resign button after resignation. Updated game API context accordingly and verified tests pass.

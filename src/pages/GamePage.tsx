@@ -110,10 +110,6 @@ const GamePage = ({ game, onUpdateGame, onQuit }: GamePageProps) => {
 
       <Board board={game.board} canPlayAt={canPlayAt} onSelect={handleSelect} />
 
-      {game.winner === 'O' && (
-        <div className="game__alert">Try Again</div>
-      )}
-
       <div className="game__actions">
         <button className="btn btn--ghost" onClick={handleRematch}>
           <span className="btn__icon" aria-hidden="true">

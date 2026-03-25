@@ -11,8 +11,6 @@ type LandingPageProps = {
     gameId: string
     playerName: string
   }) => Promise<void>
-  showApiLog: boolean
-  onToggleApiLog: (value: boolean) => void
   onLogApiMessage: (message: string) => void
 }
 
@@ -20,15 +18,19 @@ const LandingPage = ({
   onStartSingle,
   onCreateMultiplayer,
   onJoinMultiplayer,
-  showApiLog,
-  onToggleApiLog,
   onLogApiMessage,
 }: LandingPageProps) => {
   const [isMultiplayerOpen, setIsMultiplayerOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<'create' | 'join'>('create')
-  const [hostName, setHostName] = useState('')
+  const [playerName, setPlayerName] = useState(() => {
+    if (typeof window === 'undefined') return ''
+    return window.localStorage.getItem('multiplayerPlayerName') || ''
+  })
+  const [joinName, setJoinName] = useState(() => {
+    if (typeof window === 'undefined') return ''
+    return window.localStorage.getItem('multiplayerPlayerName') || ''
+  })
   const [gameName, setGameName] = useState('')
-  const [joinName, setJoinName] = useState('')
   const [availableGames, setAvailableGames] = useState<GameSummary[]>([])
   const [selectedGameId, setSelectedGameId] = useState('')
   const [isLoadingGames, setIsLoadingGames] = useState(false)
@@ -45,9 +47,19 @@ const LandingPage = ({
     setIsMultiplayerOpen(false)
   }
 
-  const canCreate = hostName.trim().length > 0 && gameName.trim().length > 0
+  const ownGameId =
+    typeof window === 'undefined'
+      ? ''
+      : window.localStorage.getItem('multiplayerLastCreatedGameId') || ''
+  const creatorName =
+    typeof window === 'undefined'
+      ? ''
+      : window.localStorage.getItem('multiplayerLastCreatorName') || ''
+  const canCreate = playerName.trim().length > 0 && gameName.trim().length > 0
   const canJoin =
-    joinName.trim().length > 0 && selectedGameId.trim().length > 0
+    joinName.trim().length > 0 &&
+    selectedGameId.trim().length > 0 &&
+    !(selectedGameId === ownGameId && joinName.trim() === creatorName)
 
   const loadGames = async () => {
     setIsLoadingGames(true)
@@ -59,7 +71,8 @@ const LandingPage = ({
       if (games.length === 0) {
         setSelectedGameId('')
       } else if (!games.find((game) => game.id === selectedGameId)) {
-        setSelectedGameId(games[0].id)
+        const fallback = games.find((game) => game.id !== ownGameId) || games[0]
+        setSelectedGameId(fallback.id)
       }
     } catch (error) {
       setAvailableGames([])
@@ -77,10 +90,18 @@ const LandingPage = ({
     setIsSubmitting(true)
     setErrorMessage('')
     try {
+      const trimmedHost = playerName.trim()
+      const trimmedGame = gameName.trim()
       await onCreateMultiplayer({
-        playerName: hostName.trim(),
-        gameName: gameName.trim(),
+        playerName: trimmedHost,
+        gameName: trimmedGame,
       })
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('multiplayerPlayerName', trimmedHost)
+        window.localStorage.setItem('multiplayerLastCreatorName', trimmedHost)
+        window.localStorage.removeItem('multiplayerGameName')
+      }
+      setGameName('')
       setIsMultiplayerOpen(false)
     } catch (error) {
       const message =
@@ -96,10 +117,14 @@ const LandingPage = ({
     setIsSubmitting(true)
     setErrorMessage('')
     try {
+      const trimmedJoin = joinName.trim()
       await onJoinMultiplayer({
         gameId: selectedGameId,
-        playerName: joinName.trim(),
+        playerName: trimmedJoin,
       })
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('multiplayerPlayerName', trimmedJoin)
+      }
       setIsMultiplayerOpen(false)
     } catch (error) {
       const message =
@@ -128,7 +153,7 @@ const LandingPage = ({
         Tic <span>Tac</span> Toe
       </h1>
       <p className="landing__subtitle">
-        The classic game of X's and O's. Can you beat the CPU?
+        The classic game of X's and O's. Can you challenge the CPU or a friend?
       </p>
       <div className="landing__cta">
         <button className="btn btn--primary" onClick={onStartSingle}>
@@ -138,17 +163,12 @@ const LandingPage = ({
           Play vs CPU
         </button>
         <button className="btn btn--ghost" onClick={openMultiplayer}>
+          <span className="btn__icon" aria-hidden="true">
+            ➕
+          </span>
           New Multiplayer
         </button>
       </div>
-      <label className="landing__toggle">
-        <input
-          type="checkbox"
-          checked={showApiLog}
-          onChange={(event) => onToggleApiLog(event.target.checked)}
-        />
-        <span>Show API activity</span>
-      </label>
       <div className="landing__stats" aria-label="Matchup">
         <div className="landing__stat">
           <span className="landing__stat-label">X</span>
@@ -168,10 +188,7 @@ const LandingPage = ({
           <div className="modal__backdrop" onClick={closeMultiplayer} />
           <div className="modal__panel">
             <header className="modal__header">
-              <div>
-                <p className="modal__eyebrow">Multiplayer</p>
-                <h2 className="modal__title">Start a live match</h2>
-              </div>
+              <h2 className="modal__title">Multiplayer</h2>
               <button
                 className="btn btn--icon"
                 type="button"
@@ -181,6 +198,21 @@ const LandingPage = ({
                 ✕
               </button>
             </header>
+            <label className="modal__field">
+              <span>Your Name</span>
+              <input
+                value={playerName}
+                onChange={(event) => {
+                  const value = event.target.value
+                  setPlayerName(value)
+                  setJoinName(value)
+                  if (typeof window !== 'undefined') {
+                    window.localStorage.setItem('multiplayerPlayerName', value)
+                  }
+                }}
+                placeholder="Enter your name"
+              />
+            </label>
             <div className="modal__tabs" role="tablist" aria-label="Multiplayer">
               <button
                 className={`modal__tab ${
@@ -209,14 +241,6 @@ const LandingPage = ({
               {activeTab === 'create' ? (
                 <div className="modal__form">
                   <label className="modal__field">
-                    <span>Your Name</span>
-                    <input
-                      value={hostName}
-                      onChange={(event) => setHostName(event.target.value)}
-                      placeholder="Enter your name"
-                    />
-                  </label>
-                  <label className="modal__field">
                     <span>Game Name</span>
                     <input
                       value={gameName}
@@ -235,14 +259,6 @@ const LandingPage = ({
                 </div>
               ) : (
                 <div className="modal__form">
-                  <label className="modal__field">
-                    <span>Your Name</span>
-                    <input
-                      value={joinName}
-                      onChange={(event) => setJoinName(event.target.value)}
-                      placeholder="Enter your name"
-                    />
-                  </label>
                   <div className="modal__list">
                     <div className="modal__list-header">
                       <span>Available Games</span>
@@ -262,13 +278,24 @@ const LandingPage = ({
                     ) : (
                       <div className="modal__games">
                         {availableGames.map((game) => (
-                          <label className="modal__game" key={game.id}>
+                          <label
+                            className={`modal__game ${
+                              game.id === ownGameId && joinName.trim() === creatorName
+                                ? 'modal__game--disabled'
+                                : ''
+                            }`}
+                            key={game.id}
+                          >
                             <input
                               type="radio"
                               name="game"
                               value={game.id}
                               checked={selectedGameId === game.id}
                               onChange={() => setSelectedGameId(game.id)}
+                              disabled={
+                                game.id === ownGameId &&
+                                joinName.trim() === creatorName
+                              }
                             />
                             <div>
                               <span className="modal__game-name">
@@ -276,6 +303,10 @@ const LandingPage = ({
                               </span>
                               <span className="modal__game-meta">
                                 Host: {game.players.X || 'Unknown'}
+                                {game.id === ownGameId &&
+                                joinName.trim() === creatorName
+                                  ? ' (You)'
+                                  : ''}
                               </span>
                             </div>
                           </label>

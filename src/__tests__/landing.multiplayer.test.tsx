@@ -4,8 +4,8 @@ import { describe, expect, it, vi } from 'vitest'
 import LandingPage from '../pages/LandingPage'
 
 const findButtonByText = (container: HTMLElement, text: string) =>
-  Array.from(container.querySelectorAll('button')).find(
-    (button) => button.textContent?.trim() === text,
+  Array.from(container.querySelectorAll('button')).find((button) =>
+    button.textContent?.includes(text),
   )
 
 const setInputValue = (input: HTMLInputElement, value: string) => {
@@ -31,8 +31,6 @@ describe('LandingPage multiplayer modal', () => {
           onStartSingle={vi.fn()}
           onCreateMultiplayer={vi.fn()}
           onJoinMultiplayer={vi.fn()}
-          showApiLog={false}
-          onToggleApiLog={vi.fn()}
           onLogApiMessage={vi.fn()}
         />,
       )
@@ -85,8 +83,6 @@ describe('LandingPage multiplayer modal', () => {
           onStartSingle={vi.fn()}
           onCreateMultiplayer={vi.fn()}
           onJoinMultiplayer={vi.fn()}
-          showApiLog={false}
-          onToggleApiLog={vi.fn()}
           onLogApiMessage={vi.fn()}
         />,
       )
@@ -100,6 +96,10 @@ describe('LandingPage multiplayer modal', () => {
     const joinTab = findButtonByText(container, 'Join')
     await act(async () => {
       joinTab?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+
+    await act(async () => {
+      await Promise.resolve()
     })
 
     expect(container.textContent).toContain('No games available yet')

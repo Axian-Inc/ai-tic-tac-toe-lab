@@ -5,6 +5,7 @@ import type { Position } from '../game'
 import useSound from '../hooks/useSound'
 import {
   postMultiplayerMove,
+  resignMultiplayerGame,
   subscribeToGame,
   type MultiplayerGame,
   type PlayerSymbol,
@@ -57,6 +58,11 @@ const MultiplayerGamePage = ({
   }, [initialGame.id])
 
   const status = useMemo(() => {
+    if (game.state.endReason === 'resign') {
+      return game.state.winner === playerSymbol
+        ? 'Your opponent resigned.'
+        : 'You resigned.'
+    }
     if (game.state.winner) {
       return game.state.winner === playerSymbol ? 'You win!' : 'You lose.'
     }
@@ -64,7 +70,13 @@ const MultiplayerGamePage = ({
     return game.state.currentPlayer === playerSymbol
       ? 'Your turn.'
       : 'Opponent turn.'
-  }, [game.state.currentPlayer, game.state.isDraw, game.state.winner, playerSymbol])
+  }, [
+    game.state.currentPlayer,
+    game.state.endReason,
+    game.state.isDraw,
+    game.state.winner,
+    playerSymbol,
+  ])
 
   const canPlayAt = (position: Position) => {
     if (game.status !== 'active') return false
@@ -86,6 +98,22 @@ const MultiplayerGamePage = ({
       setGame(response.game)
     } catch {
       // Server will keep authoritative state; ignore transient errors.
+    }
+  }
+
+  const handleResign = async () => {
+    if (game.status !== 'active') return
+    try {
+      if (showApiLog) {
+        onLogApiMessage(`POST /games/${game.id}/resign`)
+      }
+      const response = await resignMultiplayerGame({
+        gameId: game.id,
+        player: playerSymbol,
+      })
+      setGame(response.game)
+    } catch {
+      // Ignore transient errors.
     }
   }
 
@@ -155,6 +183,16 @@ const MultiplayerGamePage = ({
       )}
 
       <div className="game__actions">
+        <button
+          className="btn btn--ghost"
+          onClick={handleResign}
+          disabled={game.status !== 'active' || game.state.endReason === 'resign'}
+        >
+          <span className="btn__icon" aria-hidden="true">
+            ✕
+          </span>
+          Resign
+        </button>
         <button className="btn btn--ghost" onClick={onQuit}>
           <span className="btn__icon" aria-hidden="true">
             ⌂

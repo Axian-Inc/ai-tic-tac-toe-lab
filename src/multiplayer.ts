@@ -12,6 +12,7 @@ export type MultiplayerGameState = {
   currentPlayer: PlayerSymbol
   winner: PlayerSymbol | null
   isDraw: boolean
+  endReason: 'win' | 'draw' | 'resign' | 'abandonment' | null
   moveHistory: MultiplayerMove[]
 }
 
@@ -111,6 +112,21 @@ export const postMultiplayerMove = async (payload: {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ move: payload.move }),
+    },
+  )
+
+// Resigns an active game on behalf of the current player.
+// Returns { game } on success.
+export const resignMultiplayerGame = async (payload: {
+  gameId: string
+  player: PlayerSymbol
+}) =>
+  fetchJson<{ game: MultiplayerGame }>(
+    `${API_BASE_URL}/games/${payload.gameId}/resign`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ player: payload.player }),
     },
   )
 

@@ -24,6 +24,7 @@ Game Object Shape:
   - currentPlayer: "X" | "O".
   - winner: "X" | "O" | null.
   - isDraw: boolean.
+  - endReason: "win" | "draw" | "resign" | "abandonment" | null.
   - moveHistory: array of moves, each move has { row, col, player }.
 
 History Retrieval:
@@ -34,3 +35,6 @@ Server Outcomes:
 - A draw sets state.isDraw true and status "over".
 - Resignation sets the non-resigning player as winner and status "over".
 - Automatic abandonment after 3 minutes of inactivity sets the non-active player as winner and status "over".
+
+Join Restrictions:
+- The host (player X) is not allowed to join their own game by name.

@@ -21,7 +21,7 @@ const App = () => {
   const [playerSymbol, setPlayerSymbol] = useState<PlayerSymbol>('X')
   const showApiLogDefault =
     String(import.meta.env.VITE_SHOW_API_LOG || '').toLowerCase() === 'true'
-  const [showApiLog, setShowApiLog] = useState(showApiLogDefault)
+  const showApiLog = showApiLogDefault
   const [apiMessage, setApiMessage] = useState('')
 
   const logApiMessage = (message: string) => {
@@ -41,6 +41,13 @@ const App = () => {
   }) => {
     logApiMessage('POST /games')
     const response = await createMultiplayerGame(payload)
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(
+        'multiplayerLastCreatedGameId',
+        response.gameId,
+      )
+      window.localStorage.setItem('multiplayerLastCreatorName', payload.playerName)
+    }
     setMultiplayerGame(response.game)
     setPlayerSymbol('X')
     setView('multiplayer')
@@ -69,8 +76,6 @@ const App = () => {
           onStartSingle={startGame}
           onCreateMultiplayer={startMultiplayerCreate}
           onJoinMultiplayer={startMultiplayerJoin}
-          showApiLog={showApiLog}
-          onToggleApiLog={setShowApiLog}
           onLogApiMessage={logApiMessage}
         />
       ) : null}

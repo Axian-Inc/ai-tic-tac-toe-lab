@@ -29,6 +29,7 @@ export const createGameState = () => ({
   currentPlayer: 'X',
   winner: null,
   isDraw: false,
+  endReason: null,
   moveHistory: [],
 })
 
@@ -150,6 +151,7 @@ const resolveResignation = (game, resigningPlayer) => ({
     ...game.state,
     winner: resigningPlayer === 'X' ? 'O' : 'X',
     isDraw: false,
+    endReason: 'resign',
   },
 })
 
@@ -161,6 +163,7 @@ const resolveAbandonment = (game) => ({
     ...game.state,
     winner: game.state.currentPlayer === 'X' ? 'O' : 'X',
     isDraw: false,
+    endReason: 'abandonment',
   },
 })
 
@@ -175,6 +178,7 @@ const applyMove = (game, move) => {
     currentPlayer: move.player === 'X' ? 'O' : 'X',
     winner,
     isDraw: draw,
+    endReason: winner ? 'win' : draw ? 'draw' : null,
     moveHistory: [...game.state.moveHistory, move],
   }
 
@@ -460,6 +464,9 @@ const handleJoinGame = async (
 
     if (game.players.O) {
       return json(res, 409, { error: 'Game is already full.' })
+    }
+    if (joinerName && joinerName === game.players.X) {
+      return json(res, 409, { error: 'Host cannot join their own game.' })
     }
 
     const updated = {

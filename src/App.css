@@ -156,14 +156,9 @@
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  padding: 8px 18px;
-  border-radius: 999px;
-  border: 1px solid rgba(120, 135, 170, 0.35);
-  background: rgba(15, 19, 26, 0.7);
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  box-shadow: 0 10px 28px rgba(6, 10, 16, 0.6);
 }
 
 .landing__logo-x {
@@ -254,20 +249,6 @@
   color: #c0c8da;
 }
 
-.landing__toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 0.85rem;
-  color: var(--text-soft);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  margin-top: 10px;
-}
-
-.landing__toggle input {
-  accent-color: var(--x-color);
-}
 
 /* Multiplayer Modal */
 
@@ -301,25 +282,22 @@
 
 .modal__header {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  justify-content: center;
+  align-items: center;
+  position: relative;
   gap: 12px;
 }
 
-.modal__eyebrow {
-  text-transform: uppercase;
-  letter-spacing: 0.28em;
-  font-size: 0.7rem;
-  color: var(--text-soft);
-}
-
 .modal__title {
-  margin: 6px 0 0;
+  margin: 0;
   font-size: 1.4rem;
   letter-spacing: -0.01em;
 }
 
 .btn--icon {
+  position: absolute;
+  right: 0;
+  top: 0;
   width: 36px;
   min-width: 36px;
   height: 36px;
@@ -436,6 +414,11 @@
 
 .modal__game input {
   accent-color: var(--x-color);
+}
+
+.modal__game--disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .modal__game-name {
@@ -648,14 +631,6 @@
   min-width: 110px;
 }
 
-.game__alert {
-  padding: 8px 14px;
-  border-radius: 999px;
-  border: 1px solid rgba(240, 122, 75, 0.4);
-  background: rgba(240, 122, 75, 0.12);
-  color: #ffd1bf;
-  font-weight: 600;
-}
 
 @media (max-width: 520px) {
   .app {
