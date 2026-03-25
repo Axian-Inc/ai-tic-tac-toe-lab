@@ -6,6 +6,16 @@ import WebSocket, { WebSocketServer } from 'ws'
 
 const PORT = Number.parseInt(process.env.PORT || '5174', 10)
 const MAX_CONCURRENT_GAMES = 25
+
+const logHandlerStart = (label, context = {}) => {
+  // eslint-disable-next-line no-console
+  console.log(`[server] start ${label}`, context)
+}
+
+const logHandlerEnd = (label) => {
+  // eslint-disable-next-line no-console
+  console.log(`[server] end ${label}`)
+}
 export const VALID_STATUSES = new Set(['waiting', 'active', 'over'])
 
 export const createEmptyBoard = () => [
@@ -176,8 +186,15 @@ const applyMove = (game, move) => {
   }
 }
 
+const setCorsHeaders = (res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+}
+
 const json = (res, statusCode, payload) => {
   const body = JSON.stringify(payload)
+  setCorsHeaders(res)
   res.writeHead(statusCode, {
     'Content-Type': 'application/json; charset=utf-8',
     'Content-Length': Buffer.byteLength(body),
@@ -232,6 +249,12 @@ const createRealtimeHub = ({ games }) => {
   const broadcast = (gameId, payload) => {
     const set = subscribers.get(gameId)
     if (!set) return
+    // eslint-disable-next-line no-console
+    console.log('[server] ws broadcast', {
+      gameId,
+      type: payload?.type,
+      recipients: set.size,
+    })
     for (const ws of set) {
       send(ws, payload)
     }
@@ -280,7 +303,7 @@ const createRealtimeHub = ({ games }) => {
   return {
     handleUpgrade,
     broadcastGameUpdate: (game, move) =>
-      broadcast(game.id, { type: 'game_update', move, game }),
+      broadcast(game.id, { type: 'game_update', move: move ?? null, game }),
     broadcastGameOver: (game) => broadcast(game.id, { type: 'game_over', game }),
   }
 }
@@ -333,25 +356,31 @@ const readJsonBody = (req) =>
 // - 413 if payload exceeds 1 MB.
 // - 500 for unexpected server errors.
 const handleCreateGame = async (req, res, games) => {
-  const activeCount = [...games.values()].filter(
-    (game) => game.status !== 'over',
-  ).length
-  if (activeCount >= MAX_CONCURRENT_GAMES) {
-    return json(res, 429, { error: 'Game capacity reached.' })
+  const label = 'POST /games'
+  logHandlerStart(label)
+  try {
+    const activeCount = [...games.values()].filter(
+      (game) => game.status !== 'over',
+    ).length
+    if (activeCount >= MAX_CONCURRENT_GAMES) {
+      return json(res, 429, { error: 'Game capacity reached.' })
+    }
+
+    const body = await readJsonBody(req)
+    const game = createGameRecord({
+      playerName: body && body.playerName,
+      gameName: body && body.gameName,
+    })
+
+    games.set(game.id, game)
+
+    return json(res, 201, {
+      gameId: game.id,
+      game,
+    })
+  } finally {
+    logHandlerEnd(label)
   }
-
-  const body = await readJsonBody(req)
-  const game = createGameRecord({
-    playerName: body && body.playerName,
-    gameName: body && body.gameName,
-  })
-
-  games.set(game.id, game)
-
-  return json(res, 201, {
-    gameId: game.id,
-    game,
-  })
 }
 
 // GET /games
@@ -362,16 +391,22 @@ const handleCreateGame = async (req, res, games) => {
 // - 200 with { games: [summary] } where each summary includes id, status, name, createdAt, players.
 // - 400 if the status filter is invalid.
 const handleListGames = (req, res, url, games) => {
-  const status = url.searchParams.get('status')
-  if (status && !isValidStatus(status)) {
-    return json(res, 400, { error: 'Invalid status filter.' })
+  const label = 'GET /games'
+  logHandlerStart(label, { status: url.searchParams.get('status') })
+  try {
+    const status = url.searchParams.get('status')
+    if (status && !isValidStatus(status)) {
+      return json(res, 400, { error: 'Invalid status filter.' })
+    }
+
+    const list = [...games.values()]
+      .filter((game) => (status ? game.status === status : true))
+      .map(toGameSummary)
+
+    return json(res, 200, { games: list })
+  } finally {
+    logHandlerEnd(label)
   }
-
-  const list = [...games.values()]
-    .filter((game) => (status ? game.status === status : true))
-    .map(toGameSummary)
-
-  return json(res, 200, { games: list })
 }
 
 // GET /games/:id
@@ -380,9 +415,15 @@ const handleListGames = (req, res, url, games) => {
 // - 200 with { game } on success.
 // - 404 if the game does not exist.
 const handleGetGame = (req, res, games, gameId) => {
-  const game = games.get(gameId)
-  if (!game) return json(res, 404, { error: 'Game not found.' })
-  return json(res, 200, { game })
+  const label = 'GET /games/:id'
+  logHandlerStart(label, { gameId })
+  try {
+    const game = games.get(gameId)
+    if (!game) return json(res, 404, { error: 'Game not found.' })
+    return json(res, 200, { game })
+  } finally {
+    logHandlerEnd(label)
+  }
 }
 
 // POST /games/:id/join
@@ -396,35 +437,49 @@ const handleGetGame = (req, res, games, gameId) => {
 // - 400 if JSON payload is invalid.
 // - 413 if payload exceeds 1 MB.
 // - 500 for unexpected server errors.
-const handleJoinGame = async (req, res, games, gameId, scheduler) => {
-  const game = games.get(gameId)
-  if (!game) return json(res, 404, { error: 'Game not found.' })
-  if (game.status !== 'waiting') {
-    return json(res, 409, { error: 'Game is not available to join.' })
+const handleJoinGame = async (
+  req,
+  res,
+  games,
+  gameId,
+  scheduler,
+  realtimeHub,
+) => {
+  const label = 'POST /games/:id/join'
+  logHandlerStart(label, { gameId })
+  try {
+    const game = games.get(gameId)
+    if (!game) return json(res, 404, { error: 'Game not found.' })
+    if (game.status !== 'waiting') {
+      return json(res, 409, { error: 'Game is not available to join.' })
+    }
+
+    const body = await readJsonBody(req)
+    const joinerName =
+      body && typeof body.playerName === 'string' ? body.playerName.trim() : null
+
+    if (game.players.O) {
+      return json(res, 409, { error: 'Game is already full.' })
+    }
+
+    const updated = {
+      ...game,
+      status: 'active',
+      updatedAt: new Date().toISOString(),
+      players: {
+        ...game.players,
+        O: joinerName || null,
+      },
+    }
+
+    games.set(gameId, updated)
+    scheduler.schedule(updated)
+    realtimeHub.broadcastGameUpdate(updated, null)
+
+    return json(res, 200, { game: updated })
+  } finally {
+    logHandlerEnd(label)
   }
-
-  const body = await readJsonBody(req)
-  const joinerName =
-    body && typeof body.playerName === 'string' ? body.playerName.trim() : null
-
-  if (game.players.O) {
-    return json(res, 409, { error: 'Game is already full.' })
-  }
-
-  const updated = {
-    ...game,
-    status: 'active',
-    updatedAt: new Date().toISOString(),
-    players: {
-      ...game.players,
-      O: joinerName || null,
-    },
-  }
-
-  games.set(gameId, updated)
-  scheduler.schedule(updated)
-
-  return json(res, 200, { game: updated })
 }
 
 // POST /games/:id/moves
@@ -438,28 +493,34 @@ const handleJoinGame = async (req, res, games, gameId, scheduler) => {
 // - 413 if payload exceeds 1 MB.
 // - 500 for unexpected server errors.
 const handleMove = async (req, res, games, gameId, realtimeHub, scheduler) => {
-  const game = games.get(gameId)
-  if (!game) return json(res, 404, { error: 'Game not found.' })
+  const label = 'POST /games/:id/moves'
+  logHandlerStart(label, { gameId })
+  try {
+    const game = games.get(gameId)
+    if (!game) return json(res, 404, { error: 'Game not found.' })
 
-  const body = await readJsonBody(req)
-  const move = body ? body.move : null
+    const body = await readJsonBody(req)
+    const move = body ? body.move : null
 
-  if (!isMoveValid(game, move)) {
-    return json(res, 400, { error: 'Invalid move.' })
+    if (!isMoveValid(game, move)) {
+      return json(res, 400, { error: 'Invalid move.' })
+    }
+
+    const updated = applyMove(game, move)
+    games.set(gameId, updated)
+
+    realtimeHub.broadcastGameUpdate(updated, move)
+    if (updated.status === 'over') {
+      realtimeHub.broadcastGameOver(updated)
+      scheduler.clear(gameId)
+    } else {
+      scheduler.schedule(updated)
+    }
+
+    return json(res, 200, { game: updated })
+  } finally {
+    logHandlerEnd(label)
   }
-
-  const updated = applyMove(game, move)
-  games.set(gameId, updated)
-
-  realtimeHub.broadcastGameUpdate(updated, move)
-  if (updated.status === 'over') {
-    realtimeHub.broadcastGameOver(updated)
-    scheduler.clear(gameId)
-  } else {
-    scheduler.schedule(updated)
-  }
-
-  return json(res, 200, { game: updated })
 }
 
 const createAbandonmentScheduler = ({ games, timeoutMs, realtimeHub }) => {
@@ -532,24 +593,30 @@ const createAbandonmentScheduler = ({ games, timeoutMs, realtimeHub }) => {
 // - 413 if payload exceeds 1 MB.
 // - 500 for unexpected server errors.
 const handleResign = async (req, res, games, gameId, realtimeHub, scheduler) => {
-  const game = games.get(gameId)
-  if (!game) return json(res, 404, { error: 'Game not found.' })
-  if (game.status !== 'active') {
-    return json(res, 409, { error: 'Game is not active.' })
+  const label = 'POST /games/:id/resign'
+  logHandlerStart(label, { gameId })
+  try {
+    const game = games.get(gameId)
+    if (!game) return json(res, 404, { error: 'Game not found.' })
+    if (game.status !== 'active') {
+      return json(res, 409, { error: 'Game is not active.' })
+    }
+
+    const body = await readJsonBody(req)
+    const resigningPlayer = body ? body.player : null
+    if (!isValidPlayer(resigningPlayer)) {
+      return json(res, 400, { error: 'Invalid resigning player.' })
+    }
+
+    const updated = resolveResignation(game, resigningPlayer)
+    games.set(gameId, updated)
+    realtimeHub.broadcastGameOver(updated)
+    scheduler.clear(gameId)
+
+    return json(res, 200, { game: updated })
+  } finally {
+    logHandlerEnd(label)
   }
-
-  const body = await readJsonBody(req)
-  const resigningPlayer = body ? body.player : null
-  if (!isValidPlayer(resigningPlayer)) {
-    return json(res, 400, { error: 'Invalid resigning player.' })
-  }
-
-  const updated = resolveResignation(game, resigningPlayer)
-  games.set(gameId, updated)
-  realtimeHub.broadcastGameOver(updated)
-  scheduler.clear(gameId)
-
-  return json(res, 200, { game: updated })
 }
 
 // Creates an HTTP server that exposes the multiplayer game API.
@@ -580,6 +647,13 @@ export const createServer = ({
   })
   const server = http.createServer(async (req, res) => {
     try {
+      if (req.method === 'OPTIONS') {
+        setCorsHeaders(res)
+        res.writeHead(204)
+        res.end()
+        return
+      }
+
       const url = new URL(
         req.url || '/',
         `http://${req.headers.host || 'localhost'}`,
@@ -599,7 +673,14 @@ export const createServer = ({
 
       const joinMatch = url.pathname.match(/^\/games\/([^/]+)\/join$/)
       if (req.method === 'POST' && joinMatch) {
-        return await handleJoinGame(req, res, games, joinMatch[1], scheduler)
+        return await handleJoinGame(
+          req,
+          res,
+          games,
+          joinMatch[1],
+          scheduler,
+          realtimeHub,
+        )
       }
 
       const moveMatch = url.pathname.match(/^\/games\/([^/]+)\/moves$/)

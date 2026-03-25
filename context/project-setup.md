@@ -117,3 +117,9 @@ npm run preview
 - No environment variables are required to run the app locally.
 - `npm run test:e2e` starts or reuses a local Vite server automatically through Playwright config.
 - AWS, Terraform, and S3 deployment are not required for local development.
+
+## UI Environment Variables
+
+- `VITE_MULTIPLAYER_URL`: Base HTTP URL for the multiplayer API (default `http://localhost:5174`).
+- `VITE_MULTIPLAYER_WS_URL`: Base WebSocket URL for multiplayer updates (default `ws://localhost:5174`).
+- `VITE_SHOW_API_LOG`: When set to `true`, shows the API activity panel in the UI.

@@ -27,8 +27,11 @@ Mar 19, 2026:
   add an e2e test for a bug I spotted and fixing the bug.
 * 2 hrs: Finishing Phase 1.
 Mar 20, 2026:
-* 2 hrs: Phase 2: User stories + implementing backend stories with tests.
-
+* 2 hrs: Phase 2: Creating user stories + implementing backend stories plus tests.
+Mar 23, 2026:
+* 2.5 hrs: Phase 2: Finishing server stories and doing UI stories incl. automated tests.  No manual testing done.
+Mar 24, 2026:
+* xxx
 
 
 

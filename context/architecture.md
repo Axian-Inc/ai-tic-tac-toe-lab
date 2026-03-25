@@ -15,6 +15,7 @@ Date: 2026-03-19
 Overview:
 - Single-page React app with two views: landing and game.
 - Multiplayer server in `/server` provides HTTP API endpoints and WebSocket updates for live play.
+ - Client multiplayer flow calls the multiplayer HTTP API and subscribes to WebSocket updates during gameplay.
 - Game state managed in App component and passed to GamePage.
 - UI components: Board and Square render the grid.
 - Infrastructure lives in `/terraform` and provisions AWS S3 static website hosting.

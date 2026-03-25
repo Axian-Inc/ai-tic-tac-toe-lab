@@ -21,3 +21,4 @@ Notes:
 - Deploy the built site with `npm run deploy:s3`.
 - Validate the hosted site with `npm run deploy:validate`.
 - Run `npm run deploy` to build, sync `dist/` to S3, and verify the website URL serves HTML.
+- Production CORS policy for the multiplayer server should be updated in `server/index.js` via `setCorsHeaders` to allow only the deployed frontend origin(s) instead of `*`.

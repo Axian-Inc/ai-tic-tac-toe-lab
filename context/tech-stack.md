@@ -15,6 +15,7 @@ Frontend:
 - React 19
 - TypeScript
 - Vite
+ - Fetch + WebSocket client for multiplayer API integration
 
 Styling:
 - CSS (App.css, index.css)

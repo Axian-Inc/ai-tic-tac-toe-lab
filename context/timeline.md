@@ -120,3 +120,35 @@ It serves as the running audit trail of work completed in the repository.
 - Date/time: 2026-03-23 21:51:50 UTC
   Prompt: Please, implement P2.9 and P2.10
   Summary: Added a 25-game concurrent capacity check that returns HTTP 429 when exceeded, implemented a full-game retrieval endpoint for replay/history, expanded server flow tests to cover capacity enforcement and history retrieval, and documented the history endpoint in the game API context.
+- Date/time: 2026-03-23 22:10:01 UTC
+  Prompt: Implement stories P2.11 - P2.14
+  Summary: Added multiplayer entry CTA on the landing page, built create/join multiplayer modal flows with required inputs, tabs, and empty-state list, and preserved single-player flow. Updated styling to match the multiplayer screenshots and added UI tests covering modal behavior and join empty state.
+- Date/time: 2026-03-23 22:29:35 UTC
+  Prompt: Yes, please
+  Summary: Wired the landing multiplayer modal to the real server API for create/join/list flows, added a multiplayer gameplay page that syncs via WebSocket and posts moves to the server, and updated client architecture/tech stack context. Verified the test suite passes.
+- Date/time: 2026-03-25 00:33:24 UTC
+  Prompt: When my UI tries to call API, it is blocked by this error: Access to fetch at 'http://127.0.0.1:5174/games' from origin 'http://127.0.0.1:5173' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+  Summary: Added CORS headers and OPTIONS preflight handling to the multiplayer server responses to allow browser requests from the UI.
+- Date/time: 2026-03-25 00:34:47 UTC
+  Prompt: Please, describe in context where that policy should be updated for Prod deployment.
+  Summary: Documented that production CORS policy should be configured in server/index.js setCorsHeaders to restrict allowed origins.
+- Date/time: 2026-03-25 01:33:42 UTC
+  Prompt: Please, do:
+  1. Add to the server output to stdout at the beginning and at the end of each endpoint handler.
+  2. Add to the client a small message to show at the bottom of the UI screen (in the visible part) showing each time after a request to API was sent and what request was it.  This messages should show up only if a UI setting is set to True.
+  Summary: Added start/end logging for each server endpoint handler, introduced an opt-in client API activity panel with a landing-page toggle, and wired API calls to emit request messages. Updated tests to cover the new landing inputs and verified the test suite passes.
+- Date/time: 2026-03-25 01:48:55 UTC
+  Prompt: Two issues:
+  1. Add on the server a logging when the server broadcasts smth to a player via websocket.
+  2. When I click on Refresh button, I can see in the server log that API is called.  But the UI doesn't show the message about it.  Every call to API should be shown and I don't see any.
+  Summary: Added WebSocket broadcast logging on the server and changed client API logging to record all requests regardless of visibility toggle so refresh calls appear when the log is enabled.
+- Date/time: 2026-03-25 02:03:35 UTC
+  Prompt: Show only the last API call in the UI message area.
+  Also, I'm getting these errors in the player browser immediately after creating the game and the browser shows the gameboard: ...
+  Summary: Updated the client API activity panel to display only the latest request, defaulted the toggle to off, and adjusted WebSocket cleanup to avoid dev-mode connection warnings. Added server WebSocket broadcast logging already present to verify outbound updates.
+- Date/time: 2026-03-25 02:08:33 UTC
+  Prompt: Please, make showApiLog to be controlled by a new Vite env var.  And add description/documentation of all such envars to context.  Also, restore the logic to show API messages in UI only when showApiLog is true.
+  Summary: Added VITE_SHOW_API_LOG handling for the UI API log toggle, restored conditional logging, and documented all multiplayer-related Vite environment variables in project setup context.
+- Date/time: 2026-03-25 02:23:59 UTC
+  Prompt: Below is a server log.  I don't see the broadcast to the player that created the game that another player joined it. ...
+  Summary: Broadcast a game_update on join to notify subscribers, updated WebSocket message typing to allow null move payloads, and ensured join handler uses the realtime hub broadcast.

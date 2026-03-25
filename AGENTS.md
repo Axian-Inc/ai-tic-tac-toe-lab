@@ -54,11 +54,13 @@ Never edit or remove existing content from it.  Include in each entry:
 - Follow documented standards and constraints.
 - Stay within documented scope.
 - Don't introduce undocumented patterns.
-- Comment all major public methods (e.g. controller endpoints) with all the information 
-  relevant to the caller.
+- For all major public methods (e.g. controller endpoints)
+  - Comment them with all the information relevant to the caller.
+  - Add a log entry: if it's backend, to stdout, if it's a UI component, to browser console.
+    For UI logs, create a toggle flag.  Log only if it's set to true.
 - Add tests to cover all code with cyclomatic complexity of 3 or more.  But also cover the code
   that you think is error prone even when the complexity is lower.
-  
+
 
 ### After Completing
 Update the timeline.md file.
