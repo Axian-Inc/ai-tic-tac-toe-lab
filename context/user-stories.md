@@ -551,3 +551,101 @@ Acceptance criteria:
 - Deployment documentation covers both the static frontend and multiplayer backend.
 - The deployed architecture stays within the documented low-cost constraint.
 - Operational limits and assumptions, including the 25-game concurrency cap, are documented in context.
+
+
+## Phase 3 User Stories
+
+### US-43 Spectate Entry from the UI
+As a spectator, I want a `Spectate` entry point in the UI so that I can discover active games to watch.
+
+Technical notes:
+- Add a dedicated `Spectate` trigger to the landing-page multiplayer entry UI instead of requiring manual game-ID navigation.
+  Meaning and objective: This means the landing page should expose a first-class spectator path rather than assuming users already know a target game identifier. The goal is to make spectating discoverable and reduce friction for users who only want to watch active games.
+- Reuse the existing multiplayer discovery fetch path to request `active` games from the backend and store those results in landing-page UI state.
+  Meaning and objective: This means the client should build on the current multiplayer listing flow and narrow it to active games instead of introducing a second discovery system. The goal is to keep the implementation small and ensure the spectator list stays aligned with the backend’s authoritative game statuses.
+- Render active-game discovery results with a spectator-specific action that routes into gameplay using spectator session metadata.
+  Meaning and objective: This means each active game entry should provide a watch action that navigates into gameplay with enough route state to identify the user as a spectator. The goal is to reuse the gameplay screen safely while preventing the client from treating the spectator like a player.
+- Keep the new spectate entry flow isolated from existing create/join behaviors so single-player and player multiplayer paths do not regress.
+  Meaning and objective: This means the new UI state and handlers should be added without rewriting the already-working single-player, create-game, or join-game flows. The goal is to reduce regression risk while adding a third entry path.
+
+Acceptance criteria:
+- The landing page renders a visible `Spectate` control without requiring a game ID to be typed manually.
+- Activating `Spectate` requests and displays multiplayer games whose server status is `active`.
+- Waiting games and completed games are not shown in the active-games spectate list.
+- Selecting a listed active game navigates the user into a spectator gameplay view for that game.
+
+### US-44 Real-Time Spectator Game Viewer
+As a spectator, I want to open an active game and see live updates so that I can follow the match in real time.
+
+Technical notes:
+- Extend the gameplay route/session model so it can enter the existing multiplayer gameplay screen in spectator mode.
+  Meaning and objective: This means the gameplay screen should understand spectator sessions as a distinct mode alongside local play and active-player multiplayer sessions. The goal is to reuse the current gameplay shell while applying the correct read-only behavior and labels.
+- Load the authoritative multiplayer snapshot for the selected game before opening or while opening the websocket subscription.
+  Meaning and objective: This means the spectator should receive a full current snapshot from the server as the baseline state rather than waiting for the next live event to populate the screen. The goal is to avoid blank or stale initial rendering when a spectator opens an in-progress match.
+- Reuse the existing websocket live-update path so spectator sessions reconcile remote move and game-over events from the server.
+  Meaning and objective: This means spectators should listen to the same authoritative event stream that active players use instead of polling or inventing a parallel transport path. The goal is to keep live updates consistent across roles and minimize duplicate logic.
+- Render the gameplay board and status from authoritative multiplayer state while disabling all player-only controls and mutations for spectator sessions.
+  Meaning and objective: This means the board, turn indicator, and outcome messaging should still be visible, but interactions that change the game must be unavailable in spectator mode. The goal is to let users follow the match clearly without giving them a way to act like a player.
+
+Acceptance criteria:
+- Opening an active game as a spectator loads the current authoritative board, move history, current turn, and game status before live updates are received.
+- When a player makes a valid move, the spectator view updates automatically without a manual refresh.
+- The spectator gameplay view renders the board in a read-only state with no enabled move controls.
+- Spectator sessions do not render player-only actions such as `Join`, `Move`, or `Resign`.
+
+### US-45 Server Support for Active-Game Spectating
+As a developer, I want the server to expose active games and allow spectator subscriptions so that the client can implement real-time viewing.
+
+Technical notes:
+- Ensure the existing multiplayer list endpoint supports discovery of `active` games with enough summary data for spectator selection.
+  Meaning and objective: This means the backend list response should expose active games in a form the UI can render directly for spectate selection, such as game identifiers and summary labels. The goal is to make active-game discovery reliable without adding a second listing endpoint.
+- Use the existing multiplayer snapshot endpoint to return authoritative game state for spectator hydration without assigning a player seat.
+  Meaning and objective: This means spectators should be able to fetch the same current game snapshot as other clients, but without being recorded as player `X` or `O`. The goal is to support read-only entry into an active game while preserving the two-player model.
+- Allow websocket subscriptions keyed by `gameId` for non-player clients and track them separately from player-role assumptions.
+  Meaning and objective: This means the websocket layer should accept viewers who are attached to a game but are not eligible to take turns or occupy a seat. The goal is to separate watch access from player authorization and avoid coupling subscription logic to player participation.
+- Continue broadcasting authoritative move and terminal-game events through the websocket channel so spectators receive the same live updates as players.
+  Meaning and objective: This means the server should keep one authoritative broadcast path for game changes and include spectators among its subscribers. The goal is to ensure all connected observers stay in sync on moves and completion outcomes.
+
+Acceptance criteria:
+- `GET /games?status=active` returns only active multiplayer games that are valid spectate targets.
+- `GET /games/{id}` returns the current authoritative snapshot for an active game when requested by a spectator client.
+- `WS /ws?gameId=...` accepts spectator subscriptions for an active game without assigning the client to player `X` or `O`.
+- After a valid move or terminal game event, subscribed spectators receive a websocket message for the affected game.
+
+### US-46 Terminal Code Coverage Reporting
+As a developer, I want a code coverage report that runs from the terminal so that I can measure automated test coverage locally and in CI.
+
+Technical notes:
+- Add or confirm a repo-root npm command that runs the existing unit-test stack with coverage enabled.
+  Meaning and objective: This means developers and CI should be able to use one standard command from the repository root to produce coverage instead of needing manual flags or local knowledge. The goal is to make coverage generation easy to run and easy to document.
+- Configure coverage output so it is both printed in the terminal and written to a stable artifact directory for later inspection or CI upload.
+  Meaning and objective: This means the coverage workflow should produce immediate console feedback plus files on disk that can be inspected locally or attached to CI runs. The goal is to support both developer use and automated pipeline consumption from the same command.
+- Keep coverage scope aligned with the project’s documented unit-test targets rather than introducing a new test runner or duplicate coverage path.
+  Meaning and objective: This means coverage should be generated through the current unit-test tooling and source-file scope already documented in project context. The goal is to avoid fragmenting the test strategy or producing conflicting coverage reports.
+- Document the command in project docs or context so local developers and CI can invoke the same coverage workflow.
+  Meaning and objective: This means the chosen coverage command should be written down in the repo’s living documentation instead of existing only in package scripts. The goal is to keep local development and CI aligned on one supported way to generate coverage.
+
+Acceptance criteria:
+- A repository command runnable from the repo root generates a coverage report from automated tests.
+- Running the command produces coverage output in the terminal and writes a coverage artifact directory to disk.
+- The coverage report includes the project's Vitest unit-test coverage for the configured source files.
+- The command exits with a non-zero status when tests fail or coverage generation cannot complete.
+
+### US-47 Pull Request CI Pipeline
+As a developer, I want a GitHub Actions pipeline that runs on pull requests so that regressions are caught before merge.
+
+Technical notes:
+- Add a GitHub Actions workflow under `.github/workflows/` that runs on pull request events.
+  Meaning and objective: This means CI should be defined in-repo using the standard GitHub Actions workflow location and triggered automatically when pull requests are opened or updated. The goal is to make validation part of the normal review path instead of a manual step.
+- Configure the workflow to check out the repo, install Node dependencies, and use the project’s existing npm commands rather than bespoke shell logic.
+  Meaning and objective: This means the workflow should run the same supported commands developers use locally instead of duplicating behavior in custom CI-only scripts. The goal is to reduce maintenance cost and keep local and CI execution paths consistent.
+- Run the automated unit-test command as one validation step and the application build or packaging command as a separate validation step.
+  Meaning and objective: This means CI should validate both correctness and buildability, with tests and packaging represented as distinct stages that can fail independently. The goal is to catch both logic regressions and broken builds before merge.
+- Keep the workflow scoped to validation only so it does not deploy infrastructure or publish artifacts during pull request runs.
+  Meaning and objective: This means the pull-request pipeline should stop at verification and avoid mutating shared environments or creating releases. The goal is to keep PR checks safe, fast, and focused on merge readiness.
+
+Acceptance criteria:
+- At least one workflow file exists under `.github/workflows/`.
+- The workflow is configured to trigger on pull request events targeting the repository.
+- On each pull request run, the workflow installs dependencies and executes the project's automated unit-test command.
+- On each pull request run, the workflow executes the project's build or packaging command and fails the run if that command fails.
