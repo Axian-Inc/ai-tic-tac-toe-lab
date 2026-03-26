@@ -13,12 +13,12 @@ output "aws_region" {
   value       = var.aws_region
 }
 
-output "server_image" {
-  description = "Container image URI for the multiplayer server."
-  value       = var.server_image
-}
-
 output "server_url" {
   description = "Multiplayer server base URL."
-  value       = "http://${aws_lb.server.dns_name}"
+  value       = "http://${aws_instance.server.public_dns}:${var.server_port}"
+}
+
+output "server_instance_id" {
+  description = "EC2 instance ID for the multiplayer server."
+  value       = aws_instance.server.id
 }

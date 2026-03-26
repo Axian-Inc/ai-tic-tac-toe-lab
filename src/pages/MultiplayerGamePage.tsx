@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import confetti from 'canvas-confetti'
 import Board from '../components/Board'
-import type { Position } from '../game'
+import type { Board as GameBoard, Position } from '../game'
 import useSound from '../hooks/useSound'
 import {
   postMultiplayerMove,
@@ -139,6 +139,7 @@ const MultiplayerGamePage = ({
   }, [game.state.winner, playLose, playWin, playerSymbol])
 
   const opponentSymbol: PlayerSymbol = playerSymbol === 'X' ? 'O' : 'X'
+  const board = game.state.board as GameBoard
 
   return (
     <section className="game">
@@ -173,7 +174,7 @@ const MultiplayerGamePage = ({
       </header>
 
       <Board
-        board={game.state.board}
+        board={board}
         canPlayAt={canPlayAt}
         onSelect={handleSelect}
       />

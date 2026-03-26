@@ -200,3 +200,12 @@ It serves as the running audit trail of work completed in the repository.
 - Date/time: 2026-03-26 00:51:58 UTC
   Prompt: Yes, please.  And include envar to show API but with a 'false' value.  I'll change that value whenever I need.
   Summary: Updated the deploy script to export VITE_MULTIPLAYER_URL, VITE_MULTIPLAYER_WS_URL, and VITE_SHOW_API_LOG=false from Terraform outputs before building the client, and documented the behavior in deployment context.
+- Date/time: 2026-03-26 16:49:11 UTC
+  Prompt: Let's switch to use EC2 + systemd without ALB.  Please, modify the deployment scripts, documentation in context etc.
+  Summary: Replaced ECS/ALB server infrastructure with a single EC2 instance running systemd via user data, added SSM access for deployment updates, adjusted Terraform variables/outputs, updated deploy script to push server code via S3/SSM, and refreshed architecture/tech stack/deployment context for the new model.
+- Date/time: 2026-03-26 21:16:54 UTC
+  Prompt: Can you make the scripts use the region defined in ~/.aws/config file?  Or what is the standard way of providing AWS region?
+  Summary: Updated the deploy script to resolve the AWS region from AWS_REGION/AWS_DEFAULT_REGION or ~/.aws/config, and documented the region requirement in deployment context.
+- Date/time: 2026-03-26 22:02:44 UTC
+  Prompt: Please, deploy to system.  Tell me, if you are clear how to do it?
+  Summary: Read the project context and confirmed the intended deployment path, then executed the end-to-end deployment flow against the existing `stanb` Terraform workspace in AWS. Resolved multiple deployment blockers by updating the deploy script to reuse the existing Terraform bucket name when state already exists, bootstrap or recreate the EC2 systemd service over SSM, avoid the Amazon Linux curl package conflict, upload package manifests and install production Node dependencies on the instance before restart, and preserve the documented deployment process in context. Fixed existing TypeScript build errors in the landing multiplayer test and multiplayer game page, reran the production build locally to confirm it passes, and then reran deployment successfully until both the hosted website and multiplayer server health validations passed.

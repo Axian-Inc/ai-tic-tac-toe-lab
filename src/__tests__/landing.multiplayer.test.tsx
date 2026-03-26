@@ -17,13 +17,17 @@ const setInputValue = (input: HTMLInputElement, value: string) => {
   input.dispatchEvent(new Event('input', { bubbles: true }))
 }
 
+const reactActEnvironment = globalThis as typeof globalThis & {
+  IS_REACT_ACT_ENVIRONMENT?: boolean
+}
+
 describe('LandingPage multiplayer modal', () => {
   it('opens the modal and enables create when required fields are filled', async () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
     const root = createRoot(container)
 
-    globalThis.IS_REACT_ACT_ENVIRONMENT = true
+    reactActEnvironment.IS_REACT_ACT_ENVIRONMENT = true
 
     await act(async () => {
       root.render(
@@ -75,7 +79,7 @@ describe('LandingPage multiplayer modal', () => {
     document.body.appendChild(container)
     const root = createRoot(container)
 
-    globalThis.IS_REACT_ACT_ENVIRONMENT = true
+    reactActEnvironment.IS_REACT_ACT_ENVIRONMENT = true
 
     await act(async () => {
       root.render(

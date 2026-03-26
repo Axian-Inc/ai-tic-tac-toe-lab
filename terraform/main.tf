@@ -81,15 +81,25 @@ resource "aws_s3_bucket_policy" "site" {
   depends_on = [aws_s3_bucket_public_access_block.site]
 }
 
+data "aws_ami" "server" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["al2023-ami-2023.*-x86_64"]
+  }
+}
+
 resource "aws_security_group" "server" {
   name        = "tic-tac-toe-server"
-  description = "Allow inbound HTTP for the multiplayer server."
+  description = "Allow inbound traffic for the multiplayer server."
   vpc_id      = data.aws_vpc.default.id
 
   ingress {
-    description = "HTTP"
-    from_port   = 80
-    to_port     = 80
+    description = "HTTP game traffic"
+    from_port   = var.server_port
+    to_port     = var.server_port
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -104,54 +114,8 @@ resource "aws_security_group" "server" {
   tags = var.tags
 }
 
-resource "aws_lb" "server" {
-  name               = "tic-tac-toe-server"
-  load_balancer_type = "application"
-  security_groups    = [aws_security_group.server.id]
-  subnets            = data.aws_subnets.default.ids
-  tags               = var.tags
-
-  depends_on = [terraform_data.workspace_guard]
-}
-
-resource "aws_lb_target_group" "server" {
-  name        = "tic-tac-toe-server"
-  port        = var.server_port
-  protocol    = "HTTP"
-  target_type = "ip"
-  vpc_id      = data.aws_vpc.default.id
-
-  health_check {
-    path                = "/games?status=waiting"
-    healthy_threshold   = 2
-    unhealthy_threshold = 2
-    timeout             = 5
-    interval            = 15
-    matcher             = "200"
-  }
-
-  tags = var.tags
-}
-
-resource "aws_lb_listener" "server" {
-  load_balancer_arn = aws_lb.server.arn
-  port              = 80
-  protocol          = "HTTP"
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.server.arn
-  }
-}
-
-resource "aws_cloudwatch_log_group" "server" {
-  name              = "/ecs/tic-tac-toe-server"
-  retention_in_days = 14
-  tags              = var.tags
-}
-
-resource "aws_iam_role" "task_execution" {
-  name = "tic-tac-toe-task-execution"
+resource "aws_iam_role" "server_instance" {
+  name = "tic-tac-toe-server-instance"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -159,7 +123,7 @@ resource "aws_iam_role" "task_execution" {
       {
         Effect = "Allow"
         Principal = {
-          Service = "ecs-tasks.amazonaws.com"
+          Service = "ec2.amazonaws.com"
         }
         Action = "sts:AssumeRole"
       },
@@ -167,71 +131,54 @@ resource "aws_iam_role" "task_execution" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "task_execution" {
-  role       = aws_iam_role.task_execution.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+resource "aws_iam_role_policy_attachment" "server_ssm" {
+  role       = aws_iam_role.server_instance.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
-resource "aws_ecs_cluster" "server" {
-  name = "tic-tac-toe-server"
-  tags = var.tags
+resource "aws_iam_instance_profile" "server" {
+  name = "tic-tac-toe-server-instance"
+  role = aws_iam_role.server_instance.name
 }
 
-resource "aws_ecs_task_definition" "server" {
-  family                   = "tic-tac-toe-server"
-  requires_compatibilities = ["FARGATE"]
-  network_mode             = "awsvpc"
-  cpu                      = var.server_cpu
-  memory                   = var.server_memory
-  execution_role_arn       = aws_iam_role.task_execution.arn
+resource "aws_instance" "server" {
+  ami                    = data.aws_ami.server.id
+  instance_type          = var.server_instance_type
+  subnet_id              = data.aws_subnets.default.ids[0]
+  vpc_security_group_ids = [aws_security_group.server.id]
+  iam_instance_profile   = aws_iam_instance_profile.server.name
+  tags                   = var.tags
 
-  container_definitions = jsonencode([
-    {
-      name  = "server"
-      image = var.server_image
-      portMappings = [
-        {
-          containerPort = var.server_port
-          hostPort      = var.server_port
-          protocol      = "tcp"
-        },
-      ]
-      environment = [
-        {
-          name  = "PORT"
-          value = tostring(var.server_port)
-        },
-      ]
-      logConfiguration = {
-        logDriver = "awslogs"
-        options = {
-          awslogs-group         = aws_cloudwatch_log_group.server.name
-          awslogs-region        = data.aws_region.current.name
-          awslogs-stream-prefix = "ecs"
-        }
-      }
-    },
-  ])
-}
+  user_data = <<-USER_DATA
+              #!/usr/bin/env bash
+              set -euo pipefail
 
-resource "aws_ecs_service" "server" {
-  name            = "tic-tac-toe-server"
-  cluster         = aws_ecs_cluster.server.id
-  task_definition = aws_ecs_task_definition.server.arn
-  desired_count   = var.server_desired_count
-  launch_type     = "FARGATE"
+              dnf install -y curl awscli
+              curl -fsSL https://rpm.nodesource.com/setup_20.x | bash -
+              dnf install -y nodejs
 
-  network_configuration {
-    subnets         = data.aws_subnets.default.ids
-    security_groups = [aws_security_group.server.id]
-    assign_public_ip = true
-  }
+              mkdir -p /opt/ai-tic-tac-toe/server
 
-  load_balancer {
-    target_group_arn = aws_lb_target_group.server.arn
-    container_name   = "server"
-    container_port   = var.server_port
-  }
+              cat <<'UNIT' > /etc/systemd/system/tic-tac-toe-server.service
+              [Unit]
+              Description=AI Tic Tac Toe Multiplayer Server
+              After=network.target
 
-  depends_on = [aws_lb_listener.server]
+              [Service]
+              WorkingDirectory=/opt/ai-tic-tac-toe
+              Environment=PORT=${var.server_port}
+              ExecStart=/usr/bin/node /opt/ai-tic-tac-toe/server/index.js
+              Restart=always
+              RestartSec=2
+              ConditionPathExists=/opt/ai-tic-tac-toe/server/index.js
+
+              [Install]
+              WantedBy=multi-user.target
+              UNIT
+
+              systemctl daemon-reload
+              systemctl enable tic-tac-toe-server
+              USER_DATA
+
+  depends_on = [terraform_data.workspace_guard]
 }
