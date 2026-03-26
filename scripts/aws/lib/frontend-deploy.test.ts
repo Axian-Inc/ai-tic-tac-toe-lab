@@ -7,14 +7,14 @@ import {
 import type { DevConfig } from "./config.js";
 
 const config: DevConfig = {
-  projectTag: "ttt-ms-aj-phase2",
+  projectTag: "ttt-ms-aj-phase3",
   awsRegion: "us-west-2",
-  s3WebsiteStackName: "ttt-ms-aj-phase2-s3-website",
-  s3WebsiteBucketName: "ttt-ms-aj-tic-tac-toe-site",
+  s3WebsiteStackName: "ttt-ms-aj-phase3-s3-website",
+  s3WebsiteBucketName: "ttt-ms-aj-phase3-tic-tac-toe-site",
   s3BuildDir: "dist",
-  s3MultiplayerStackName: "ttt-ms-aj-phase2-multiplayer-service",
+  s3MultiplayerStackName: "ttt-ms-aj-phase3-multiplayer-service",
   s3MultiplayerApiBaseUrl: "",
-  multiplayerStackName: "ttt-ms-aj-phase2-multiplayer-service",
+  multiplayerStackName: "ttt-ms-aj-phase3-multiplayer-service",
   multiplayerInstanceType: "t3.micro",
   multiplayerServicePort: "3001",
   multiplayerHealthPath: "/health",
@@ -38,7 +38,7 @@ describe("resolveFrontendMultiplayerApiBaseUrl", () => {
       "https://resolved.example.com",
     );
     expect(resolver).toHaveBeenCalledWith(
-      "ttt-ms-aj-phase2-multiplayer-service",
+      "ttt-ms-aj-phase3-multiplayer-service",
       "us-west-2",
       "BackendBaseUrl",
     );

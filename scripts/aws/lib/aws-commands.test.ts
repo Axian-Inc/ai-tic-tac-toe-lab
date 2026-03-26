@@ -7,10 +7,10 @@ describe("buildCloudFormationDeployArgs", () => {
     expect(
       buildCloudFormationDeployArgs({
         region: "us-west-2",
-        stackName: "ttt-ms-aj-phase2-multiplayer-service",
+        stackName: "ttt-ms-aj-phase3-multiplayer-service",
         templatePath: "infra/multiplayer-service-foundation.yaml",
         capabilities: ["CAPABILITY_NAMED_IAM"],
-        parameterOverrides: ["ProjectTag=ttt-ms-aj-phase2", "ServicePort=3001"],
+        parameterOverrides: ["ProjectTag=ttt-ms-aj-phase3", "ServicePort=3001"],
       }),
     ).toEqual([
       "cloudformation",
@@ -18,13 +18,13 @@ describe("buildCloudFormationDeployArgs", () => {
       "--region",
       "us-west-2",
       "--stack-name",
-      "ttt-ms-aj-phase2-multiplayer-service",
+      "ttt-ms-aj-phase3-multiplayer-service",
       "--template-file",
       "infra/multiplayer-service-foundation.yaml",
       "--capabilities",
       "CAPABILITY_NAMED_IAM",
       "--parameter-overrides",
-      "ProjectTag=ttt-ms-aj-phase2",
+      "ProjectTag=ttt-ms-aj-phase3",
       "ServicePort=3001",
       "--no-fail-on-empty-changeset",
     ]);

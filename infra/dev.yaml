@@ -1,13 +1,13 @@
-project_tag: ttt-ms-aj-phase2
+project_tag: ttt-ms-aj-phase3
 aws_region: us-west-2
 
-s3_website_stack_name: ttt-ms-aj-phase2-website
-s3_website_bucket_name: ttt-ms-aj-phase2-website-storage
+s3_website_stack_name: ttt-ms-aj-phase3-website
+s3_website_bucket_name: ttt-ms-aj-phase3-website-storage
 s3_build_dir: dist
-s3_multiplayer_stack_name: ttt-ms-aj-phase2-mp-service
+s3_multiplayer_stack_name: ttt-ms-aj-phase3-mp-service
 s3_multiplayer_api_base_url: ""
 
-multiplayer_stack_name: ttt-ms-aj-phase2-mp-service
+multiplayer_stack_name: ttt-ms-aj-phase3-mp-service
 multiplayer_instance_type: t3.micro
 multiplayer_service_port: 3001
 multiplayer_health_path: /health

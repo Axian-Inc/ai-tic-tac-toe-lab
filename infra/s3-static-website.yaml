@@ -5,7 +5,7 @@ Parameters:
   BucketName:
     Type: String
     Description: S3 bucket name for hosting the static website. Must include ttt-ms-aj.
-    AllowedPattern: '^(?=.*ttt-ms-aj-phase2)[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$'
+    AllowedPattern: '^(?=.*ttt-ms-aj-phase3)[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$'
     ConstraintDescription: Bucket name must be 3-63 chars, lowercase, and include ttt-ms-aj.
 
 Resources:

@@ -116,7 +116,7 @@ npm run aws:s3:setup
 
 Default resources:
 
-- Stack name: `ttt-ms-aj-phase2-s3-website`
+- Stack name: `ttt-ms-aj-phase3-s3-website`
 - Bucket name: `ttt-ms-aj-tic-tac-toe-site`
 - Region: `us-west-2`
 

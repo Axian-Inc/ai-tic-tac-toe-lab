@@ -1,6 +1,6 @@
 # User Stories - Phase 1
 
-Last updated: 2026-03-21
+Last updated: 2026-03-25
 
 ## Epic 1: App Foundation
 
@@ -555,7 +555,31 @@ Acceptance criteria:
 
 ## Phase 3 User Stories
 
-### US-43 Spectate Entry from the UI
+### US-43 Pull Request CI Pipeline
+As a developer, I want a GitHub Actions pipeline that runs on pull requests so that regressions are caught before merge.
+
+Status note (2026-03-26):
+- Added GitHub Actions workflow: `.github/workflows/pr.yml`.
+- Workflow triggers on `pull_request`, installs dependencies with `npm ci`, runs `npm test`, and runs `npm run build`.
+- CI reuses existing repo-root npm commands and remains validation-only with no deployment or artifact-publish steps.
+
+Technical notes:
+- Add a GitHub Actions workflow under `.github/workflows/` that runs on pull request events.
+  Meaning and objective: This means CI should be defined in-repo using the standard GitHub Actions workflow location and triggered automatically when pull requests are opened or updated. The goal is to make validation part of the normal review path instead of a manual step.
+- Configure the workflow to check out the repo, install Node dependencies, and use the project’s existing npm commands rather than bespoke shell logic.
+  Meaning and objective: This means the workflow should run the same supported commands developers use locally instead of duplicating behavior in custom CI-only scripts. The goal is to reduce maintenance cost and keep local and CI execution paths consistent.
+- Run the automated unit-test command as one validation step and the application build or packaging command as a separate validation step.
+  Meaning and objective: This means CI should validate both correctness and buildability, with tests and packaging represented as distinct stages that can fail independently. The goal is to catch both logic regressions and broken builds before merge.
+- Keep the workflow scoped to validation only so it does not deploy infrastructure or publish artifacts during pull request runs.
+  Meaning and objective: This means the pull-request pipeline should stop at verification and avoid mutating shared environments or creating releases. The goal is to keep PR checks safe, fast, and focused on merge readiness.
+
+Acceptance criteria:
+- At least one workflow file exists under `.github/workflows/`.
+- The workflow is configured to trigger on pull request events targeting the repository.
+- On each pull request run, the workflow installs dependencies and executes the project's automated unit-test command.
+- On each pull request run, the workflow executes the project's build or packaging command and fails the run if that command fails.
+
+### US-44 Spectate Entry from the UI
 As a spectator, I want a `Spectate` entry point in the UI so that I can discover active games to watch.
 
 Technical notes:
@@ -574,7 +598,7 @@ Acceptance criteria:
 - Waiting games and completed games are not shown in the active-games spectate list.
 - Selecting a listed active game navigates the user into a spectator gameplay view for that game.
 
-### US-44 Real-Time Spectator Game Viewer
+### US-45 Real-Time Spectator Game Viewer
 As a spectator, I want to open an active game and see live updates so that I can follow the match in real time.
 
 Technical notes:
@@ -593,7 +617,7 @@ Acceptance criteria:
 - The spectator gameplay view renders the board in a read-only state with no enabled move controls.
 - Spectator sessions do not render player-only actions such as `Join`, `Move`, or `Resign`.
 
-### US-45 Server Support for Active-Game Spectating
+### US-46 Server Support for Active-Game Spectating
 As a developer, I want the server to expose active games and allow spectator subscriptions so that the client can implement real-time viewing.
 
 Technical notes:
@@ -612,7 +636,7 @@ Acceptance criteria:
 - `WS /ws?gameId=...` accepts spectator subscriptions for an active game without assigning the client to player `X` or `O`.
 - After a valid move or terminal game event, subscribed spectators receive a websocket message for the affected game.
 
-### US-46 Terminal Code Coverage Reporting
+### US-47 Terminal Code Coverage Reporting
 As a developer, I want a code coverage report that runs from the terminal so that I can measure automated test coverage locally and in CI.
 
 Technical notes:
@@ -630,22 +654,3 @@ Acceptance criteria:
 - Running the command produces coverage output in the terminal and writes a coverage artifact directory to disk.
 - The coverage report includes the project's Vitest unit-test coverage for the configured source files.
 - The command exits with a non-zero status when tests fail or coverage generation cannot complete.
-
-### US-47 Pull Request CI Pipeline
-As a developer, I want a GitHub Actions pipeline that runs on pull requests so that regressions are caught before merge.
-
-Technical notes:
-- Add a GitHub Actions workflow under `.github/workflows/` that runs on pull request events.
-  Meaning and objective: This means CI should be defined in-repo using the standard GitHub Actions workflow location and triggered automatically when pull requests are opened or updated. The goal is to make validation part of the normal review path instead of a manual step.
-- Configure the workflow to check out the repo, install Node dependencies, and use the project’s existing npm commands rather than bespoke shell logic.
-  Meaning and objective: This means the workflow should run the same supported commands developers use locally instead of duplicating behavior in custom CI-only scripts. The goal is to reduce maintenance cost and keep local and CI execution paths consistent.
-- Run the automated unit-test command as one validation step and the application build or packaging command as a separate validation step.
-  Meaning and objective: This means CI should validate both correctness and buildability, with tests and packaging represented as distinct stages that can fail independently. The goal is to catch both logic regressions and broken builds before merge.
-- Keep the workflow scoped to validation only so it does not deploy infrastructure or publish artifacts during pull request runs.
-  Meaning and objective: This means the pull-request pipeline should stop at verification and avoid mutating shared environments or creating releases. The goal is to keep PR checks safe, fast, and focused on merge readiness.
-
-Acceptance criteria:
-- At least one workflow file exists under `.github/workflows/`.
-- The workflow is configured to trigger on pull request events targeting the repository.
-- On each pull request run, the workflow installs dependencies and executes the project's automated unit-test command.
-- On each pull request run, the workflow executes the project's build or packaging command and fails the run if that command fails.

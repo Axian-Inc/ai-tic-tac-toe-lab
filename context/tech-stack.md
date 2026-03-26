@@ -27,6 +27,7 @@ Last updated: 2026-03-23
 - AWS CloudFormation (template-based infrastructure provisioning)
 - AWS CLI v2 (stack deployment and output inspection)
 - AWS EC2 (single-instance multiplayer runtime for low-cost Phase 2 hosting)
+- GitHub Actions (pull request validation workflow)
 - AWS Systems Manager Run Command (backend release automation)
 - AWS S3 (static frontend hosting and versioned backend release bundles)
 - TypeScript-based repo-local deployment automation compiled with `tsc`

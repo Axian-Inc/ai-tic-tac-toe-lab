@@ -28,3 +28,4 @@ Last updated: 2026-03-22
 - Vitest coverage is currently scoped to `src/game/**/*.ts` to align with US-19 core-logic goals.
 - Playwright starts the local Vite dev server automatically through `playwright.config.ts`.
 - Playwright test discovery now spans `tests/`, including `tests/e2e/` and `tests/unit/`.
+- Pull request CI validation uses the same repo-root commands documented for local use: `npm test` for automated unit coverage and `npm run build` for build validation.

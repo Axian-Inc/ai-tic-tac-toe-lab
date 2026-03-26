@@ -1,11 +1,12 @@
 # Deployment
 
-Last updated: 2026-03-24
+Last updated: 2026-03-25
 
 ## Shared AWS Script Configuration
 - AWS helper scripts under `scripts/aws/` now run as TypeScript entrypoints compiled through npm and read deployment settings from `infra/dev.yaml`.
 - Setup and deploy scripts no longer accept CLI flags for stack names, bucket names, region, instance type, or service paths; update `infra/dev.yaml` instead.
 - Remaining runtime-generated values, such as backend release IDs, may still be supplied through environment variables when needed.
+- `npm run aws:urls` resolves and prints the deployed S3 website URL plus the deployed backend base URL using `infra/dev.yaml` and CloudFormation stack outputs.
 
 ## Phase 1
 
