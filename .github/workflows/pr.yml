@@ -27,7 +27,7 @@ jobs:
         run: npm ci
 
       - name: Run automated unit tests
-        run: npm test
+        run: npm test:unit
 
       - name: Build application
         run: npm run build
