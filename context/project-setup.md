@@ -122,4 +122,4 @@ npm run preview
 
 - `VITE_MULTIPLAYER_URL`: Base HTTP URL for the multiplayer API (default `http://localhost:5174`).
 - `VITE_MULTIPLAYER_WS_URL`: Base WebSocket URL for multiplayer updates (default `ws://localhost:5174`).
-- `VITE_SHOW_API_LOG`: When set to `true`, shows the API activity panel in the UI.
+- `VITE_SHOW_API_LOG`: When set to `true`, shows the API activity panel in the UI (default: `false`).

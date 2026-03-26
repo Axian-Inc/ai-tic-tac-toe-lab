@@ -188,3 +188,15 @@ It serves as the running audit trail of work completed in the repository.
 - Date/time: 2026-03-25 19:59:15 UTC
   Prompt: When a player resigns, show "You rsigned" instead of "You loose" and block the Resign button for this game.  The oponent should see "Your oponent resigned" instead of "You win".
   Summary: Added an endReason field to the multiplayer game state, set it for win/draw/resign/abandonment on the server, updated multiplayer UI status messaging for resign outcomes, and disabled the resign button after resignation. Updated game API context accordingly and verified tests pass.
+- Date/time: 2026-03-25 21:38:44 UTC
+  Prompt: Please, implement the user story P2.16 - see docs/phase-2/user-stories.md
+  Summary: Added Terraform infrastructure for hosting the multiplayer server on ECS Fargate behind an ALB, with variables for image/CPU/memory/desired count, security groups, logging, and outputs for the server URL. Updated architecture, tech stack, and deployment context accordingly.
+- Date/time: 2026-03-25 21:48:12 UTC
+  Prompt: Yes, add whatever is needed to deploy the system using the deployment scripts.  Update existing deployment scripts scripts/deploy.sh etc. and document/update the deployment process in context folder.
+  Summary: Added a Dockerfile for the multiplayer server, updated deploy scripts to build/push the server image based on a SERVER_IMAGE env var, apply Terraform with that image, and then deploy the static site. Documented the new deployment requirements in context.
+- Date/time: 2026-03-25 22:00:06 UTC
+  Prompt: Please, add to context/deployment.md a comprehensive deployment process instructions.  I'd like to be able to deploy the whole system just by following those steps.  Set the SERVER_HOME and othr required env vars using terraform.
+  Summary: Added a comprehensive end-to-end deployment checklist to the deployment context, including required tools, workspace selection, SERVER_IMAGE configuration, deploy/validate commands, and exporting SERVER_HOME/WEBSITE_URL from Terraform outputs.
+- Date/time: 2026-03-26 00:51:58 UTC
+  Prompt: Yes, please.  And include envar to show API but with a 'false' value.  I'll change that value whenever I need.
+  Summary: Updated the deploy script to export VITE_MULTIPLAYER_URL, VITE_MULTIPLAYER_WS_URL, and VITE_SHOW_API_LOG=false from Terraform outputs before building the client, and documented the behavior in deployment context.

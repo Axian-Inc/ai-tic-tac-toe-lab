@@ -3,6 +3,47 @@
 You are an AI coding agent. 
 
 
+## Working Agreement
+
+### Source of truth
+- Always treat the current contents of the repository as the source of truth.
+- Never assume a file should be restored to an earlier state just because it was different in a prior step.
+- Before editing a file, re-read its current contents from disk.
+
+### Manual user edits
+- Manual user edits always take precedence over earlier plans, earlier patches, and earlier assistant-generated changes.
+- Do not revert or overwrite user edits unless the user explicitly asks for that.
+- If a file has changed since the last task, treat that change as intentional.
+
+### Planning behavior
+- Do not blindly continue a previous plan if the codebase has changed.
+- Re-evaluate the current codebase before making new edits.
+- Prefer adapting the plan to the current files rather than restoring prior assumptions.
+
+### File safety
+- Make the smallest necessary change.
+- Do not modify unrelated files.
+- Do not rewrite whole files when a targeted edit will do.
+- Preserve existing formatting, comments, and structure unless asked to change them.
+
+### When a file may be sensitive
+- If a file appears to have been manually edited recently, be conservative.
+- If a requested change could conflict with current file contents, stop and explain the conflict instead of overwriting.
+- When in doubt, ask for confirmation before making a destructive or wide-ranging rewrite.
+
+### Read-before-write rule
+- For every task, first inspect the relevant files as they exist now.
+- Base all edits on the current on-disk contents, not on memory from earlier in the session.
+
+### Respect protected files
+- If the user says a file is finalized, locked, or manual-only, do not change it.
+- If a file is marked as reference-only, read it but do not edit it.
+
+### Communication
+- Briefly mention which files you intend to change before making substantial edits.
+- If you notice user changes that alter the original plan, acknowledge that and proceed from the updated state.
+
+
 ## Core Principle
 
 * **The contents of the /context folder (called "context" below) is cannon for this project.** 

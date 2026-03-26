@@ -27,6 +27,7 @@ Testing:
 Infrastructure:
 - Terraform
 - AWS CLI
+- ECS Fargate + Application Load Balancer for multiplayer server hosting
 
 Automation:
 - Bash deployment scripts in `/scripts`
