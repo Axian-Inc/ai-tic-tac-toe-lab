@@ -1,7 +1,10 @@
 name: PR Checks
 
 on:
-  pull_request:
+    push:
+      branches:
+        - msmith-ajoplin-ttt-lab-phase3
+
 
 permissions:
   contents: read
