@@ -10,7 +10,7 @@ output "website_url" {
 
 output "aws_region" {
   description = "AWS region used for deployment."
-  value       = var.aws_region
+  value       = data.aws_region.current.name
 }
 
 output "server_url" {

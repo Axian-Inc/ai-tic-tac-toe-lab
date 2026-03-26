@@ -1,9 +1,3 @@
-variable "aws_region" {
-  description = "AWS region that hosts the static website bucket."
-  type        = string
-  default     = "us-east-1"
-}
-
 variable "bucket_name" {
   description = "Globally unique S3 bucket name for the static website."
   type        = string

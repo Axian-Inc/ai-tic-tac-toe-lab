@@ -18,6 +18,7 @@ Notes:
 - Infrastructure is defined in `/terraform`.
 - Select or create the `stanb` workspace before planning or applying Terraform.
 - The Terraform configuration intentionally fails in the `default` workspace.
+- Terraform now relies on the AWS provider's standard region resolution, so it follows `AWS_REGION`, then `AWS_DEFAULT_REGION`, then the active profile/shared config in `~/.aws/config`.
 - Terraform requires `bucket_name`; provide it via `TF_VAR_bucket_name`/`terraform.tfvars` for first-time setup, after which the deploy script can reuse the value from Terraform state.
 - Deploy the built site with `npm run deploy:s3`.
 - Validate the hosted site with `npm run deploy:validate`.
@@ -37,7 +38,7 @@ These steps deploy the static client and the multiplayer server.
    - AWS credentials configured for the target account.
    - Terraform and AWS CLI installed.
    - SSM access available in the target AWS account (managed by Terraform).
-   - AWS region set via `AWS_REGION` / `AWS_DEFAULT_REGION` or configured in `~/.aws/config`.
+   - AWS region set consistently through `AWS_REGION`, `AWS_DEFAULT_REGION`, or `~/.aws/config`; Terraform and the deploy script now follow the same standard AWS region resolution chain.
    - For the first Terraform apply in a workspace, set `TF_VAR_bucket_name` (or provide `terraform.tfvars`) with a globally unique S3 bucket name.
 
 2. Select the Terraform workspace:

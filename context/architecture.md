@@ -20,6 +20,7 @@ Overview:
 - Game state managed in App component and passed to GamePage.
 - UI components: Board and Square render the grid.
 - Infrastructure lives in `/terraform` and provisions AWS S3 static website hosting.
+- The Terraform AWS provider inherits region selection from the standard AWS CLI/shared-config resolution chain instead of a Terraform-specific default.
 - Deployment scripts in `/scripts` build the app, read Terraform outputs, sync `dist/` to S3, and validate the hosted site.
 
 Data Flow:
