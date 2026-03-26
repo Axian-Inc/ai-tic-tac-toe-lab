@@ -1,24 +1,18 @@
 # Tech Stack
 
-Last updated: 2026-03-23
+Last updated: 2026-03-26
 
 ### Frontend
 - React 18
 - TypeScript 5
-- Vite 7
+- Vite 8
 
 ### Runtime and Package Manager
 - Node.js 20
 - npm 10
 
 ## Testing Tooling
-- Vitest 4
-- `@vitest/coverage-v8`
-- Testing Library (`@testing-library/react`, `@testing-library/jest-dom`)
-- Playwright 1.58
-
-## Testing Tooling
-- Vitest 4
+- Vitest 4.1
 - `@vitest/coverage-v8`
 - Testing Library (`@testing-library/react`, `@testing-library/jest-dom`)
 - Playwright 1.58
@@ -35,6 +29,7 @@ Last updated: 2026-03-23
 ### Notes
 - This stack supports local development and AWS S3 static website hosting for browser-based Tic-Tac-Toe.
 - Testing stack supports both fast local unit feedback and browser-level UI automation from the same npm workflow.
+- The React Vite integration uses `@vitejs/plugin-react` 6.x with the Vite 8 toolchain.
 
 ## Phase 2
 

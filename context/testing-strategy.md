@@ -1,6 +1,6 @@
 # Testing Strategy
 
-Last updated: 2026-03-22
+Last updated: 2026-03-26
 
 ## Purpose
 - Define the baseline test framework for fast game-logic regression coverage and browser-level UI automation.
@@ -22,7 +22,7 @@ Last updated: 2026-03-22
 - `npm run test:watch` runs Vitest in watch mode for local development.
 - `npm run test:ui` runs Playwright headless for `tests/e2e/`.
 - `npm run test:unit` runs Playwright headless for `tests/unit/`.
-- `npm run test:ui:headed` runs Playwright headed for local debugging.
+- `npm run test:ui:headed` runs Playwright headed for `tests/e2e/` local debugging.
 
 ## Notes
 - Vitest coverage is currently scoped to `src/game/**/*.ts` to align with US-19 core-logic goals.
