@@ -1,30 +1,23 @@
 import { defineConfig, devices } from "@playwright/test";
+import { getUiAutomationRuntimeConfig } from "./tests/playwright/runtime";
 
-const PORT = 4173;
-const positionalArgs = process.argv
-  .slice(2)
-  .filter((arg) => arg !== "test" && !arg.startsWith("-"));
-const isUnitOnlyRun =
-  positionalArgs.length > 0 &&
-  positionalArgs.every((arg) => arg.startsWith("tests/unit"));
+const runtime = getUiAutomationRuntimeConfig(process.argv);
 
 export default defineConfig({
   testDir: "./tests",
   fullyParallel: true,
   retries: 0,
-  reporter: "list",
+  outputDir: "test-results/playwright/artifacts",
+  reporter: [
+    ["list"],
+    ["junit", { outputFile: "test-results/playwright/junit.xml" }],
+  ],
   use: {
-    baseURL: `http://127.0.0.1:${PORT}`,
+    baseURL: runtime.baseURL,
     trace: "on-first-retry",
     testIdAttribute: "data-testid",
   },
-  webServer: isUnitOnlyRun
-    ? undefined
-    : {
-        command: `npm run dev -- --host 127.0.0.1 --port ${PORT}`,
-        port: PORT,
-        reuseExistingServer: !process.env.CI,
-      },
+  webServer: runtime.webServers.length > 0 ? runtime.webServers : undefined,
   projects: [
     {
       name: "chromium",
