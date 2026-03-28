@@ -85,6 +85,8 @@ Define the plan to automate the manual UI cases in [ui-test-cases.md](/workspace
 
 - [x] Establish the base automation layer: shared fixture, `StepAsync` helper, core page objects, and JUnit-capable reporter configuration.
 - [x] Support both execution modes needed by the plan: frontend-only runs and coordinated frontend-plus-backend runs.
+- [ ] Add backend-state isolation for frontend-plus-backend runs before running multiplayer automation concurrently.
+- [ ] Harden `StepAsync` attachment naming so repeated step titles cannot collide within one test's artifact output.
 - [ ] Add deterministic test data support before expanding coverage beyond smoke tests.
 
 ### Phase 2: Single-Player
