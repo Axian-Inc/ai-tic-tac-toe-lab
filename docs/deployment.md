@@ -49,18 +49,13 @@ Deploy the stack:
 AWS_REGION=us-west-2 npm --prefix infra run deploy
 ```
 
-## GitHub Actions Deployment
+## GitHub Actions Validation
 
-The repository includes a post-merge deployment workflow at `.github/workflows/deploy.yml`.
+The repository automation validates changes in GitHub Actions without deploying infrastructure.
 
-- Trigger: pushes to `main` and manual `workflow_dispatch`
-- Build inputs: repository root `dist/` plus `server/deploy/`, both produced by `npm run build`
-- Infra entrypoint: `npm --prefix infra run deploy`
-
-Repository configuration required before the workflow can deploy:
-
-- GitHub Actions secret `AWS_DEPLOY_ROLE_ARN`
-- The referenced IAM role must trust GitHub Actions OIDC for this repository and allow CDK deployment in `us-west-2`
+- Trigger: pull requests, pushes to `main`, and manual `workflow_dispatch`
+- Workflow: `.github/workflows/ci.yml`
+- Checks: dependency install, coverage, and application build
 
 Verify the API health endpoint:
 
