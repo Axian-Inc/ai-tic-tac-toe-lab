@@ -1,0 +1,78 @@
+name: PR Checks
+
+on:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Install backend dependencies
+        run: npm --prefix backend ci
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Build backend
+        run: npm run build:backend
+
+      - name: Run frontend unit tests with JUnit output
+        run: npm run test:unit:report
+
+      - name: Run backend unit tests with JUnit output
+        run: npm run test:backend:report
+
+      - name: Publish unit test results
+        if: always()
+        uses: mikepenz/action-junit-report@v5
+        with:
+          report_paths: |
+            test-results/frontend/junit.xml
+            test-results/backend/junit.xml
+          check_name: Unit Test Report
+          detailed_summary: true
+          annotate_only: false
+          require_tests: true
+
+      - name: Generate coverage reports
+        run: npm run coverage
+
+      - name: Upload frontend coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-frontend
+          path: coverage/frontend
+          if-no-files-found: error
+
+      - name: Upload backend coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-backend
+          path: coverage/backend
+          if-no-files-found: error
+
+      - name: Upload unit test result artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: test-results
+          if-no-files-found: error

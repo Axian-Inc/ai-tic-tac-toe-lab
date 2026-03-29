@@ -1,0 +1,42 @@
+{
+  "name": "tic-tac-toe-lab",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit -p tsconfig.app.json && vite build",
+    "build:backend": "npm --prefix backend run build",
+    "preview": "vite preview",
+    "test": "npm run test:unit",
+    "test:backend": "npm --prefix backend run test",
+    "test:backend:report": "npm --prefix backend run test:report",
+    "test:unit": "vitest run",
+    "test:unit:report": "node -e \"require('fs').mkdirSync('test-results/frontend',{recursive:true})\" && vitest run --reporter=default --reporter=junit --outputFile.junit=test-results/frontend/junit.xml",
+    "test:e2e:install": "playwright install --with-deps chromium",
+    "test:e2e": "playwright test",
+    "test:all": "npm run test:unit && npm run test:e2e",
+    "coverage:frontend": "vitest run --coverage",
+    "coverage:backend": "npm --prefix backend run coverage",
+    "coverage": "npm run coverage:frontend && npm run coverage:backend"
+  },
+  "dependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-router-dom": "^7.9.5"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/node": "^24.5.2",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "@vitejs/plugin-react": "^5.1.0",
+    "@vitest/coverage-v8": "^3.2.4",
+    "jsdom": "^29.0.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.12",
+    "vitest": "^3.2.4"
+  }
+}

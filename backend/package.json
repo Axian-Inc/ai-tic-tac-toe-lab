@@ -1,0 +1,20 @@
+{
+  "name": "tic-tac-toe-lab-backend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:report": "node -e \"require('fs').mkdirSync('../test-results/backend',{recursive:true})\" && vitest run --reporter=default --reporter=junit --outputFile.junit=../test-results/backend/junit.xml",
+    "coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@aws-sdk/client-apigatewaymanagementapi": "^3.1014.0",
+    "@aws-sdk/client-dynamodb": "^3.1014.0",
+    "@aws-sdk/lib-dynamodb": "^3.1014.0"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^3.2.4"
+  }
+}

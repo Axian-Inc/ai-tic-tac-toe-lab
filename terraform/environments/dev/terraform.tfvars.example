@@ -1,0 +1,17 @@
+resource_namespace = "jltlnd"
+project_name = "tic-tac-toe-lab"
+environment  = "dev"
+aws_region   = "us-west-2"
+
+# Leave these empty to use the default CloudFront HTTPS domain for Phase 1.
+domain_aliases         = []
+acm_certificate_arn    = null
+route53_zone_id        = null
+create_route53_records = false
+
+tags = {
+  Owner = "platform-team"
+}
+
+backend_lambda_memory_size    = 256
+backend_lambda_timeout_seconds = 10
