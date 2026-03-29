@@ -1,40 +1,66 @@
 # ai-tic-tac-toe-lab
 
-The full details for the lab are available on the Axian Wiki [AI Project Exercise](https://axianinc.atlassian.net/wiki/spaces/AXLND/pages/3482976257/AI+Project+Exercise) page.
+## Dev Container Setup Instructions
 
-To start the lab follow the Dev Container Setup Instructions in the README.md of the 00-devcontainer-starter branch
+### Pre-Requisites:
+This lab will takes place INSIDE a docker container using the Dev Containers Extension so you need very little on the host OS beyond Docker, Git, VS Code (and Dev Containers Extension)
 
-## Example/Starter Branches
-This repository contains multiple branches that serve as examples or starters for different AI Agent usage patterns. Each branch is designed to demonstrate specific functionalities or use cases of AI Agents.
+- Docker Desktop
+- VS Code + Dev Container Extension
+- LOCAL (host OS) install of OpenAI Codex CLI (npm / brew are easiest)
+<br/>Example: brew install codex or  npm install -g @openai/codex
+<br/>NOTE: We’ll only be running codex to enable auth, you won’t need many of its features on the Host OS.
+- Axian Github account access
+- Axian AWS L&D Access Key (for AWS CLI work) 
 
-- `00-devcontainer-starter`: A starter branch that includes a development container setup for easy environment configuration.
-- `01-agents-md-with-context-management`: An example branch that showcases how to use AI Agents with context management through markdown files.
-- `02-agents-md-with-extended-context-management`: An advanced example branch that extends the context management capabilities demonstrated in the previous branch. (May or may not be better)
-- `03-codex-custom-prompts`: An example branch that illustrates the use of custom prompts for Codex (feel free to add more examples prompts)
+### Prep:
 
-## Codex CLI
+- Grab/generate your AWS L&D access key (URL: Axian AWS L&D Account)
 
-This lab is focused on using Codex CLI, which is an open-source command-line interface for interacting with OpenAI's Codex models. Codex CLI allows users to leverage the power of Codex for various tasks, such as code generation, code completion, and more.
+- Run codex from the terminal/command prompt and login to your local codex (follow the prompts to the web UI auth).
 
-However, the AI Agent functionality demonstrated in this lab can also be applied using other tools like ClaudeCode, Gemini CLI, or LangChain. The principles and techniques covered in this lab are generally applicable across different AI Agent platforms.
+### Clone and Create Personal Branch
 
-[Codex CLI Overview](https://developers.openai.com/codex/cli)  
+- Clone the repo to your local machine
+```
+git clone https://github.com/Axian-Inc/ai-tic-tac-toe-lab.git
+```
+- Checkout the starting lab branch
+```
+git checkout 00-devcontainer-starter
+```
+- Create a personal branch for your work (i.e. chadr-first-pass)
+```
+git checkout -b <firstname-last initial>-<whatever you want>
+```
 
-Basic Codex CLI areas to understand for this lab:
-- [Prompting](https://developers.openai.com/codex/prompting)
-- [AGENTS.md](https://developers.openai.com/codex/guides/agents-md)
-- [Custom Prompts](https://developers.openai.com/codex/custom-prompts)
+### Open in Dev Container
+- Open the folder in VS Code
+- When prompted, open in Dev Container
+- Wait for the container to build and start (this may take a few minutes the first time)
+- The build will run the `copy-codex-auth.sh` script to copy your local codex auth into the container
 
-Advanced Codex CLI areas not currently covered in this lab but useful for more complex scenarios:
-- [Rules](https://developers.openai.com/codex/rules)
-- [MCP Servers](https://developers.openai.com/codex/mcp)
-- [Skills](https://developers.openai.com/codex/skills)
+### Verify Codex Auth Copied
+- Open a terminal in the Dev Container
+- Run `codex` and verify you are logged in (it should not prompt you to login again)
+- You can use `/status` to verify the account info
+
+### AWS Setup
+- In the Dev Container terminal, run `aws configure`
+- Enter your Axian AWS L&D Access Key ID and Secret Access Key when prompted
+- For default region, enter `us-west-2`
+- For default output format, enter `json` or leave blank
+- Verify AWS CLI is working by running `aws s3 ls` (you should see a list of S3 buckets)
+
+### Github Setup
+- In the Dev Container terminal, verify git is working by running `git ls-remote origin` 
+- If prompted, enter your Github credentials (you may need to set up a personal access token)
+- Set GitHub account identity
+   - `git config --global user.email "you@example.com"`
+   - `git config --global user.name "Your Name"`
+
+### You are now ready to begin the lab!
 
 
 
-## Thoughts on the README.md
-When working with AI Agents, the README.md file serves as a crucial guide for users to understand the purpose, setup, and usage of the project.  The Agent will generally read the README.md to gather context about the project, even if not specifically given instructions to do so. Therefore, it is important to ensure that the README.md is clear, concise, and informative.
 
-Each example branch has a README.md that is tailored to the specific example being demonstrated. This allows users to quickly grasp the unique aspects of each example without confusion. However, the example branch README.md files may not be valid for the actual project goals and will most likely confuse the Agent about your actual intent.
-
-It is recommended that if you clone an example branch to use as the base for your own project, you should update the README.md file to accurately reflect the goals and context of your specific project. This will help ensure that the AI Agent has the correct information to work with and can perform its tasks effectively.  Or even just remove the README.md file entirely and let the Agent generate a new one based on your specific project needs.
