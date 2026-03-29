@@ -60,12 +60,18 @@ aws s3 sync dist "s3://$FRONTEND_BUCKET_NAME" --delete
 aws cloudfront create-invalidation --distribution-id "$FRONTEND_DISTRIBUTION_ID" --paths "/*"
 ```
 
+Release note:
+
+- A full frontend deployment should also bump the landing-page watermark in `src/routes/LandingPage.tsx`.
+- That watermark is intended to provide a simple visual check that the live frontend matches the expected deployed build.
+
 ## Post-Deploy Verification
 
 Basic checks:
 
 - open the CloudFront frontend URL
 - verify the landing page loads
+- verify the landing-page watermark matches the expected release value from the repo
 - verify waiting, active, or over multiplayer games can be listed
 - create a multiplayer game
 - join it from a second browser session
@@ -107,6 +113,7 @@ CloudFront still serves old assets:
 
 - verify the `aws s3 sync` upload succeeded
 - verify the CloudFront invalidation completed
+- verify the live landing-page watermark matches the newly deployed value
 - hard-refresh the browser and confirm the latest asset names are served
 
 Unexpected stale-game behavior:
@@ -132,3 +139,4 @@ Unexpected stale-game behavior:
 - WebSocket connections are also cleaned up passively through TTL on the `connections` table
 - Replay hydration comes from `GET /games/{id}`, not from WebSocket backfill
 - The current PR workflow validates build, unit tests, and coverage, but not deployed-environment behavior
+- The landing-page watermark is a lightweight release marker for confirming the expected frontend is live

@@ -280,6 +280,7 @@ Phase 2 added server-brokered multiplayer to the existing Tic Tac Toe app while 
 
 - Verified: existing local Playwright single-player suite passes
 - Verified: deployed frontend now reaches the live HTTP API and loads waiting games from AWS
+- Verified: the landing-page release watermark can be used as a simple visual check that the expected frontend bundle is live
 - Verified: deployed HTTP API supports create, join, move, and replay reads end to end
 - Verified: deployed WebSocket connections now stabilize successfully and deliver asynchronous multiplayer updates in the live environment
 - Verified: deployed stale active games are marked `over` with terminal reason `abandonment`
@@ -316,6 +317,7 @@ Phase 2 added server-brokered multiplayer to the existing Tic Tac Toe app while 
 - Implemented: finished multiplayer games now replay on open for both returning players and third-party spectators
 - Implemented: replay no longer depends on the viewer lacking a participant session, so returning players keep their player identity in the UI during replay
 - Implemented: multiplayer game pages expose a manual replay control and suppress player actions while replay is in progress
+- Implemented: the landing page exposes a release watermark that can be bumped and checked during full frontend deployments
 - Implemented: terminal coverage commands now generate separate frontend and backend reports under `coverage/frontend/` and `coverage/backend/`
 - Implemented: JUnit-style frontend and backend test report commands now generate artifacts under `test-results/`
 - Implemented: a GitHub Actions pull-request workflow now runs frontend build, backend build, frontend tests, backend tests, coverage generation, artifact upload, and PR-visible unit test reporting

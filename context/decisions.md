@@ -6,6 +6,28 @@ This file records material project decisions and tradeoffs.
 
 ### Decision
 
+The landing page will carry an explicit release watermark, and bumping that watermark is part of a full frontend deployment.
+
+### Rationale
+
+- Static asset deployments behind CloudFront can otherwise be hard to distinguish visually from a previously cached release
+- A lightweight visible release marker makes it easy to confirm that the live frontend matches the expected repo state
+- This gives both humans and AI agents a simple post-deploy verification target without requiring browser devtools or bundle inspection
+
+### Impact
+
+- `src/routes/LandingPage.tsx` includes a hard-coded landing-page watermark value
+- A full frontend deployment should bump that value before rebuilding and publishing assets
+- Deployment documentation should instruct operators to compare the live watermark against the expected release value
+
+### Follow-Up
+
+- Keep the deployment runbook aligned with this release-verification step
+
+## 2026-03-29
+
+### Decision
+
 Phase 3 will treat multiplayer replay as a page-entry and user-invoked viewing mode that is independent from whether the viewer is a player or a spectator.
 
 ### Rationale

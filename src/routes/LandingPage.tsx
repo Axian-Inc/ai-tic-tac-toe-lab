@@ -13,7 +13,7 @@ import styles from './LandingPage.module.css';
 
 type MultiplayerDialogMode = 'create' | 'join' | 'spectate' | null;
 
-const LANDING_WATERMARK = 'release 2026.03.22.9';
+const LANDING_WATERMARK = 'release 2026.03.29.1';
 
 const GAME_STATUS_LABELS: Record<MultiplayerGameStatus, string> = {
   waiting: 'Waiting',
