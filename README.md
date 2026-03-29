@@ -1,66 +1,204 @@
 # ai-tic-tac-toe-lab
 
+## Project Ground Rules
+
+Project operating rules, intent, and the running action log live in [`docs/`](./docs/README.md).
+
+Before making changes:
+
+1. Review [`docs/working-agreement.md`](./docs/working-agreement.md).
+2. Confirm the current target state in [`docs/project-intent.md`](./docs/project-intent.md).
+3. Plan the work before executing it.
+4. Update documentation as changes land.
+
+## Current Status
+
+The repository now contains a Tic Tac Toe React application in TypeScript with:
+
+- a dedicated local game domain module for deterministic CPU play
+- a multiplayer HTTP + WebSocket API server
+- move history and replayable multiplayer state
+- landing, local game, and live multiplayer views
+- win/loss/move sound effects
+- confetti on player wins
+- command-line unit, server, and Playwright test coverage
+
+The application is currently deployed at `https://d3e68a1unw9npz.cloudfront.net`.
+
+## Local Development
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Start the client only:
+
+```bash
+npm run dev
+```
+
+Start the multiplayer API only:
+
+```bash
+npm run dev:server
+```
+
+Start client and API together:
+
+```bash
+npm run dev:multiplayer
+```
+
+Create a production build:
+
+```bash
+npm run build
+```
+
+## Test Commands
+
+Run linting:
+
+```bash
+npm run lint
+```
+
+Run unit tests:
+
+```bash
+npm run test:unit
+```
+
+Run multiplayer server tests:
+
+```bash
+npm run test:server
+```
+
+Install the Playwright browser dependency:
+
+```bash
+npm run test:e2e:install
+```
+
+Run the end-to-end browser test:
+
+```bash
+npm run test:e2e
+```
+
+## AWS Deployment
+
+Deployment documentation lives in [`docs/deployment.md`](./docs/deployment.md).
+
+The current IaC path uses AWS CDK in TypeScript under [`infra/`](./infra), targeting:
+
+- private S3 origin storage
+- CloudFront distribution
+- DynamoDB for multiplayer game storage
+- a low-cost EC2 API host behind CloudFront
+- SPA fallback routing back to `index.html`
+
+Current deployed URL:
+
+- `https://d3e68a1unw9npz.cloudfront.net`
+- API health: `https://d3e68a1unw9npz.cloudfront.net/health`
+
+## Implemented Game Flow
+
+- The landing page starts a new game against the CPU.
+- The landing page can also create or join waiting multiplayer games.
+- The game detail page shows turn state, winner state, move history, and legal move feedback.
+- Illegal moves are blocked in the UI.
+- A completed game allows rematch or quit.
+- The deterministic CPU always takes the first available cell.
+- Multiplayer games are validated by the server before moves are accepted.
+- Multiplayer updates are delivered live over WebSockets to players and spectators.
+- Multiplayer games can be resigned.
+- Abandoned multiplayer games can be ended after 3 minutes via server-side abandonment checks.
+
 ## Dev Container Setup Instructions
 
-### Pre-Requisites:
-This lab will takes place INSIDE a docker container using the Dev Containers Extension so you need very little on the host OS beyond Docker, Git, VS Code (and Dev Containers Extension)
+### Pre-Requisites
+
+This lab takes place inside a Docker-based Dev Container, so the host machine only needs the core local tooling.
 
 - Docker Desktop
-- VS Code + Dev Container Extension
-- LOCAL (host OS) install of OpenAI Codex CLI (npm / brew are easiest)
-<br/>Example: brew install codex or  npm install -g @openai/codex
-<br/>NOTE: We’ll only be running codex to enable auth, you won’t need many of its features on the Host OS.
-- Axian Github account access
-- Axian AWS L&D Access Key (for AWS CLI work) 
+- VS Code with the Dev Containers extension
+- Local install of OpenAI Codex CLI
+- Axian GitHub account access
+- Axian AWS L&D access key
 
-### Prep:
+Example local Codex install:
 
-- Grab/generate your AWS L&D access key (URL: Axian AWS L&D Account)
+```bash
+brew install codex
+```
 
-- Run codex from the terminal/command prompt and login to your local codex (follow the prompts to the web UI auth).
+or:
+
+```bash
+npm install -g @openai/codex
+```
+
+### Prep
+
+- Generate or obtain your Axian AWS L&D access key.
+- Run `codex` locally and complete the sign-in flow.
 
 ### Clone and Create Personal Branch
 
-- Clone the repo to your local machine
-```
+```bash
 git clone https://github.com/Axian-Inc/ai-tic-tac-toe-lab.git
-```
-- Checkout the starting lab branch
-```
 git checkout 00-devcontainer-starter
-```
-- Create a personal branch for your work (i.e. chadr-first-pass)
-```
-git checkout -b <firstname-last initial>-<whatever you want>
+git checkout -b <firstname-last initial>-<branch-name>
 ```
 
 ### Open in Dev Container
-- Open the folder in VS Code
-- When prompted, open in Dev Container
-- Wait for the container to build and start (this may take a few minutes the first time)
-- The build will run the `copy-codex-auth.sh` script to copy your local codex auth into the container
+
+- Open the repository in VS Code.
+- Reopen in Dev Container when prompted.
+- Wait for the build to complete.
+- The build runs `copy-codex-auth.sh` to copy local Codex auth into the container.
 
 ### Verify Codex Auth Copied
-- Open a terminal in the Dev Container
-- Run `codex` and verify you are logged in (it should not prompt you to login again)
-- You can use `/status` to verify the account info
+
+- Open a terminal in the Dev Container.
+- Run `codex` and verify you are already logged in.
+- Run `/status` if needed to confirm account information.
 
 ### AWS Setup
-- In the Dev Container terminal, run `aws configure`
-- Enter your Axian AWS L&D Access Key ID and Secret Access Key when prompted
-- For default region, enter `us-west-2`
-- For default output format, enter `json` or leave blank
-- Verify AWS CLI is working by running `aws s3 ls` (you should see a list of S3 buckets)
 
-### Github Setup
-- In the Dev Container terminal, verify git is working by running `git ls-remote origin` 
-- If prompted, enter your Github credentials (you may need to set up a personal access token)
-- Set GitHub account identity
-   - `git config --global user.email "you@example.com"`
-   - `git config --global user.name "Your Name"`
+Run:
 
-### You are now ready to begin the lab!
+```bash
+aws configure
+```
 
+Use:
 
+- region: `us-west-2`
+- output: `json` or blank
 
+Verify with:
 
+```bash
+aws s3 ls
+```
+
+### GitHub Setup
+
+Verify repository access:
+
+```bash
+git ls-remote origin
+```
+
+Set Git identity:
+
+```bash
+git config --global user.email "you@example.com"
+git config --global user.name "Your Name"
+```
