@@ -1,6 +1,6 @@
 # API Design
 
-This document captures the proposed Phase 2 API and backend design for multiplayer Tic Tac Toe.
+This document captures the Phase 2 API and backend design baseline for multiplayer Tic Tac Toe.
 
 ## Goals
 

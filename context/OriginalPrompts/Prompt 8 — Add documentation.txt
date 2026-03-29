@@ -1,0 +1,18 @@
+Expand the project documentation.
+
+README requirements:
+- Project overview
+- Tech stack
+- How to install dependencies
+- How to run locally
+- How to run tests
+- Architecture overview
+- Explanation of the Game module
+- Explanation of deterministic CPU behavior
+- Deployment overview for AWS
+- Terraform usage overview
+
+Also add concise inline comments only where they improve maintainability, especially around:
+- game state transitions
+- CPU decision order
+- UI effect triggering

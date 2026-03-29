@@ -202,7 +202,7 @@ Phase 2 added server-brokered multiplayer to the existing Tic Tac Toe app while 
 - Completed: 7. Frontend multiplayer flows
 - Completed: 8. Frontend multiplayer tests
 - Completed: 9. Terraform and deployment updates
-- In Progress: 10. End-to-end verification and rollout hardening
+- Completed: 10. End-to-end verification and rollout hardening
 
 ### 1. Backend workspace and package layout
 
@@ -308,7 +308,7 @@ Phase 2 added server-brokered multiplayer to the existing Tic Tac Toe app while 
 - Completed: 5. Coverage documentation updates
 - Completed: 6. PR build pipeline definition and automation
 - Completed: 7. PR-visible test reporting and artifact publishing
-- In Progress: 8. Documentation and rollout notes
+- Completed: 8. Documentation and rollout notes
 
 ### Phase 3 Implementation Notes
 
@@ -319,4 +319,4 @@ Phase 2 added server-brokered multiplayer to the existing Tic Tac Toe app while 
 - Implemented: terminal coverage commands now generate separate frontend and backend reports under `coverage/frontend/` and `coverage/backend/`
 - Implemented: JUnit-style frontend and backend test report commands now generate artifacts under `test-results/`
 - Implemented: a GitHub Actions pull-request workflow now runs frontend build, backend build, frontend tests, backend tests, coverage generation, artifact upload, and PR-visible unit test reporting
-- Caveat: the GitHub Actions workflow is configured in-repo but has not yet been exercised through an actual pull request run from this workspace session
+- Verified: the GitHub Actions pull-request workflow has been exercised successfully through an actual pull request run

@@ -1,0 +1,22 @@
+Create a new React app in TypeScript for a local-only Tic Tac Toe game.
+
+Requirements:
+- Use React with TypeScript.
+- Use a clean, maintainable project structure.
+- Use functional components only.
+- Keep game logic separate from UI logic.
+- Include routing for:
+  - Landing page
+  - Game detail page
+- Prepare folders for:
+  - src/components
+  - src/game
+  - src/hooks
+  - tests/game
+  - terraform
+- Add a README stub with sections for local development, testing, architecture, and deployment.
+
+Implementation preferences:
+- Use a lightweight modern setup suitable for local development and later deployment to AWS.
+- Keep dependencies minimal.
+- Make the initial app compile and run.

@@ -1,0 +1,38 @@
+Implement a pure TypeScript game domain module for Tic Tac Toe under src/game.
+
+Create a Game module that owns and exposes:
+- Game state
+- Board state
+- Move history, including order and placement
+- Current turn
+- Winner state
+- Game over state
+- Legal move detection
+
+Requirements:
+- Represent a 3x3 board.
+- Track moves in order.
+- Prevent illegal moves.
+- Detect winning states.
+- Detect draw states.
+- Expose clear pure functions and types that the UI can consume.
+- Keep this module framework-agnostic and independent from React.
+
+Suggested API shape:
+- createGame(...)
+- getLegalMoves(...)
+- applyMove(...)
+- getWinner(...)
+- isGameOver(...)
+- getCurrentPlayer(...)
+- getMoveHistory(...)
+
+Also define clear TypeScript types for:
+- Player
+- Cell value
+- Move
+- Game status
+- Board
+- Game state
+
+Keep naming explicit and code easy to test.

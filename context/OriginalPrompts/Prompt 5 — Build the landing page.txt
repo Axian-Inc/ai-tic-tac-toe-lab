@@ -1,0 +1,78 @@
+Implement the landing page UI for the Tic Tac Toe app.
+
+This page should visually resemble a modern dark-themed game landing screen.
+
+Layout
+- Center all primary content vertically and horizontally.
+- Use a dark gradient or dark solid background.
+- The layout should be clean, minimal, and centered.
+
+Top Section (Game Branding)
+Display a stylized game title area:
+
+1. Large “X | O” title
+   - X should be teal/cyan colored
+   - O should be orange colored
+   - Include a vertical divider between them
+
+2. Main heading
+   - “Tic Tac Toe”
+   - Large and prominent
+
+3. Subtitle text
+   - “The classic game of X’s and O’s. Can you beat the CPU?”
+
+Typography hierarchy
+- Title (X | O) = largest
+- Game name = second largest
+- Subtitle = smaller descriptive text
+
+Primary Action
+Add a large central button:
+Button text: “Play vs CPU”
+
+Button design:
+- Rounded corners
+- Bright teal/cyan color
+- Large and easy to click
+- Slight hover animation (scale or glow)
+
+Button behavior:
+- Starts a new game against the CPU
+- Navigates to the Game Detail page
+
+Bottom Section (Player indicator)
+
+Below the button show a simple matchup display:
+
+Left:
+X
+YOU
+
+Center:
+VS
+BATTLE
+
+Right:
+O
+CPU
+
+Layout details:
+- Three evenly spaced columns
+- X colored teal
+- O colored orange
+- VS and BATTLE smaller and neutral colored
+
+Visual Style
+- Use subtle glow or highlight effects
+- Maintain strong contrast for readability
+- Use a modern UI aesthetic suitable for a small browser game
+- Add faint oversized X and O shapes in the background corners
+- These should be low opacity decorative elements
+- They should not interfere with readability
+
+Implementation preferences
+- Create a dedicated LandingPage React component
+- Keep layout styles isolated to the component or a CSS module
+- Use semantic HTML elements where appropriate
+- Ensure the page remains responsive and centered on most screen sizes

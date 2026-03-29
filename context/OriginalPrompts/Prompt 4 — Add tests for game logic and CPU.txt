@@ -1,0 +1,63 @@
+Add automated test coverage for the Tic Tac Toe project, including both unit tests and end-to-end tests.
+
+Testing requirements
+
+1. Unit tests
+- Write unit tests for the pure game domain logic and deterministic CPU behavior.
+- Unit tests must be runnable from the command line.
+- Unit tests must be suitable for CI pipeline automation.
+
+Cover at minimum:
+- New game initializes correctly
+- Turn alternates correctly
+- Legal move application updates board and move history
+- Illegal moves are rejected
+- Win detection works for rows, columns, and diagonals
+- Draw detection works
+- Game over prevents further moves
+- CPU always returns the same move for the same board state
+- CPU never returns an illegal move
+- CPU takes a winning move when available
+- CPU blocks an opponent winning move when applicable
+
+Requirements:
+- Tests should focus on pure logic, not React rendering details.
+- Organize tests clearly.
+- Use descriptive, behavior-oriented test names.
+
+2. End-to-end tests with Playwright
+- Add Playwright-based end-to-end tests for the app.
+- Playwright tests must be runnable from the command line.
+- Playwright tests must be suitable for CI pipeline automation.
+
+Required Playwright coverage:
+- Start a new game from the landing page
+- Play a full game through the UI
+- Verify turn/state updates are reflected correctly in the interface
+- Verify illegal moves cannot be made through the UI
+- Verify game-over behavior prevents further moves
+- Verify rematch / play again flow works
+- Verify quit / home navigation works if implemented
+- Include a Playwright script that plays a full game and tests winning conditions
+
+Important:
+- There must be a Playwright script to play a complete game from start to finish, including testing winning conditions.
+- The Playwright tests should be deterministic and stable for CI use.
+- Avoid flaky timing assumptions; prefer robust selectors and explicit waiting based on UI state.
+
+Command-line / CI requirements
+- Both the unit tests and Playwright tests must be executable from the command line.
+- Add npm scripts for common test workflows.
+- Make the test setup friendly for CI pipeline automation.
+
+Example expectations:
+- a command to run unit tests
+- a command to run Playwright tests
+- optionally a command to run all tests
+
+Implementation guidance
+- Keep unit tests focused on the game module and CPU module.
+- Keep Playwright tests focused on real user flows and visible behavior.
+- Use deterministic test scenarios and stable selectors so the test suite can run reliably in local development and CI without manual intervention.
+- Use stable selectors such as roles, labels, or explicit test ids where needed.
+- Document test commands in the README.

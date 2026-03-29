@@ -1,0 +1,59 @@
+Add Terraform configuration and an AWS deployment path for the Tic Tac Toe project.
+The infrastructure should support deploying the frontend for Phase 1 while remaining flexible enough to support backend services in future phases.
+Infrastructure Goals
+•	Provide a clean Terraform project structure.
+•	Deploy the React application in a way that supports modern web apps.
+•	Avoid infrastructure choices that would limit adding APIs or compute services later.
+•	Keep the infrastructure minimal for Phase 1 but extensible for Phase 2.
+•	Terraform should be written as if this project will evolve into a small production service, not just a demo site.
+Terraform Structure
+Create a terraform/ directory with a clear structure such as:
+terraform/
+main.tf
+variables.tf
+outputs.tf
+providers.tf
+versions.tf
+modules/
+environments/
+dev/
+The configuration should be readable and easy to expand.
+Frontend Hosting
+Deploy the built React application to AWS using an approach suitable for modern web applications.
+Requirements:
+•	Host the frontend with a highly available architecture.
+•	Support HTTPS.
+•	Support caching of static assets.
+•	Allow future routing for APIs or backend services without major refactoring.
+Implementation guidance:
+•	Use AWS services commonly used for modern frontend deployments.
+•	Use infrastructure that supports scaling and global delivery.
+•	Separate infrastructure concerns from application code.
+Build & Deployment Workflow
+Document the deployment process in the README.
+Include:
+•	How to build the React application
+•	How to initialize Terraform
+•	How to apply infrastructure
+•	How to deploy a new frontend build
+Example workflow outline:
+1.	Build frontend
+2.	Initialize Terraform
+3.	Apply Terraform infrastructure
+4.	Upload or deploy frontend assets
+Future Extensibility (Important)
+The Terraform configuration should anticipate that future phases may add:
+•	Backend APIs
+•	Authentication
+•	Game persistence
+•	Real-time multiplayer features
+•	Additional compute services
+Avoid tightly coupling the infrastructure to a static-only hosting model.
+Documentation
+Update the README with:
+•	Architecture overview
+•	Infrastructure diagram or description
+•	Deployment instructions
+•	Explanation of the Terraform layout
+The documentation should make it easy for another developer to understand and extend the infrastructure.
+

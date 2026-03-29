@@ -1,0 +1,93 @@
+Implement the Game Detail page and gameplay UI for the Tic Tac Toe app.
+Page Layout
+The entire page should be centered vertically and horizontally on a dark background.
+Top Section (Game Title + Matchup Indicator)
+Display a compact title area:
+1.	Page Title
+•	Text: "Tic Tac Toe"
+•	Large font
+•	Subtle gradient coloring across the text (teal → orange)
+2.	Matchup indicator below the title
+Layout:
+X You VS O CPU
+Design requirements:
+•	X should be teal colored
+•	O should be orange colored
+•	The currently active player should be visually highlighted
+•	The highlight should appear as a glowing or outlined pill around the player indicator
+Example:
+If it is the CPU’s turn, the "O CPU" indicator should have a glowing border or highlighted background.
+Game Board
+The board should be a centered 3x3 grid.
+Board design:
+•	Rounded outer border
+•	Subtle border or frame around the board
+•	Each cell is a square tile
+•	Tiles should have slight spacing between them
+Tile styling:
+•	Dark tile background
+•	Rounded corners
+•	Hover highlight for valid moves
+•	Disabled appearance for invalid or filled cells
+Interaction behavior:
+•	Clicking a valid tile places the player's piece
+•	Invalid tiles cannot be clicked
+•	Hovering valid tiles should give clear visual feedback
+Game Pieces
+X piece:
+•	Teal colored
+•	Bold and centered
+O piece:
+•	Orange colored
+•	Bold and centered
+Pieces should be large and centered within the tile.
+Game State Reflection
+The UI must always reflect the state returned from the Game module.
+Display states include:
+•	Current player turn
+•	Game over
+•	Winner or draw state
+When the game ends:
+•	The board remains visible
+•	No further moves are allowed
+Action Buttons
+Below the board, display two buttons:
+1.	Play Again
+•	Starts a new game against the CPU
+•	Should reset the game state
+2.	Home
+•	Navigates back to the landing page
+Button design:
+•	Rounded outline style
+•	Minimal modern design
+•	Small icons next to button labels if convenient
+Example layout:
+[ Play Again ] [ Home ]
+Interaction Flow
+Gameplay should follow this sequence:
+1.	Player clicks a valid square
+2.	Player move is applied
+3.	Move sound plays
+4.	UI updates
+5.	CPU move occurs automatically if game is not over
+6.	CPU move appears on the board
+Visual Feedback
+Valid move indicators:
+•	Hover highlight
+•	Cursor pointer
+Invalid moves:
+•	No hover highlight
+•	Cursor not-allowed
+Game end:
+•	Board remains static
+•	Rematch option appears via Play Again button
+Implementation Preferences
+Use reusable React components:
+Board
+Square
+GameStatus
+ActionBar
+GamePage
+The Game module should remain the source of truth for all rules and game state transitions. React components should only render state and dispatch actions.
+Ensure the layout remains responsive and centered on common desktop and tablet screen sizes.
+

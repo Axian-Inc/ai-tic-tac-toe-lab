@@ -1,0 +1,17 @@
+Add polish for gameplay feedback.
+
+Requirements:
+- Play a pleasant thud sound when a valid move is made.
+- On player win:
+  - play a winning sound
+  - trigger confetti
+- On player loss:
+  - play a losing sound
+  - show visual and written feedback encouraging the user to try again
+- Avoid replaying effects incorrectly on re-render.
+
+Implementation guidance:
+- Encapsulate sound/effect triggering carefully so effects happen only when state transitions warrant them.
+- Keep assets organized under public or src/assets.
+- Make the code resilient if media files fail to load.
+- Ensure confetti only appears when the player actually wins.

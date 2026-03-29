@@ -1,0 +1,22 @@
+Implement a deterministic CPU opponent under src/game/cpu.ts.
+
+Requirements:
+- Given the same board state, the CPU must always choose the same move.
+- CPU behavior must be deterministic, not random.
+- CPU must never make illegal moves.
+- CPU should operate only through the pure game domain types and functions.
+
+Implementation guidance:
+- Prefer a simple deterministic strategy over a complex one.
+- Make the priority order explicit, stable, and documented.
+- Example strategy shape:
+  1. Take winning move if available
+  2. Block opponent winning move if needed
+  3. Take center
+  4. Take corners in fixed order
+  5. Take edges in fixed order
+
+Export a pure function like:
+- chooseCpuMove(gameState): Move | null
+
+Document the decision rules in comments.
