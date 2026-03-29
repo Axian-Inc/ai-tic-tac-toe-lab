@@ -6,6 +6,8 @@ This project is a browser-based Tic Tac Toe app built as a small lab for modern 
 
 The repository is structured so the game rules stay framework-agnostic, the UI remains thin, and the project can grow into an AWS-hosted deployment backed by Terraform-managed infrastructure.
 
+With PR gates
+
 ## Tech Stack
 
 - React 19
