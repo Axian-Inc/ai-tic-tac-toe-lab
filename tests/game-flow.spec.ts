@@ -39,7 +39,7 @@ test('two multiplayer players receive live websocket updates and finish a shared
   await expect(playerOne.getByText('Waiting for another player to join.')).toBeVisible()
 
   await playerTwo.goto('/')
-  await playerTwo.getByRole('button', { name: 'Refresh' }).click()
+  await playerTwo.getByRole('button', { name: 'Refresh Waiting' }).click()
   await playerTwo.getByRole('button', { name: 'Join' }).first().click()
 
   await expect(playerTwo).toHaveURL(/\/multiplayer\//)
@@ -67,4 +67,39 @@ test('two multiplayer players receive live websocket updates and finish a shared
 
   await playerOne.close()
   await playerTwo.close()
+})
+
+test('a spectator can open an active game and watch live moves', async ({ browser }) => {
+  const playerOne = await browser.newPage()
+  const playerTwo = await browser.newPage()
+  const spectator = await browser.newPage()
+
+  await playerOne.goto('/')
+  await playerOne.getByTestId('create-multiplayer').click()
+  await expect(playerOne).toHaveURL(/\/multiplayer\//)
+
+  await playerTwo.goto('/')
+  await playerTwo.getByRole('button', { name: 'Refresh Waiting' }).click()
+  await playerTwo.getByRole('button', { name: 'Join' }).first().click()
+  await expect(playerTwo).toHaveURL(/\/multiplayer\//)
+
+  await spectator.goto('/')
+  await spectator.getByRole('button', { name: 'Refresh Active' }).click()
+  await spectator.getByRole('button', { name: 'Spectate' }).first().click()
+
+  await expect(spectator).toHaveURL(/\/multiplayer\//)
+  await expect(spectator.getByText('Watching live. X to move.')).toBeVisible()
+  await expect(spectator.getByText('You Are')).toBeVisible()
+  await expect(spectator.getByText('spectator')).toBeVisible()
+
+  await playerOne.getByTestId('cell-0').click()
+  await expect(spectator.getByTestId('cell-0')).toContainText('X')
+  await expect(spectator.getByText('Watching live. O to move.')).toBeVisible()
+
+  await playerTwo.getByTestId('cell-4').click()
+  await expect(spectator.getByTestId('cell-4')).toContainText('O')
+
+  await playerOne.close()
+  await playerTwo.close()
+  await spectator.close()
 })

@@ -19,9 +19,11 @@ The repository now contains a Tic Tac Toe React application in TypeScript with:
 - a multiplayer HTTP + WebSocket API server
 - move history and replayable multiplayer state
 - landing, local game, and live multiplayer views
+- an active-game spectator lobby with real-time viewing
 - win/loss/move sound effects
 - confetti on player wins
 - command-line unit, server, and Playwright test coverage
+- PR validation through GitHub Actions with test coverage and build packaging
 
 The application is currently deployed at `https://d3e68a1unw9npz.cloudfront.net`.
 
@@ -77,6 +79,12 @@ Run multiplayer server tests:
 npm run test:server
 ```
 
+Generate coverage reports for the client and server test suites:
+
+```bash
+npm run coverage
+```
+
 Install the Playwright browser dependency:
 
 ```bash
@@ -109,13 +117,14 @@ Current deployed URL:
 ## Implemented Game Flow
 
 - The landing page starts a new game against the CPU.
-- The landing page can also create or join waiting multiplayer games.
+- The landing page can also create, join, or spectate multiplayer games.
 - The game detail page shows turn state, winner state, move history, and legal move feedback.
 - Illegal moves are blocked in the UI.
 - A completed game allows rematch or quit.
 - The deterministic CPU always takes the first available cell.
 - Multiplayer games are validated by the server before moves are accepted.
 - Multiplayer updates are delivered live over WebSockets to players and spectators.
+- Active multiplayer games can be listed and opened in spectator mode.
 - Multiplayer games can be resigned.
 - Abandoned multiplayer games can be ended after 3 minutes via server-side abandonment checks.
 

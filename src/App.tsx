@@ -115,34 +115,43 @@ function useGameFeedback(
 type HomePageProps = {
   onCreateMultiplayer: () => Promise<void>
   onJoinMultiplayer: (gameId: string) => Promise<void>
+  onSpectate: (gameId: string) => void
   onStartLocalGame: () => void
 }
 
 function HomePage({
   onCreateMultiplayer,
   onJoinMultiplayer,
+  onSpectate,
   onStartLocalGame,
 }: HomePageProps) {
   const [waitingGames, setWaitingGames] = useState<MultiplayerGameSummary[]>([])
+  const [activeGames, setActiveGames] = useState<MultiplayerGameSummary[]>([])
   const [loadingGames, setLoadingGames] = useState(true)
-  const [busyGameId, setBusyGameId] = useState<string | null>(null)
+  const [busyAction, setBusyAction] = useState<{ gameId: string; type: 'join' | 'spectate' } | null>(
+    null,
+  )
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
 
-    async function loadWaitingGames() {
+    async function loadGameLists() {
       try {
-        const response = await listGames('waiting')
+        const [waitingResponse, activeResponse] = await Promise.all([
+          listGames('waiting'),
+          listGames('active'),
+        ])
 
         if (!cancelled) {
-          setWaitingGames(response.games)
+          setWaitingGames(waitingResponse.games)
+          setActiveGames(activeResponse.games)
           setError(null)
         }
       } catch (loadError) {
         if (!cancelled) {
-          setError(loadError instanceof Error ? loadError.message : 'Failed to load waiting games')
+          setError(loadError instanceof Error ? loadError.message : 'Failed to load multiplayer games')
         }
       } finally {
         if (!cancelled) {
@@ -151,9 +160,9 @@ function HomePage({
       }
     }
 
-    void loadWaitingGames()
+    void loadGameLists()
     const interval = window.setInterval(() => {
-      void loadWaitingGames()
+      void loadGameLists()
     }, 5000)
 
     return () => {
@@ -176,21 +185,34 @@ function HomePage({
   }
 
   const handleJoin = async (gameId: string) => {
-    setBusyGameId(gameId)
+    setBusyAction({ gameId, type: 'join' })
     setError(null)
 
     try {
       await onJoinMultiplayer(gameId)
     } catch (joinError) {
       setError(joinError instanceof Error ? joinError.message : 'Failed to join game')
-      const refreshed = await listGames('waiting').catch(() => null)
+      const refreshed = await Promise.all([
+        listGames('waiting').catch(() => null),
+        listGames('active').catch(() => null),
+      ])
 
-      if (refreshed) {
-        setWaitingGames(refreshed.games)
+      if (refreshed[0]) {
+        setWaitingGames(refreshed[0].games)
+      }
+
+      if (refreshed[1]) {
+        setActiveGames(refreshed[1].games)
       }
     } finally {
-      setBusyGameId(null)
+      setBusyAction(null)
     }
+  }
+
+  const handleSpectate = (gameId: string) => {
+    setBusyAction({ gameId, type: 'spectate' })
+    setError(null)
+    onSpectate(gameId)
   }
 
   return (
@@ -236,9 +258,10 @@ function HomePage({
                 disabled={loadingGames}
                 onClick={() => {
                   setLoadingGames(true)
-                  void listGames('waiting')
-                    .then((response) => {
-                      setWaitingGames(response.games)
+                  void Promise.all([listGames('waiting'), listGames('active')])
+                    .then(([waitingResponse, activeResponse]) => {
+                      setWaitingGames(waitingResponse.games)
+                      setActiveGames(activeResponse.games)
                       setError(null)
                     })
                     .catch((loadError) => {
@@ -253,7 +276,7 @@ function HomePage({
                     })
                 }}
               >
-                Refresh
+                Refresh Waiting
               </button>
             </div>
 
@@ -273,10 +296,71 @@ function HomePage({
                     type="button"
                     className="secondary-action"
                     data-testid={`join-game-${game.id}`}
-                    disabled={busyGameId === game.id}
+                    disabled={busyAction?.gameId === game.id}
                     onClick={() => void handleJoin(game.id)}
                   >
-                    {busyGameId === game.id ? 'Joining...' : 'Join'}
+                    {busyAction?.gameId === game.id && busyAction.type === 'join'
+                      ? 'Joining...'
+                      : 'Join'}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <section className="waiting-list">
+            <div className="waiting-list-header">
+              <h3>Active Games</h3>
+              <button
+                type="button"
+                className="secondary-action"
+                disabled={loadingGames}
+                onClick={() => {
+                  setLoadingGames(true)
+                  void Promise.all([listGames('waiting'), listGames('active')])
+                    .then(([waitingResponse, activeResponse]) => {
+                      setWaitingGames(waitingResponse.games)
+                      setActiveGames(activeResponse.games)
+                      setError(null)
+                    })
+                    .catch((loadError) => {
+                      setError(
+                        loadError instanceof Error
+                          ? loadError.message
+                          : 'Failed to refresh games',
+                      )
+                    })
+                    .finally(() => {
+                      setLoadingGames(false)
+                    })
+                }}
+              >
+                Refresh Active
+              </button>
+            </div>
+
+            {loadingGames ? <p>Loading active games...</p> : null}
+            {!loadingGames && activeGames.length === 0 ? (
+              <p>No live games right now. Join one when another player arrives.</p>
+            ) : null}
+
+            <ul className="game-list">
+              {activeGames.map((game) => (
+                <li key={game.id}>
+                  <div>
+                    <strong>{game.id.slice(0, 8)}</strong>
+                    <p>{game.moveCount} moves in progress</p>
+                  </div>
+                  <button
+                    type="button"
+                    className="secondary-action"
+                    data-testid={`spectate-game-${game.id}`}
+                    disabled={busyAction?.gameId === game.id}
+                    onClick={() => handleSpectate(game.id)}
+                  >
+                    {busyAction?.gameId === game.id && busyAction.type === 'spectate'
+                      ? 'Opening...'
+                      : 'Spectate'}
                   </button>
                 </li>
               ))}
@@ -762,6 +846,10 @@ function App() {
     navigate(`/multiplayer/${response.game.id}`)
   }
 
+  const spectateLiveGame = (gameId: string) => {
+    navigate(`/multiplayer/${gameId}`)
+  }
+
   const applyLocalMove = (index: number) => {
     setLocalGame((currentGame) => {
       if (!currentGame || !isMoveLegal(currentGame, index)) {
@@ -804,6 +892,7 @@ function App() {
           <HomePage
             onCreateMultiplayer={createLiveGame}
             onJoinMultiplayer={joinLiveGame}
+            onSpectate={spectateLiveGame}
             onStartLocalGame={startLocalGame}
           />
         }

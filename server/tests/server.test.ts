@@ -72,11 +72,33 @@ describe('multiplayer server', () => {
     const [updateRaw] = (await updatePromise) as [unknown]
     const update = JSON.parse(String(updateRaw)) as MultiplayerWebSocketMessage
     expect(update.event).toBe('move')
+    expect(update.role).toBe('spectator')
     expect(update.game.board[4]).toBe('X')
     expect(update.game.currentPlayer).toBe('O')
     expect(joined.playerRole).toBe('O')
 
     socket.close()
+  })
+
+  it('lists active games for spectators after a second player joins', async () => {
+    const created = await createGame(address)
+    await joinGame(address, created.game.id)
+
+    const response = await fetch(`${address}/api/games?status=active`)
+
+    expect(response.status).toBe(200)
+    const payload = (await response.json()) as {
+      games: Array<{ id: string; moveCount: number; seatCount: number; status: string }>
+    }
+
+    expect(payload.games).toEqual([
+      expect.objectContaining({
+        id: created.game.id,
+        moveCount: 0,
+        seatCount: 2,
+        status: 'active',
+      }),
+    ])
   })
 
   it('marks games over by abandonment when a player times out', async () => {

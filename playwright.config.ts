@@ -5,7 +5,7 @@ const useLocalWebServer = !process.env.PLAYWRIGHT_BASE_URL
 
 export default defineConfig({
   testDir: './tests',
-  fullyParallel: true,
+  fullyParallel: false,
   use: {
     baseURL,
     trace: 'on-first-retry',

@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "coverage": "vitest run --coverage",
     "dev": "tsx watch src/index.ts",
     "prepare:deploy": "rm -rf deploy && mkdir -p deploy && cp package.json package-lock.json deploy/ && cp -R dist deploy/dist",
     "start": "node dist/server/src/index.js",
@@ -20,6 +21,7 @@
   "devDependencies": {
     "@types/node": "^24.12.0",
     "@types/ws": "^8.18.1",
+    "@vitest/coverage-v8": "^4.1.2",
     "tsx": "^4.20.6",
     "typescript": "~5.9.3",
     "vitest": "^4.0.8",
