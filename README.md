@@ -24,6 +24,7 @@ The repository now contains a Tic Tac Toe React application in TypeScript with:
 - confetti on player wins
 - command-line unit, server, and Playwright test coverage
 - PR validation through GitHub Actions with test coverage and build packaging
+- post-merge deployment through GitHub Actions on `main`
 
 The application is currently deployed at `https://d3e68a1unw9npz.cloudfront.net`.
 
