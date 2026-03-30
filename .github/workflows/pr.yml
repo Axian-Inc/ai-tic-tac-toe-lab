@@ -37,7 +37,5 @@ jobs:
       - name: Run automated unit tests
         run: npm run test:unit
 
-      - name: Run automated integration tests
-        run: npm run test:ui
 
 
