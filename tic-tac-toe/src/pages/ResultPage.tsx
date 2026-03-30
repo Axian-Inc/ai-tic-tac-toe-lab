@@ -1,5 +1,7 @@
 import React, { useEffect } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { useAppSelector } from '../app/hooks';
+import { selectGameMode } from '../features/app/appSlice';
 import { clearGameSession } from '../features/game/session';
 
 type GameOutcome = 'win' | 'lose' | 'draw';
@@ -15,6 +17,7 @@ function ResultPage() {
   const { outcome } = useParams<{ outcome: string }>();
   const showConfetti = outcome === 'win';
   const showSadRain = outcome === 'lose';
+  const gameMode = useAppSelector(selectGameMode);
   const confettiPieces = Array.from({ length: 36 }, (_, index) => {
     const left = (index * 7 + 13) % 100;
     const delay = (index % 12) * 0.12;
@@ -156,7 +159,6 @@ function ResultPage() {
   }
 
   const outcomeMessage = messageByOutcome[outcome as GameOutcome];
-
   return (
     <main className="app">
       {showConfetti ? (
@@ -176,7 +178,7 @@ function ResultPage() {
             className="start"
             onClick={() => {
               clearGameSession();
-              navigate('/');
+              navigate(gameMode === 'single' ? '/single' : '/');
             }}
           >
             Play Again

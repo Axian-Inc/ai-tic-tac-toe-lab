@@ -56,6 +56,8 @@ function mapErrorToStatus(errorCode: string): number {
     case 'CELL_ALREADY_TAKEN':
     case 'INVALID_JSON':
       return 400;
+    case 'GAME_LIMIT_REACHED':
+      return 429;
     default:
       return 500;
   }

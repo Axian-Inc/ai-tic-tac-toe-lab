@@ -4,6 +4,7 @@ import http from 'node:http';
 import test from 'node:test';
 import WebSocket from 'ws';
 import { createAppServer } from '../src/server';
+import { GameStore } from '../src/gameStore';
 
 type JsonResponse = {
   statusCode: number;
@@ -325,6 +326,31 @@ test('leave after moves finishes game', async () => {
     assert.equal(left.body.game.status, 'over');
     assert.equal(left.body.game.completedReason, 'player_left');
     assert.equal(left.body.game.winner, 'X');
+  } finally {
+    server.close();
+    await once(server, 'close');
+  }
+});
+
+test('enforces concurrent game limit', async () => {
+  const store = new GameStore(1);
+  const server = createAppServer(store);
+  server.listen(0, '127.0.0.1');
+  await once(server, 'listening');
+
+  try {
+    const address = server.address();
+    if (!address || typeof address === 'string') {
+      throw new Error('Invalid server address');
+    }
+    const port = address.port;
+
+    const first = await requestJson(port, 'POST', '/games');
+    assert.equal(first.statusCode, 201);
+
+    const second = await requestJson(port, 'POST', '/games');
+    assert.equal(second.statusCode, 429);
+    assert.equal(second.body.error, 'GAME_LIMIT_REACHED');
   } finally {
     server.close();
     await once(server, 'close');

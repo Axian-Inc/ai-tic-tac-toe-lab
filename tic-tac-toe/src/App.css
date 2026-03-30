@@ -65,6 +65,34 @@ h1 {
   gap: 0.9rem;
 }
 
+.mode-toggle {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.mode-button {
+  border: 2px solid #d8e0f2;
+  border-radius: 999px;
+  padding: 0.5rem 0.85rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  background: #f5f7fb;
+  color: #1b2a4b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mode-button:hover {
+  background: #e9eef9;
+}
+
+.mode-button.active {
+  background: #1f4fd6;
+  border-color: #1f4fd6;
+  color: #ffffff;
+}
+
 .mode-message {
   margin: 0;
   font-size: 1.05rem;
@@ -308,6 +336,22 @@ h1 {
 .theme-dark .landing {
   background: #1e293b;
   border-color: #334155;
+}
+
+.theme-dark .mode-button {
+  background: #0f172a;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+.theme-dark .mode-button:hover {
+  background: #1e293b;
+}
+
+.theme-dark .mode-button.active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
 }
 
 .theme-dark .join-input {

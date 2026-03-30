@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 
 const BOARD_SIZE = 9;
+export const DEFAULT_MAX_CONCURRENT_GAMES = 25;
 const winningLines: ReadonlyArray<readonly [number, number, number]> = [
   [0, 1, 2],
   [3, 4, 5],
@@ -102,8 +103,27 @@ function buildPublicState(game: InternalGame): PublicGameState {
 
 export class GameStore {
   private readonly games = new Map<string, InternalGame>();
+  private readonly maxConcurrentGames: number;
+
+  constructor(maxConcurrentGames: number = DEFAULT_MAX_CONCURRENT_GAMES) {
+    this.maxConcurrentGames = maxConcurrentGames;
+  }
+
+  private countConcurrentGames(): number {
+    let count = 0;
+    for (const game of this.games.values()) {
+      if (deriveGameState(game).status !== 'over') {
+        count += 1;
+      }
+    }
+    return count;
+  }
 
   createGame(): PlayerAssignment {
+    if (this.countConcurrentGames() >= this.maxConcurrentGames) {
+      throw new Error('GAME_LIMIT_REACHED');
+    }
+
     const gameId = crypto.randomUUID();
     const playerId = crypto.randomUUID();
     const now = new Date().toISOString();

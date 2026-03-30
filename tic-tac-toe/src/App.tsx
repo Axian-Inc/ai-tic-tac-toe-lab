@@ -7,6 +7,7 @@ import { selectIsDarkMode, toggleDarkMode } from './features/app/appSlice';
 import GamePage from './pages/GamePage';
 import LandingPage from './pages/LandingPage';
 import ResultPage from './pages/ResultPage';
+import SinglePlayerPage from './pages/SinglePlayerPage';
 
 function App() {
   const dispatch = useAppDispatch();
@@ -32,6 +33,7 @@ function App() {
         </header>
         <Routes>
           <Route path="/" element={<LandingPage />} />
+          <Route path="/single" element={<SinglePlayerPage />} />
           <Route path="/game" element={<GamePage />} />
           <Route path="/result/:outcome" element={<ResultPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
