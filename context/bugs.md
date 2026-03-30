@@ -1,6 +1,6 @@
 # Bugs
 
-Last updated: 2026-03-24
+Last updated: 2026-03-30
 
 This file tracks active and resolved product defects discovered during development and testing.
 
@@ -42,6 +42,13 @@ This file tracks active and resolved product defects discovered during developme
 - None.
 
 ### Resolved
+
+#### BUG-014 Active Game List Match ID Overflows Column Layout
+- Reported: 2026-03-29
+- Resolved: 2026-03-30
+- Related stories: US-31, US-36, US-40
+- Root cause: Active game discovery cards reused the same horizontal card layout as waiting games, which forced long match IDs into the main content column alongside the rest of the entry details.
+- Resolution: Updated active game discovery cards so the match ID renders on its own line and the remaining active-card content stacks in rows beneath it, while preserving the existing waiting-game layout.
 
 #### BUG-013 Backend Deploy Health Check Fails During Normal Startup Delay
 - Reported: 2026-03-24

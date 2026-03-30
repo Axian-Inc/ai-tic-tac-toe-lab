@@ -1,18 +1,25 @@
-import { expect, test } from "@playwright/test";
+import { test } from "./fixtures/test-fixture";
 
-test("player can start a game and place the opening move", async ({ page }) => {
-  await page.goto("/");
+test("UI-001 player can start a game and place the opening move", async ({
+  StepAsync,
+  gameplayPage,
+  landingPage,
+}) => {
+  await StepAsync("Open the landing page", async () => {
+    await landingPage.goto();
+    await landingPage.expectLoaded();
+  });
 
-  await expect(page.getByTestId("landing-page")).toBeVisible();
-  await page.getByRole("button", { name: "Play vs CPU" }).click();
+  await StepAsync("Start a single-player game", async () => {
+    await landingPage.startCpuGame();
+    await gameplayPage.expectLoaded();
+    await gameplayPage.expectStatusContains("Your turn");
+    await gameplayPage.expectBoardCellCount(9);
+  });
 
-  await expect(page).toHaveURL(/\/game$/);
-  await expect(page.getByTestId("gameplay-page")).toBeVisible();
-  await expect(page.getByTestId("game-status")).toContainText("Your turn");
-
-  const openingCell = page.getByTestId("board-cell-0");
-  await openingCell.click();
-
-  await expect(openingCell).toContainText("X");
-  await expect(page.getByTestId("board-cell-4")).toContainText("O");
+  await StepAsync("Place the opening move and verify the CPU response", async () => {
+    await gameplayPage.playCell(0);
+    await gameplayPage.expectCellValue(0, "X");
+    await gameplayPage.expectCellValue(4, "O");
+  });
 });

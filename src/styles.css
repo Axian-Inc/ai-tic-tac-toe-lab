@@ -393,13 +393,51 @@ body,
 
 .multiplayer-game-card {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: stretch;
   gap: 1rem;
   padding: 0.85rem 0.95rem;
   border: 1px solid rgba(125, 138, 168, 0.26);
   border-radius: 0.75rem;
   background: rgba(20, 28, 46, 0.82);
+}
+
+.multiplayer-game-card:not(.multiplayer-game-card-active) {
+  gap: 0.75rem;
+}
+
+.multiplayer-game-card-active {
+  display: grid;
+  align-items: stretch;
+}
+
+.multiplayer-game-card-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.multiplayer-game-card-active .multiplayer-game-card-content {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr auto;
+  align-items: center;
+}
+
+.multiplayer-game-card-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.multiplayer-game-card-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  min-width: 0;
 }
 
 .multiplayer-game-name {
@@ -414,16 +452,29 @@ body,
   gap: 0.75rem;
 }
 
+.multiplayer-game-card-active .multiplayer-game-actions {
+  grid-area: actions;
+  justify-content: space-between;
+}
+
 .multiplayer-game-id {
   font-weight: 800;
   color: #f7fbff;
   word-break: break-all;
 }
 
-.multiplayer-game-meta {
-  margin-top: 0.2rem;
+.multiplayer-game-card-active .multiplayer-game-id {
+  margin: 0;
+}
+
+.multiplayer-game-meta,
+.multiplayer-game-meta-item {
   font-size: 0.88rem;
   color: var(--text-muted);
+}
+
+.multiplayer-game-status {
+  text-transform: capitalize;
 }
 
 .multiplayer-game-badge {
@@ -452,6 +503,29 @@ body,
 .multiplayer-join-button:disabled {
   cursor: wait;
   opacity: 0.7;
+}
+
+@media (max-width: 720px) {
+  .multiplayer-game-card-content,
+  .multiplayer-game-actions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .multiplayer-game-card-heading {
+    flex-wrap: wrap;
+  }
+
+  .multiplayer-game-card-details {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+  }
+
+  .multiplayer-game-badge {
+    justify-items: start;
+    min-width: 0;
+  }
 }
 
 .landing-meta {
@@ -928,7 +1002,8 @@ body,
 
   .multiplayer-game-actions {
     width: 100%;
-    justify-content: space-between;
+    justify-content: flex-start;
+    flex-wrap: wrap;
   }
 
   .multiplayer-game-badge {

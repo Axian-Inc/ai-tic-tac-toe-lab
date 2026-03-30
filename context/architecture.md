@@ -1,6 +1,6 @@
 # Architecture
 
-Last updated: 2026-03-23
+Last updated: 2026-03-28
 
 ## Phase 1
 
@@ -8,6 +8,13 @@ Last updated: 2026-03-23
 - Unit test execution is handled by Vitest using the Vite config, with `jsdom` enabled so logic tests and future React rendering tests share one runner.
 - Browser automation is handled by Playwright against the local Vite app using a dedicated `playwright.config.ts`.
 - Playwright discovery now includes both browser specs in `tests/e2e/` and isolated runner-based specs in `tests/unit/`.
+- Browser specs now share a Playwright fixture layer under `tests/e2e/fixtures/` that constructs page objects instead of repeating raw locators inside specs.
+- The browser automation support layer now includes:
+  - `tests/e2e/page-objects/` for `LandingPage`, `GameplayPage`, and `MultiplayerModalPage`
+  - `tests/e2e/support/step-async.ts` for manual-step-aligned execution and failure attachments
+  - `tests/playwright/runtime.ts` for frontend-only versus frontend-plus-backend startup selection
+- Playwright reporting now keeps console `list` output while also writing JUnit XML to `test-results/playwright/junit.xml`.
+- Coordinated multiplayer automation startup uses an automation-only backend command (`npm run server:start:automation`) so Playwright can run against the existing backend source without requiring application-code changes.
 - Automation-stable selectors are exposed through `data-testid` attributes on landing/gameplay controls, board container, status text, and board cells.
 - Initial framework coverage includes:
   - `src/game/Game.test.ts` for core logic regression checks.
