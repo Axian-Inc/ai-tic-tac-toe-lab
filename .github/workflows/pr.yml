@@ -3,7 +3,7 @@ name: PR Checks
 on:
   push:
     branches:
-      - US-44-spectator-entry
+      - msmith-ajoplin-ttt-*
 
 permissions:
   contents: read
