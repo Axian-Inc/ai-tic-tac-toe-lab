@@ -14,7 +14,7 @@
     "typecheck:server": "tsc --noEmit -p tsconfig.server.json",
     "typecheck:scripts": "tsc --noEmit -p tsconfig.scripts.json",
     "server:build": "tsc -p tsconfig.server.json",
-    "server:start:automation": "tsx server/index.ts",
+    "server:start:automation": "AUTOMATION_TEST_SUPPORT=1 tsx server/index.ts",
     "aws:build-scripts": "tsc -p tsconfig.scripts.json",
     "server:start": "npm run server:build && node dist-server/server/index.js",
     "test": "node scripts/test/playwright-unit-coverage.mjs",

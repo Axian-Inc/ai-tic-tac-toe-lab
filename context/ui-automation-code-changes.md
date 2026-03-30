@@ -1,14 +1,14 @@
 # UI Automation Support Code Changes
 
-Last updated: 2026-03-28
+Last updated: 2026-03-30
 
 ## Summary
 
-Full automation of [ui-test-cases.md](/workspaces/ai-tic-tac-toe-lab/context/ui-test-cases.md) will require targeted application and backend support changes. The current selectors and runtime behavior are adequate for a small smoke test, but not for deterministic coverage of multiplayer discovery, replay, abandonment, stale join, capacity, and forced-error scenarios.
+The baseline support changes required for deterministic Playwright expansion are now in place. The application and backend now expose automation-stable selectors, a guarded backend test-support API, an app-owned resign confirmation dialog, and serialized full-mode runtime behavior for the shared multiplayer backend.
 
 ## Feature: Stable Automation Selectors
 
-Implement dedicated `data-testid` attributes for multiplayer and replay surfaces in [src/App.tsx](/workspaces/ai-tic-tac-toe-lab/src/App.tsx).
+Implemented dedicated `data-testid` attributes for multiplayer and replay surfaces in [src/App.tsx](/workspaces/ai-tic-tac-toe-lab/src/App.tsx).
 
 Required additions:
 - multiplayer modal container
@@ -42,7 +42,7 @@ Why:
 
 ## Feature: Deterministic Test Support API
 
-Implement test-only support endpoints in [server/index.ts](/workspaces/ai-tic-tac-toe-lab/server/index.ts), guarded behind an explicit environment flag.
+Implemented test-only support endpoints in [server/index.ts](/workspaces/ai-tic-tac-toe-lab/server/index.ts), guarded behind `AUTOMATION_TEST_SUPPORT=1`.
 
 Required capabilities:
 - reset in-memory game state
@@ -57,9 +57,12 @@ Required capabilities:
 Why:
 - Manual timing and shared in-memory state are not reliable enough for CI automation.
 
+Implementation note:
+- Added `POST /test-support/seed/stale-join` so automation can present a waiting-list entry that deterministically fails `POST /games/{id}/join` with `not_joinable`.
+
 ## Feature: Deterministic Confirmation Handling
 
-Replace direct `window.confirm` usage for resignation in [src/App.tsx](/workspaces/ai-tic-tac-toe-lab/src/App.tsx) with a testable abstraction or app-owned confirmation dialog.
+Replaced direct `window.confirm` usage for resignation in [src/App.tsx](/workspaces/ai-tic-tac-toe-lab/src/App.tsx) with an app-owned confirmation dialog.
 
 Why:
 - Native browser confirms are automatable, but they are less observable and harder to standardize inside a page-object pattern and step wrapper.
@@ -67,7 +70,7 @@ Why:
 
 ## Feature: Observable Multiplayer State Hooks
 
-Expose stable test hooks for state that is currently only inferable from prose text.
+Exposed stable test hooks for state that was previously only inferable from prose text.
 
 Recommended additions:
 - current session role
@@ -79,9 +82,16 @@ Recommended additions:
 Why:
 - Several manual cases depend on verifying role, state transitions, and replay/live mode without relying on exact user-facing copy.
 
+## Feature: Replay Page Object Surface
+
+Added a dedicated replay page object in [tests/e2e/page-objects/ReplayPanel.ts](/workspaces/ai-tic-tac-toe-lab/tests/e2e/page-objects/ReplayPanel.ts) and exposed it through the shared fixture in [tests/e2e/fixtures/test-fixture.ts](/workspaces/ai-tic-tac-toe-lab/tests/e2e/fixtures/test-fixture.ts).
+
+Why:
+- The automation plan treats replay controls as a first-class surface, so tests should not have to fall back to raw locators for replay-only interactions.
+
 ## Feature: Automation-Friendly Environment Startup
 
-Provide a dedicated automation startup path in repo scripts or configuration.
+Provided a dedicated automation startup path in repo scripts and configuration.
 
 Recommended additions:
 - one command for frontend-only UI automation
@@ -89,4 +99,4 @@ Recommended additions:
 - optional isolated backend port configuration per worker if multiplayer parallelism is expanded later
 
 Why:
-- The current `dev:full` command is useful manually but is not yet shaped as a deterministic automation runtime contract.
+- The full-mode Playwright runtime now provides the deterministic automation contract; isolated backend ports remain a future optimization if worker parallelism is expanded.

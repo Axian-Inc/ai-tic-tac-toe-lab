@@ -42,11 +42,21 @@ const DEFAULT_PORT = 3001;
 const DEFAULT_HOST = "0.0.0.0";
 const MAX_CONCURRENT_GAMES = 25;
 const WS_MAGIC_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+const AUTOMATION_TEST_SUPPORT_ENABLED = process.env.AUTOMATION_TEST_SUPPORT === "1";
 const SUPPORTED_GAME_STATUSES: ReadonlySet<MultiplayerGameStatus> = new Set([
   "waiting",
   "active",
   "over",
 ]);
+const AUTOMATION_FAILURE_TARGETS = [
+  "create",
+  "list",
+  "detail",
+  "join",
+  "move",
+  "resign",
+  "abandonment-check",
+] as const;
 
 const serviceStartedAt = new Date().toISOString();
 const MULTIPLAYER_HISTORY_RETENTION = {
@@ -77,6 +87,33 @@ type MultiplayerGameEventInput =
   | Omit<Extract<MultiplayerGameEvent, { type: "game-created" }>, "sequence">
   | Omit<Extract<MultiplayerGameEvent, { type: "player-joined" }>, "sequence">
   | Omit<Extract<MultiplayerGameEvent, { type: "game-completed" }>, "sequence">;
+
+type AutomationFailureTarget = (typeof AUTOMATION_FAILURE_TARGETS)[number];
+
+interface AutomationFailureConfig {
+  message: string;
+  statusCode: number;
+}
+
+interface AutomationSeedGameRequest {
+  game: MultiplayerGameSnapshot;
+}
+
+interface AutomationSeedStaleJoinRequest {
+  gameId?: string;
+  gameName?: string;
+  hostName?: string;
+}
+
+interface AutomationSeedCapacityRequest {
+  count?: number;
+}
+
+interface AutomationForcedFailureRequest {
+  message?: string;
+  statusCode?: number;
+  target?: string;
+}
 
 export function toGameSummary(game: MultiplayerGameRecord): MultiplayerGameSummary {
   const openSeatCount = game.players.O === null ? 1 : 0;
@@ -186,6 +223,60 @@ export function appendHistoryEvent(
     ...event,
     sequence: game.historyEvents.length + 1,
   } as MultiplayerGameEvent);
+}
+
+function isAutomationFailureTarget(value: string): value is AutomationFailureTarget {
+  return (AUTOMATION_FAILURE_TARGETS as readonly string[]).includes(value);
+}
+
+export function createGameRecordFromSnapshot(
+  snapshot: MultiplayerGameSnapshot
+): MultiplayerGameRecord {
+  const reconstructedGame = new Game();
+  const orderedMoves = [...snapshot.state.moves].sort((left, right) => left.order - right.order);
+
+  for (const move of orderedMoves) {
+    const didPlaceMove = reconstructedGame.placeMove(move.position);
+    if (!didPlaceMove) {
+      throw new Error(`Unable to seed game ${snapshot.id}: invalid move history.`);
+    }
+  }
+
+  const reconstructedState = reconstructedGame.getState();
+  const reconstructedBoard = JSON.stringify(reconstructedState.board);
+  const snapshotBoard = JSON.stringify(snapshot.state.board);
+
+  if (
+    reconstructedBoard !== snapshotBoard ||
+    reconstructedState.currentPlayer !== snapshot.state.currentPlayer
+  ) {
+    throw new Error(`Unable to seed game ${snapshot.id}: snapshot state does not match moves.`);
+  }
+
+  return {
+    id: snapshot.id,
+    name: snapshot.name,
+    status: snapshot.status,
+    createdAt: snapshot.createdAt,
+    updatedAt: snapshot.updatedAt,
+    game: reconstructedGame,
+    players: {
+      X: { ...snapshot.players.X },
+      O: snapshot.players.O ? { ...snapshot.players.O } : null,
+    },
+    completion: snapshot.completion ? { ...snapshot.completion } : null,
+    historyEvents: snapshot.history.events.map((event) => {
+      if (event.type === "game-completed") {
+        return {
+          ...event,
+          completion: { ...event.completion },
+        };
+      }
+
+      return { ...event };
+    }),
+    activity: { ...snapshot.activity },
+  };
 }
 
 function getAbandonmentDeadline(activity: MultiplayerGameActivity): string | null {
@@ -404,6 +495,15 @@ export class InMemoryMultiplayerGameStore {
 
   get(id: string): MultiplayerGameRecord | undefined {
     return this.games.get(id);
+  }
+
+  reset() {
+    this.games.clear();
+  }
+
+  save(game: MultiplayerGameRecord): MultiplayerGameRecord {
+    this.games.set(game.id, game);
+    return game;
   }
 
   joinWaitingGame(id: string): MultiplayerGameRecord | "not_found" | "not_joinable" {
@@ -677,6 +777,118 @@ function createAbandonedEvent(
   };
 }
 
+function createAutomationCapacityGame(index: number): MultiplayerGameSnapshot {
+  const createdAt = new Date(Date.UTC(2026, 2, 30, 12, index, 0)).toISOString();
+  const updatedAt = createdAt;
+  const id = `automation-capacity-${index + 1}`;
+
+  return {
+    id,
+    name: `Automation Capacity ${index + 1}`,
+    status: "waiting",
+    createdAt,
+    updatedAt,
+    hostName: `Host ${index + 1}`,
+    openSeatCount: 1,
+    players: {
+      X: {
+        player: "X",
+        name: `Host ${index + 1}`,
+        joinedAt: createdAt,
+      },
+      O: null,
+    },
+    state: {
+      board: [null, null, null, null, null, null, null, null, null],
+      currentPlayer: "X",
+      moves: [],
+      status: {
+        isDraw: false,
+        isOver: false,
+        winner: null,
+      },
+    },
+    completion: null,
+    history: {
+      retention: MULTIPLAYER_HISTORY_RETENTION,
+      events: [
+        {
+          type: "game-created",
+          sequence: 1,
+          occurredAt: createdAt,
+          player: "X",
+        },
+      ],
+    },
+    activity: {
+      lastProgressedAt: createdAt,
+      awaitingPlayer: null,
+      awaitingSince: null,
+      abandonmentTimeoutMs: MULTIPLAYER_ABANDONMENT_TIMEOUT_MS,
+      abandonmentDeadlineAt: null,
+    },
+  };
+}
+
+function createAutomationStaleJoinGame(
+  overrides: AutomationSeedStaleJoinRequest = {}
+): MultiplayerGameSnapshot {
+  const hostName = overrides.hostName?.trim() || "Host";
+  const createdAt = "2026-03-30T12:00:00.000Z";
+  const updatedAt = "2026-03-30T12:03:00.000Z";
+
+  return {
+    id: overrides.gameId?.trim() || "stale-join-game",
+    name: overrides.gameName?.trim() || "Stale Join Match",
+    status: "waiting",
+    createdAt,
+    updatedAt,
+    hostName,
+    openSeatCount: 0,
+    players: {
+      X: {
+        player: "X",
+        name: hostName,
+        joinedAt: createdAt,
+      },
+      O: {
+        player: "O",
+        name: "Guest",
+        joinedAt: updatedAt,
+      },
+    },
+    state: {
+      board: [null, null, null, null, null, null, null, null, null],
+      currentPlayer: "X",
+      moves: [],
+      status: {
+        isDraw: false,
+        isOver: false,
+        winner: null,
+      },
+    },
+    completion: null,
+    history: {
+      retention: MULTIPLAYER_HISTORY_RETENTION,
+      events: [
+        {
+          type: "game-created",
+          sequence: 1,
+          occurredAt: createdAt,
+          player: "X",
+        },
+      ],
+    },
+    activity: {
+      lastProgressedAt: createdAt,
+      awaitingPlayer: null,
+      awaitingSince: null,
+      abandonmentTimeoutMs: MULTIPLAYER_ABANDONMENT_TIMEOUT_MS,
+      abandonmentDeadlineAt: null,
+    },
+  };
+}
+
 function attachWebSocketServer(server: HttpServer, service: MultiplayerService) {
   server.on("upgrade", (request, rawSocket) => {
     const socket = rawSocket as Socket;
@@ -753,6 +965,7 @@ export function createMultiplayerApp(): MultiplayerService {
   const app = express();
   const gameStore = new InMemoryMultiplayerGameStore();
   const websocketHub = new MultiplayerWebSocketHub();
+  const forcedFailures = new Map<AutomationFailureTarget, AutomationFailureConfig>();
 
   app.disable("x-powered-by");
   app.use(express.json());
@@ -768,6 +981,142 @@ export function createMultiplayerApp(): MultiplayerService {
 
     next();
   });
+
+  const maybeSendForcedFailure = (
+    target: AutomationFailureTarget,
+    response: express.Response
+  ): boolean => {
+    const failure = forcedFailures.get(target);
+
+    if (!failure) {
+      return false;
+    }
+
+    response.setHeader("cache-control", "no-store");
+    response.status(failure.statusCode).json({
+      status: "forced_failure",
+      message: failure.message,
+      target,
+    });
+    return true;
+  };
+
+  if (AUTOMATION_TEST_SUPPORT_ENABLED) {
+    app.post("/test-support/reset", (_request, response) => {
+      gameStore.reset();
+      forcedFailures.clear();
+      response.status(200).json({ status: "ok" });
+    });
+
+    app.post("/test-support/seed/game", (request, response) => {
+      const body = (request.body ?? {}) as Partial<AutomationSeedGameRequest>;
+
+      if (!body.game) {
+        response.status(400).json({
+          status: "invalid_request",
+          message: "Test-support seed requests must include a game snapshot.",
+        });
+        return;
+      }
+
+      try {
+        const seededGame = gameStore.save(createGameRecordFromSnapshot(body.game));
+        response.status(201).json({
+          status: "ok",
+          game: toGameSnapshot(seededGame),
+        });
+      } catch (error) {
+        response.status(400).json({
+          status: "invalid_seed",
+          message: error instanceof Error ? error.message : "Unable to seed game.",
+        });
+      }
+    });
+
+    app.post("/test-support/seed/stale-join", (request, response) => {
+      const body = (request.body ?? {}) as AutomationSeedStaleJoinRequest;
+
+      try {
+        const seededGame = gameStore.save(
+          createGameRecordFromSnapshot(createAutomationStaleJoinGame(body))
+        );
+
+        response.status(201).json({
+          status: "ok",
+          game: toGameSnapshot(seededGame),
+        });
+      } catch (error) {
+        response.status(400).json({
+          status: "invalid_seed",
+          message:
+            error instanceof Error ? error.message : "Unable to seed stale join state.",
+        });
+      }
+    });
+
+    app.post("/test-support/seed/capacity", (request, response) => {
+      const body = (request.body ?? {}) as AutomationSeedCapacityRequest;
+      const count = Number.isInteger(body.count) ? Number(body.count) : MAX_CONCURRENT_GAMES;
+
+      if (count < 0 || count > MAX_CONCURRENT_GAMES) {
+        response.status(400).json({
+          status: "invalid_request",
+          message: `Capacity seed count must be between 0 and ${MAX_CONCURRENT_GAMES}.`,
+        });
+        return;
+      }
+
+      gameStore.reset();
+      for (let index = 0; index < count; index += 1) {
+        gameStore.save(createGameRecordFromSnapshot(createAutomationCapacityGame(index)));
+      }
+
+      response.status(201).json({
+        status: "ok",
+        count,
+      });
+    });
+
+    app.post("/test-support/force-failure", (request, response) => {
+      const body = (request.body ?? {}) as AutomationForcedFailureRequest;
+
+      if (
+        typeof body.target !== "string" ||
+        !isAutomationFailureTarget(body.target) ||
+        !Number.isInteger(body.statusCode) ||
+        typeof body.message !== "string" ||
+        body.message.trim().length === 0
+      ) {
+        response.status(400).json({
+          status: "invalid_request",
+          message:
+            "Forced-failure requests must include a valid target, integer statusCode, and message.",
+        });
+        return;
+      }
+
+      forcedFailures.set(body.target, {
+        statusCode: Number(body.statusCode),
+        message: body.message.trim(),
+      });
+      response.status(200).json({ status: "ok", target: body.target });
+    });
+
+    app.delete("/test-support/force-failure/:target", (request, response) => {
+      const { target } = request.params;
+
+      if (!isAutomationFailureTarget(target)) {
+        response.status(400).json({
+          status: "invalid_request",
+          message: "Unknown forced-failure target.",
+        });
+        return;
+      }
+
+      forcedFailures.delete(target);
+      response.status(200).json({ status: "ok", target });
+    });
+  }
 
   app.get("/health", (_request, response) => {
     response.setHeader("cache-control", "no-store");
@@ -794,6 +1143,10 @@ export function createMultiplayerApp(): MultiplayerService {
 
   app.post("/games", (request, response) => {
     response.setHeader("cache-control", "no-store");
+
+    if (maybeSendForcedFailure("create", response)) {
+      return;
+    }
 
     if (gameStore.getConcurrentGameCount() >= MAX_CONCURRENT_GAMES) {
       response.status(429).json({
@@ -829,6 +1182,10 @@ export function createMultiplayerApp(): MultiplayerService {
   app.get("/games", (request, response) => {
     response.setHeader("cache-control", "no-store");
 
+    if (maybeSendForcedFailure("list", response)) {
+      return;
+    }
+
     const rawStatus = request.query.status;
     const status =
       typeof rawStatus === "string" ? (rawStatus as MultiplayerGameStatus) : undefined;
@@ -850,6 +1207,10 @@ export function createMultiplayerApp(): MultiplayerService {
 
   app.get("/games/:id", (request, response) => {
     response.setHeader("cache-control", "no-store");
+
+    if (maybeSendForcedFailure("detail", response)) {
+      return;
+    }
 
     const rawPlayer = request.query.player;
     const rawIntent = request.query.intent;
@@ -901,6 +1262,10 @@ export function createMultiplayerApp(): MultiplayerService {
   app.post("/games/:id/join", (request, response) => {
     response.setHeader("cache-control", "no-store");
 
+    if (maybeSendForcedFailure("join", response)) {
+      return;
+    }
+
     const result = gameStore.joinWaitingGame(request.params.id);
 
     if (result === "not_found") {
@@ -934,6 +1299,10 @@ export function createMultiplayerApp(): MultiplayerService {
 
   app.post("/games/:id/moves", (request, response) => {
     response.setHeader("cache-control", "no-store");
+
+    if (maybeSendForcedFailure("move", response)) {
+      return;
+    }
 
     const { player, position } = (request.body ?? {}) as Partial<MultiplayerMoveRequest>;
 
@@ -1006,6 +1375,10 @@ export function createMultiplayerApp(): MultiplayerService {
   app.post("/games/:id/resign", (request, response) => {
     response.setHeader("cache-control", "no-store");
 
+    if (maybeSendForcedFailure("resign", response)) {
+      return;
+    }
+
     const { player } = (request.body ?? {}) as Partial<ResignGameRequest>;
 
     if (player !== "X" && player !== "O") {
@@ -1054,6 +1427,10 @@ export function createMultiplayerApp(): MultiplayerService {
 
   app.post("/games/:id/abandonment-check", (request, response) => {
     response.setHeader("cache-control", "no-store");
+
+    if (maybeSendForcedFailure("abandonment-check", response)) {
+      return;
+    }
 
     const currentGame = gameStore.get(request.params.id);
     const result = gameStore.checkAbandonment(request.params.id);

@@ -1,6 +1,6 @@
 # UI Automation Plan
 
-Last updated: 2026-03-28
+Last updated: 2026-03-30
 
 ## Purpose
 
@@ -10,11 +10,11 @@ Define the plan to automate the manual UI cases in [ui-test-cases.md](/workspace
 
 - Playwright is already present in the repo at version `1.58.x`.
 - The current Playwright configuration is TypeScript-based in [playwright.config.ts](/workspaces/ai-tic-tac-toe-lab/playwright.config.ts).
-- Current reporting is `list` only; JUnit output is not configured yet.
+- Current reporting includes console `list` output plus JUnit XML.
 - Current browser coverage is one Chromium project only.
-- Current UI automation coverage is a single smoke test in [tests/e2e/gameplay.spec.ts](/workspaces/ai-tic-tac-toe-lab/tests/e2e/gameplay.spec.ts).
-- The current framework automatically starts only the frontend Vite app for UI tests. Multiplayer automation will need coordinated frontend and backend startup.
-- Existing stable selectors are limited. Single-player board selectors exist, but most multiplayer modal, discovery, replay, sync, and error surfaces currently depend on text or CSS structure in [src/App.tsx](/workspaces/ai-tic-tac-toe-lab/src/App.tsx).
+- Current UI automation coverage includes the `UI-001` smoke test in [tests/e2e/gameplay.spec.ts](/workspaces/ai-tic-tac-toe-lab/tests/e2e/gameplay.spec.ts) plus targeted spectate coverage in [tests/e2e/spectate.spec.ts](/workspaces/ai-tic-tac-toe-lab/tests/e2e/spectate.spec.ts).
+- The framework supports both frontend-only and coordinated frontend-plus-backend startup for UI tests.
+- Stable automation selectors now cover multiplayer modal, discovery, gameplay-session, replay, timeout, resignation, and error surfaces in [src/App.tsx](/workspaces/ai-tic-tac-toe-lab/src/App.tsx).
 
 ## Assumptions
 
@@ -85,9 +85,10 @@ Define the plan to automate the manual UI cases in [ui-test-cases.md](/workspace
 
 - [x] Establish the base automation layer: shared fixture, `StepAsync` helper, core page objects, and JUnit-capable reporter configuration.
 - [x] Support both execution modes needed by the plan: frontend-only runs and coordinated frontend-plus-backend runs.
-- [ ] Add backend-state isolation for frontend-plus-backend runs before running multiplayer automation concurrently.
-- [ ] Harden `StepAsync` attachment naming so repeated step titles cannot collide within one test's artifact output.
-- [ ] Add deterministic test data support before expanding coverage beyond smoke tests.
+- [x] Serialize frontend-plus-backend Playwright runs until per-worker backend isolation exists.
+- [x] Harden `StepAsync` attachment naming so repeated step titles cannot collide within one test's artifact output.
+- [x] Add deterministic test data support before expanding coverage beyond smoke tests.
+- [x] Add deterministic stale-join seeding so join-race failures can be exercised without timing-dependent setup.
 
 ### Phase 2: Single-Player
 
@@ -140,13 +141,13 @@ Define the plan to automate the manual UI cases in [ui-test-cases.md](/workspace
 ### Parallelism
 
 - Keep single-player tests parallel-safe.
-- Restrict multiplayer tests that mutate shared backend state to serialized workers unless isolated backend instances are introduced.
+- Multiplayer tests that mutate shared backend state now run with one worker in `UI_AUTOMATION_MODE=full` until isolated backend instances are introduced.
 
 ### Test Data
 
 - Do not depend on naturally accumulated in-memory game state.
-- Seed exact waiting, active, replay, timeout, and full-capacity conditions before each affected test.
-- Reset backend state between multiplayer tests.
+- Seed exact waiting, active, replay, timeout, and full-capacity conditions through the guarded backend test-support API before each affected test.
+- Reset backend state between multiplayer tests through the same test-support API.
 
 ## Required Support Gaps
 

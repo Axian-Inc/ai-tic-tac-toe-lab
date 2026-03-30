@@ -605,6 +605,7 @@ function LandingPage({
         <div
           className="multiplayer-modal-backdrop"
           role="presentation"
+          data-testid="multiplayer-modal-backdrop"
           onClick={(event) => {
             if (event.target === event.currentTarget) {
               closeMultiplayerModal();
@@ -616,6 +617,7 @@ function LandingPage({
             role="dialog"
             aria-modal="true"
             aria-labelledby="multiplayer-modal-title"
+            data-testid="multiplayer-modal-container"
           >
             <div className="multiplayer-modal-header">
               <h2 id="multiplayer-modal-title">Multiplayer</h2>
@@ -624,6 +626,7 @@ function LandingPage({
                 className="multiplayer-modal-close"
                 onClick={closeMultiplayerModal}
                 aria-label="Close multiplayer setup"
+                data-testid="multiplayer-modal-close-button"
               >
                 X
               </button>
@@ -643,6 +646,7 @@ function LandingPage({
                   placeholder="Enter your name here"
                   autoComplete="nickname"
                   maxLength={MULTIPLAYER_PLAYER_NAME_MAX_LENGTH}
+                  data-testid="player-name-input"
                 />
               </label>
             ) : null}
@@ -655,6 +659,7 @@ function LandingPage({
                   setMultiplayerModalView("create");
                   setMultiplayerError("");
                 }}
+                data-testid="create-tab-button"
               >
                 Create
               </button>
@@ -664,6 +669,7 @@ function LandingPage({
                 onClick={() => {
                   void handleOpenJoinPanel();
                 }}
+                data-testid="join-tab-button"
               >
                 Join
               </button>
@@ -673,13 +679,17 @@ function LandingPage({
                 onClick={() => {
                   void handleOpenSpectatePanel();
                 }}
+                data-testid="spectate-tab-button"
               >
                 Spectate
               </button>
             </div>
 
             {multiplayerError ? (
-              <p className="multiplayer-message multiplayer-message-error">
+              <p
+                className="multiplayer-message multiplayer-message-error"
+                data-testid="modal-error-message"
+              >
                 {multiplayerError}
               </p>
             ) : null}
@@ -704,6 +714,7 @@ function LandingPage({
                     placeholder="Friday Lunch Match"
                     autoComplete="off"
                     maxLength={MULTIPLAYER_GAME_NAME_MAX_LENGTH}
+                    data-testid="game-name-input"
                   />
                 </label>
                 <p className="multiplayer-message">
@@ -717,6 +728,7 @@ function LandingPage({
                       void handleCreateMultiplayerGame();
                     }}
                     disabled={isCreatingMultiplayerGame}
+                    data-testid="create-submit-button"
                   >
                     {isCreatingMultiplayerGame ? "Creating..." : "Create Game"}
                   </button>
@@ -725,6 +737,7 @@ function LandingPage({
                     className="multiplayer-refresh multiplayer-modal-cancel"
                     onClick={closeMultiplayerModal}
                     disabled={isCreatingMultiplayerGame}
+                    data-testid="create-cancel-button"
                   >
                     Cancel
                   </button>
@@ -746,6 +759,7 @@ function LandingPage({
                       void loadDiscoveryGames();
                     }}
                     disabled={isLoadingWaitingGames || isLoadingActiveGames}
+                    data-testid="discovery-refresh-button"
                   >
                     Refresh
                   </button>
@@ -756,14 +770,17 @@ function LandingPage({
                 activeGames.length === 0 &&
                 !isLoadingWaitingGames &&
                 !isLoadingActiveGames ? (
-                  <p className="multiplayer-message">
+                  <p className="multiplayer-message" data-testid="empty-state-message">
                     No multiplayer games are available right now. Refresh to check
                     again or create a new match.
                   </p>
                 ) : null}
 
                 {waitingGames.length > 0 ? (
-                  <section className="multiplayer-discovery-group">
+                  <section
+                    className="multiplayer-discovery-group"
+                    data-testid="waiting-games-list"
+                  >
                     <div className="multiplayer-discovery-header">
                       <p className="multiplayer-panel-kicker">Joinable Games</p>
                       <span className="multiplayer-discovery-count">
@@ -776,7 +793,11 @@ function LandingPage({
                         const isSpectating = spectatingGameId === game.id;
 
                         return (
-                          <li key={game.id} className="multiplayer-game-card">
+                          <li
+                            key={game.id}
+                            className="multiplayer-game-card"
+                            data-testid={`waiting-game-card-${game.id}`}
+                          >
                             <div className="multiplayer-game-card-heading">
                               <span className="multiplayer-game-name">{game.name}</span>
                               <span className="multiplayer-game-id">{game.id}</span>
@@ -806,8 +827,20 @@ function LandingPage({
                                 disabled={
                                   isJoining || isSpectating || isCreatingMultiplayerGame
                                 }
+                                data-testid={`join-game-button-${game.id}`}
                               >
                                 {isJoining ? "Joining..." : "Join"}
+                              </button>
+                              <button
+                                type="button"
+                                className="multiplayer-join-button"
+                                onClick={() => {
+                                  void handleSpectateMultiplayerGame(game.id);
+                                }}
+                                disabled={isJoining || isSpectating || isCreatingMultiplayerGame}
+                                data-testid={`spectate-game-button-${game.id}`}
+                              >
+                                {isSpectating ? "Opening..." : "Spectate"}
                               </button>
                             </div>
                           </li>
@@ -818,7 +851,10 @@ function LandingPage({
                 ) : null}
 
                 {activeGames.length > 0 ? (
-                  <section className="multiplayer-discovery-group">
+                  <section
+                    className="multiplayer-discovery-group"
+                    data-testid="active-games-list"
+                  >
                     <div className="multiplayer-discovery-header">
                       <p className="multiplayer-panel-kicker">Live Games</p>
                       <span className="multiplayer-discovery-count">
@@ -833,6 +869,7 @@ function LandingPage({
                           <li
                             key={game.id}
                             className="multiplayer-game-card multiplayer-game-card-active"
+                            data-testid={`active-game-card-${game.id}`}
                           >
                             <p className="multiplayer-game-id">{game.id}</p>
                             <div className="multiplayer-game-card-content">
@@ -855,6 +892,7 @@ function LandingPage({
                                     void handleSpectateMultiplayerGame(game.id);
                                   }}
                                   disabled={isSpectating || isCreatingMultiplayerGame}
+                                  data-testid={`spectate-game-button-${game.id}`}
                                 >
                                   {isSpectating ? "Opening..." : "Spectate"}
                                 </button>
@@ -883,6 +921,7 @@ function LandingPage({
                       void loadActiveGames();
                     }}
                     disabled={isLoadingActiveGames}
+                    data-testid="discovery-refresh-button"
                   >
                     Refresh
                   </button>
@@ -891,14 +930,17 @@ function LandingPage({
                 {!multiplayerError &&
                 activeGames.length === 0 &&
                 !isLoadingActiveGames ? (
-                  <p className="multiplayer-message">
+                  <p className="multiplayer-message" data-testid="empty-state-message">
                     No active multiplayer games are available to spectate right now.
                     Refresh to check again later.
                   </p>
                 ) : null}
 
                 {activeGames.length > 0 ? (
-                  <section className="multiplayer-discovery-group">
+                  <section
+                    className="multiplayer-discovery-group"
+                    data-testid="active-games-list"
+                  >
                     <div className="multiplayer-discovery-header">
                       <p className="multiplayer-panel-kicker">Live Games</p>
                       <span className="multiplayer-discovery-count">
@@ -913,6 +955,7 @@ function LandingPage({
                           <li
                             key={game.id}
                             className="multiplayer-game-card multiplayer-game-card-active"
+                            data-testid={`active-game-card-${game.id}`}
                           >
                             <p className="multiplayer-game-id">{game.id}</p>
                             <div className="multiplayer-game-card-content">
@@ -935,6 +978,7 @@ function LandingPage({
                                     void handleSpectateMultiplayerGame(game.id);
                                   }}
                                   disabled={isSpectating || isCreatingMultiplayerGame}
+                                  data-testid={`spectate-game-button-${game.id}`}
                                 >
                                   {isSpectating ? "Opening..." : "Spectate"}
                                 </button>
@@ -989,6 +1033,7 @@ function GameplayPage({
     useState<boolean>(false);
   const [isCheckingAbandonment, setIsCheckingAbandonment] =
     useState<boolean>(false);
+  const [isResignDialogOpen, setIsResignDialogOpen] = useState<boolean>(false);
   const [multiplayerError, setMultiplayerError] = useState<string>("");
   const [liveSyncState, setLiveSyncState] = useState<LiveSyncState>("idle");
   const [replayFrameIndex, setReplayFrameIndex] = useState<number | null>(null);
@@ -1276,12 +1321,8 @@ function GameplayPage({
       return;
     }
 
-    const didConfirm = window.confirm("Resign this multiplayer game?");
-    if (!didConfirm) {
-      return;
-    }
-
     setIsResigningMultiplayerGame(true);
+    setIsResignDialogOpen(false);
     setMultiplayerError("");
 
     try {
@@ -1298,6 +1339,22 @@ function GameplayPage({
     } finally {
       setIsResigningMultiplayerGame(false);
     }
+  };
+
+  const handleOpenResignDialog = () => {
+    if (
+      !multiplayerSession ||
+      multiplayerSession.role !== "player" ||
+      !multiplayerGame ||
+      multiplayerGame.status !== "active" ||
+      multiplayerGame.state.status.isOver ||
+      isReplayActive ||
+      isResigningMultiplayerGame
+    ) {
+      return;
+    }
+
+    setIsResignDialogOpen(true);
   };
 
   const handleCellClick = (position: number) => {
@@ -1356,6 +1413,9 @@ function GameplayPage({
       multiplayerSession === null ||
       multiplayerGame !== null
     ) {
+      if (!isMultiplayer) {
+        setIsResignDialogOpen(false);
+      }
       return;
     }
 
@@ -1368,7 +1428,14 @@ function GameplayPage({
   }, [isMultiplayer, multiplayerGame, multiplayerSession]);
 
   useEffect(() => {
+    if (!isActiveMultiplayerPlayerGame || isReplayActive) {
+      setIsResignDialogOpen(false);
+    }
+  }, [isActiveMultiplayerPlayerGame, isReplayActive]);
+
+  useEffect(() => {
     if (!isMultiplayer || multiplayerSession === null) {
+      setIsResignDialogOpen(false);
       setLiveSyncState("idle");
       shouldReconnectRef.current = false;
       clearReconnectTimer();
@@ -1618,6 +1685,47 @@ function GameplayPage({
       data-testid="gameplay-page"
     >
       <section className="gameplay-shell">
+        {isResignDialogOpen ? (
+          <section
+            className="multiplayer-modal"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="resign-confirmation-title"
+            data-testid="resign-confirmation-dialog"
+          >
+            <div className="multiplayer-modal-header">
+              <h2 id="resign-confirmation-title">Resign Multiplayer Game</h2>
+            </div>
+            <p className="multiplayer-message">
+              Resigning ends the match immediately for both players.
+            </p>
+            <div className="multiplayer-modal-actions">
+              <button
+                type="button"
+                className="landing-cta multiplayer-modal-submit"
+                onClick={() => {
+                  void handleResignMultiplayerGame();
+                }}
+                disabled={isResigningMultiplayerGame}
+                data-testid="resign-confirm-button"
+              >
+                {isResigningMultiplayerGame ? "Resigning..." : "Confirm Resign"}
+              </button>
+              <button
+                type="button"
+                className="multiplayer-refresh multiplayer-modal-cancel"
+                onClick={() => {
+                  setIsResignDialogOpen(false);
+                }}
+                disabled={isResigningMultiplayerGame}
+                data-testid="resign-cancel-button"
+              >
+                Cancel
+              </button>
+            </div>
+          </section>
+        ) : null}
+
         {!isMultiplayer && isConfettiVisible ? (
           <div className="confetti-layer" aria-hidden="true" key={confettiBurstId}>
             {CONFETTI_INDICES.map((index) => {
@@ -1643,7 +1751,14 @@ function GameplayPage({
         </h1>
 
         {multiplayerSession ? (
-          <section className="gameplay-session-card" aria-label="Multiplayer session">
+          <section
+            className="gameplay-session-card"
+            aria-label="Multiplayer session"
+            data-testid="multiplayer-session-card"
+            data-session-role={multiplayerSession.role}
+            data-game-status={multiplayerGame?.status ?? "loading"}
+            data-replay-mode={isReplayActive ? "replay" : "live"}
+          >
             <div className="gameplay-session-header">
               <div>
                 <p className="gameplay-session-kicker">Multiplayer Match</p>
@@ -1652,7 +1767,9 @@ function GameplayPage({
                     {getMultiplayerMatchTitle(multiplayerGame)}
                   </p>
                 ) : null}
-                <p className="gameplay-session-id">{multiplayerSession.gameId}</p>
+                <p className="gameplay-session-id" data-testid="match-id-text">
+                  {multiplayerSession.gameId}
+                </p>
               </div>
               <button
                 type="button"
@@ -1661,12 +1778,16 @@ function GameplayPage({
                   void handleRefreshMultiplayerGame();
                 }}
                 disabled={isRefreshingMultiplayerGame || isLoadingMultiplayerGame}
+                data-testid="refresh-match-button"
               >
                 {isRefreshingMultiplayerGame ? "Refreshing..." : "Refresh Match"}
               </button>
             </div>
             <div className="gameplay-session-meta">
-              <span>
+              <span
+                data-testid="multiplayer-session-role"
+                data-role={multiplayerSession.role}
+              >
                 {multiplayerSession.role === "spectator"
                   ? "You are spectating"
                   : `You are player ${multiplayerSession.player}`}
@@ -1674,7 +1795,14 @@ function GameplayPage({
               {multiplayerGame ? (
                 <span>Hosted by {getMultiplayerHostLabel(multiplayerGame)}</span>
               ) : null}
-              {multiplayerGame ? <span>Status: {multiplayerGame.status}</span> : null}
+              {multiplayerGame ? (
+                <span
+                  data-testid="multiplayer-game-status"
+                  data-status={multiplayerGame.status}
+                >
+                  Status: {multiplayerGame.status}
+                </span>
+              ) : null}
               {multiplayerGame ? (
                 <span>Created {formatMultiplayerTimestamp(multiplayerGame.createdAt)}</span>
               ) : null}
@@ -1683,20 +1811,36 @@ function GameplayPage({
               className={`gameplay-live-sync gameplay-live-sync-${liveSyncState}`}
               role="status"
               aria-live="polite"
+              data-testid="live-sync-status"
+              data-sync-state={liveSyncState}
             >
               {getLiveSyncLabel(liveSyncState)}
             </p>
             <p className="gameplay-session-help">{multiplayerHelpMessage}</p>
             {abandonmentMessage ? (
-              <p className="gameplay-session-help">{abandonmentMessage}</p>
+              <p
+                className="gameplay-session-help"
+                data-testid="abandonment-countdown"
+                data-awaiting-player={abandonmentAwaitingPlayer ?? ""}
+              >
+                {abandonmentMessage}
+              </p>
             ) : null}
             {multiplayerError ? (
-              <p className="multiplayer-message multiplayer-message-error">
+              <p
+                className="multiplayer-message multiplayer-message-error"
+                data-testid="gameplay-error-message"
+              >
                 {multiplayerError}
               </p>
             ) : null}
             {multiplayerGame && isReplayAvailable ? (
-              <section className="gameplay-history-card" aria-label="Replay and catch-up">
+              <section
+                className="gameplay-history-card"
+                aria-label="Replay and catch-up"
+                data-testid="replay-panel"
+                data-replay-mode={isReplayActive ? "replay" : "live"}
+              >
                 <div className="gameplay-history-header">
                   <div>
                     <p className="gameplay-session-kicker">Replay and Catch-Up</p>
@@ -1728,6 +1872,7 @@ function GameplayPage({
                     onClick={() => {
                       setReplayFrameIndex(0);
                     }}
+                    data-testid="replay-start-button"
                   >
                     Start
                   </button>
@@ -1744,6 +1889,7 @@ function GameplayPage({
                       });
                     }}
                     disabled={replayFrameIndex === 0}
+                    data-testid="replay-back-button"
                   >
                     Back
                   </button>
@@ -1760,6 +1906,7 @@ function GameplayPage({
                       });
                     }}
                     disabled={replayFrameIndex === lastReplayFrameIndex}
+                    data-testid="replay-next-button"
                   >
                     Next
                   </button>
@@ -1770,6 +1917,7 @@ function GameplayPage({
                       setReplayFrameIndex(null);
                     }}
                     disabled={!isReplayActive}
+                    data-testid="replay-return-live-button"
                   >
                     Return to Live
                   </button>
@@ -1812,7 +1960,9 @@ function GameplayPage({
           {statusMessage}
         </p>
         {!isMultiplayer && isGameOver && displayedGameState.status.winner === "O" ? (
-          <p className="gameplay-loss-feedback">Try again.</p>
+          <p className="gameplay-loss-feedback" data-testid="loss-feedback-text">
+            Try again.
+          </p>
         ) : null}
 
         <section
@@ -1842,9 +1992,10 @@ function GameplayPage({
                 type="button"
                 className="gameplay-control gameplay-control-primary"
                 onClick={() => {
-                  void handleResignMultiplayerGame();
+                  handleOpenResignDialog();
                 }}
                 disabled={isResigningMultiplayerGame || isReplayActive}
+                data-testid="resignation-button"
               >
                 {isResigningMultiplayerGame ? "Resigning..." : "Resign"}
               </button>
@@ -1855,6 +2006,7 @@ function GameplayPage({
                   void handleCheckAbandonment();
                 }}
                 disabled={isCheckingAbandonment || isReplayActive}
+                data-testid="timeout-button"
               >
                 {isCheckingAbandonment ? "Checking..." : "Check Timeout"}
               </button>
