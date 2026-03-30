@@ -13,6 +13,9 @@ node_modules
 node_modules.old
 dist
 dist-ssr
+coverage
+playwright-report
+test-results
 *.local
 .terraform/
 *.tfstate

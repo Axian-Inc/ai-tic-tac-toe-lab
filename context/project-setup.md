@@ -87,6 +87,12 @@ Run Playwright E2E tests:
 npm run test:e2e
 ```
 
+Generate the Vitest coverage reports:
+
+```bash
+npm run test:coverage
+```
+
 If Playwright browsers are not installed yet:
 
 ```bash
@@ -116,6 +122,7 @@ npm run preview
 - The app is a Vite + React + TypeScript project.
 - No environment variables are required to run the app locally.
 - `npm run test:e2e` starts or reuses a local Vite server automatically through Playwright config.
+- `npm run test:coverage` writes coverage artifacts to `coverage/`, including `coverage/index.html` and `coverage/coverage-summary.json`.
 - AWS, Terraform, and S3 deployment are not required for local development.
 
 ## UI Environment Variables

@@ -16,20 +16,25 @@ Update: 2026-03-30 21:30:09 UTC - Added server test coverage for active-game dis
 Update: 2026-03-30 22:32:33 UTC - Added server tests for completed-game exclusion from active spectator lists, missing-game spectator transport errors, and turn-order stability during spectator subscriptions.
 Update: 2026-03-30 22:41:06 UTC - Added client unit coverage for the landing-page spectator dialog and the read-only spectator game view with player names.
 Update: 2026-03-30 22:46:46 UTC - Clarified the current project-wide test commands and documented that coverage is not yet produced by a single existing command.
+Update: 2026-03-30 23:20:34 UTC - Added a working coverage command and browser-level spectator flow coverage.
 
 Current:
 - Unit tests via Vitest: `npm run test:run`
-- End-to-end tests via Playwright: `npx playwright test tests/e2e/full-game.spec.ts`
+- End-to-end tests via Playwright: `npm run test:e2e`
 - Multiplayer server unit + flow tests via Vitest (including WebSocket updates): `npm run test:run`
-- Coverage reporting is now in scope and should be invokable from the terminal.
+- Coverage reporting via Vitest: `npm run test:coverage`
 
 Command Notes:
 - There is currently no single existing npm command that runs every automated test suite in the project.
 - To run the currently documented automated suites, use both:
-  - `npm run test:run` - all Vitest tests (in `src/__tests__`)
+  - `npm run test:run` - all Vitest tests (in `src/__tests__` and `server/__tests__`)
   - `npm run test:e2e` - all Playwright tests thru the browser
-- Coverage is not currently reported by the same existing command, because the repository does not yet define a dedicated coverage script in `package.json`.
-- When coverage support is implemented, document the exact terminal command here and note whether it is combined with the full test run or separate from it.
+- Coverage is generated separately with `npm run test:coverage`.
+- The coverage command currently measures the client and server Vitest suites and writes reports to `coverage/`.
+- The configured reports include:
+  - `text-summary` in the terminal
+  - `coverage/coverage-summary.json` as a machine-readable summary
+  - `coverage/index.html` as a human-readable HTML report
 
 Priorities:
 - Validate game logic and board interactions.

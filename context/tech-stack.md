@@ -11,6 +11,7 @@ It serves as the concise source of truth for major dependencies and tool categor
 
 Date: 2026-03-19
 Update: 2026-03-30 20:31:29 UTC - Phase 3 adds GitHub Actions-based pull-request automation and terminal-generated coverage reporting requirements.
+Update: 2026-03-30 23:20:34 UTC - Coverage reporting is implemented with Vitest's V8 provider and HTML/JSON/text outputs.
 
 Frontend:
 - React 19
@@ -24,7 +25,7 @@ Styling:
 Testing:
 - Vitest
 - Playwright
-- Coverage reporting via test tooling, invokable from the terminal
+- Coverage reporting via Vitest V8 coverage, invokable from the terminal
 
 Infrastructure:
 - Terraform
