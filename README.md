@@ -71,7 +71,7 @@ npx playwright install
 npm run test:e2e
 ```
 
-## API Server: Run Tests
+## API Server: Run Unit Tests
 
 ```bash
 cd api-server
