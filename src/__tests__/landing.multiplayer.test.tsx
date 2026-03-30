@@ -2,6 +2,7 @@ import { act } from 'react'
 import { createRoot } from 'react-dom/client'
 import { describe, expect, it, vi } from 'vitest'
 import LandingPage from '../pages/LandingPage'
+import * as multiplayerModule from '../multiplayer'
 
 const findButtonByText = (container: HTMLElement, text: string) =>
   Array.from(container.querySelectorAll('button')).find((button) =>
@@ -35,6 +36,7 @@ describe('LandingPage multiplayer modal', () => {
           onStartSingle={vi.fn()}
           onCreateMultiplayer={vi.fn()}
           onJoinMultiplayer={vi.fn()}
+          onSpectateGame={vi.fn()}
           onLogApiMessage={vi.fn()}
         />,
       )
@@ -87,6 +89,7 @@ describe('LandingPage multiplayer modal', () => {
           onStartSingle={vi.fn()}
           onCreateMultiplayer={vi.fn()}
           onJoinMultiplayer={vi.fn()}
+          onSpectateGame={vi.fn()}
           onLogApiMessage={vi.fn()}
         />,
       )
@@ -108,6 +111,55 @@ describe('LandingPage multiplayer modal', () => {
 
     expect(container.textContent).toContain('No games available yet')
     expect(findButtonByText(container, 'Refresh')).toBeTruthy()
+
+    await act(async () => {
+      root.unmount()
+    })
+    container.remove()
+  })
+
+  it('opens the spectate dialog and shows active games', async () => {
+    vi.spyOn(multiplayerModule, 'listActiveGames').mockResolvedValueOnce([
+      {
+        id: 'active-1',
+        status: 'active',
+        name: 'Live Match',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        currentPlayer: 'X',
+        players: { X: 'Misty', O: 'Zesty' },
+      },
+    ])
+
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+    const root = createRoot(container)
+
+    reactActEnvironment.IS_REACT_ACT_ENVIRONMENT = true
+
+    await act(async () => {
+      root.render(
+        <LandingPage
+          onStartSingle={vi.fn()}
+          onCreateMultiplayer={vi.fn()}
+          onJoinMultiplayer={vi.fn()}
+          onSpectateGame={vi.fn()}
+          onLogApiMessage={vi.fn()}
+        />,
+      )
+    })
+
+    const spectateButton = findButtonByText(container, 'Spectate')
+    expect(spectateButton).toBeTruthy()
+
+    await act(async () => {
+      spectateButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+      await Promise.resolve()
+    })
+
+    expect(container.textContent).toContain('Live Games')
+    expect(container.textContent).toContain('Live Match')
+    expect(container.textContent).toContain('Misty vs Zesty')
 
     await act(async () => {
       root.unmount()

@@ -58,7 +58,9 @@ export const toGameSummary = (game) => ({
   status: game.status,
   name: game.name,
   createdAt: game.createdAt,
+  updatedAt: game.updatedAt,
   players: game.players,
+  currentPlayer: game.state.currentPlayer,
 })
 
 export const isValidStatus = (status) =>
@@ -221,7 +223,7 @@ const respondUpgradeError = (socket, statusCode, message) => {
 
 // WebSocket protocol for multiplayer updates.
 // Endpoint: WS /ws?gameId=...
-// On connect: sends { type: "game_state", game } to allow catch-up.
+// On connect: sends { type: "game_state", game } to allow catch-up for players or spectators.
 // On valid move: broadcasts { type: "game_update", move, game }.
 // On game end: broadcasts { type: "game_over", game }.
 // On invalid subscription: closes the connection with an error response.
@@ -301,6 +303,8 @@ const createRealtimeHub = ({ games }) => {
     set.add(ws)
     send(ws, { type: 'game_state', game })
 
+    // Spectators are read-only subscribers. Ignore incoming client messages.
+    ws.on('message', () => {})
     ws.on('close', () => removeSubscriber(gameId, ws))
   })
 

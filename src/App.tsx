@@ -6,12 +6,13 @@ import LandingPage from './pages/LandingPage'
 import MultiplayerGamePage from './pages/MultiplayerGamePage'
 import {
   createMultiplayerGame,
+  getMultiplayerGame,
   joinMultiplayerGame,
   type MultiplayerGame,
   type PlayerSymbol,
 } from './multiplayer'
 
-type View = 'landing' | 'game' | 'multiplayer'
+type View = 'landing' | 'game' | 'multiplayer' | 'spectate'
 
 const App = () => {
   const [view, setView] = useState<View>('landing')
@@ -64,6 +65,13 @@ const App = () => {
     setView('multiplayer')
   }
 
+  const startSpectating = async (gameId: string) => {
+    logApiMessage(`GET /games/${gameId}`)
+    const response = await getMultiplayerGame(gameId)
+    setMultiplayerGame(response.game)
+    setView('spectate')
+  }
+
   const quitGame = () => {
     setView('landing')
     setMultiplayerGame(null)
@@ -76,6 +84,7 @@ const App = () => {
           onStartSingle={startGame}
           onCreateMultiplayer={startMultiplayerCreate}
           onJoinMultiplayer={startMultiplayerJoin}
+          onSpectateGame={startSpectating}
           onLogApiMessage={logApiMessage}
         />
       ) : null}
@@ -85,7 +94,17 @@ const App = () => {
       {view === 'multiplayer' && multiplayerGame ? (
         <MultiplayerGamePage
           initialGame={multiplayerGame}
+          mode="player"
           playerSymbol={playerSymbol}
+          onQuit={quitGame}
+          showApiLog={showApiLog}
+          onLogApiMessage={logApiMessage}
+        />
+      ) : null}
+      {view === 'spectate' && multiplayerGame ? (
+        <MultiplayerGamePage
+          initialGame={multiplayerGame}
+          mode="spectator"
           onQuit={quitGame}
           showApiLog={showApiLog}
           onLogApiMessage={logApiMessage}

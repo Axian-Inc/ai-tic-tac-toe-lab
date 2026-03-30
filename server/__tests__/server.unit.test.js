@@ -49,6 +49,8 @@ describe('multiplayer server unit helpers', () => {
       status: 'waiting',
       name: 'Arena',
       createdAt: '2026-03-20T23:10:00.000Z',
+      updatedAt: '2026-03-20T23:10:00.000Z',
+      currentPlayer: 'X',
       players: {
         X: 'Player 1',
         O: null,

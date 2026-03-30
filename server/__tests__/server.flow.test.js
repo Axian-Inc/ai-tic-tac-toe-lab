@@ -121,6 +121,82 @@ describe('multiplayer server flow', () => {
     expect(joined.game.players.O).toBe('Joiner')
   })
 
+  it('lists only active games with spectator metadata', async () => {
+    const started = await startTestServer()
+    const localBaseUrl = started.baseUrl
+    const localServer = started.server
+
+    const createLocalGame = async (payload = {}) => {
+      const response = await fetch(`${localBaseUrl}/games`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      return response.json()
+    }
+
+    const waitingGame = await createLocalGame({ playerName: 'Waiting Host' })
+    const activeGame = await createLocalGame({
+      playerName: 'Active Host',
+      gameName: 'Spectator Table',
+    })
+    const completedGame = await createLocalGame({ playerName: 'Completed Host' })
+
+    await fetch(`${localBaseUrl}/games/${activeGame.gameId}/join`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ playerName: 'Joiner' }),
+    })
+
+    await fetch(`${localBaseUrl}/games/${completedGame.gameId}/join`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ playerName: 'Finisher' }),
+    })
+
+    const finishingMoves = [
+      { row: 0, col: 0, player: 'X' },
+      { row: 1, col: 0, player: 'O' },
+      { row: 0, col: 1, player: 'X' },
+      { row: 1, col: 1, player: 'O' },
+      { row: 0, col: 2, player: 'X' },
+    ]
+
+    for (const move of finishingMoves) {
+      const moveResponse = await fetch(
+        `${localBaseUrl}/games/${completedGame.gameId}/moves`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ move }),
+        },
+      )
+      expect(moveResponse.status).toBe(200)
+    }
+
+    const response = await fetch(`${localBaseUrl}/games?status=active`)
+    expect(response.status).toBe(200)
+
+    const payload = await response.json()
+    expect(payload.games).toHaveLength(1)
+    expect(payload.games[0]).toMatchObject({
+      id: activeGame.gameId,
+      status: 'active',
+      name: 'Spectator Table',
+      players: {
+        X: 'Active Host',
+        O: 'Joiner',
+      },
+      currentPlayer: 'X',
+    })
+    expect(payload.games[0].updatedAt).toBeTypeOf('string')
+    expect(payload.games.map((game) => game.id)).not.toContain(waitingGame.gameId)
+    expect(payload.games.map((game) => game.id)).not.toContain(completedGame.gameId)
+
+    await new Promise((resolve) => localServer.close(resolve))
+  })
+
   it('rejects joining a non-waiting game', async () => {
     const created = await createGame({ playerName: 'Host' })
 
@@ -239,5 +315,63 @@ describe('multiplayer server flow', () => {
     expect(ids).toContain(created.gameId)
 
     await new Promise((resolve) => localServer.close(resolve))
+  })
+
+  it('returns the latest completed game state for late spectator retrieval', async () => {
+    const started = await startTestServer()
+    const localBaseUrl = started.baseUrl
+    const localServer = started.server
+
+    const response = await fetch(`${localBaseUrl}/games`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ playerName: 'Host' }),
+    })
+    const created = await response.json()
+
+    await fetch(`${localBaseUrl}/games/${created.gameId}/join`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ playerName: 'Joiner' }),
+    })
+
+    const moves = [
+      { row: 0, col: 0, player: 'X' },
+      { row: 1, col: 0, player: 'O' },
+      { row: 0, col: 1, player: 'X' },
+      { row: 1, col: 1, player: 'O' },
+      { row: 0, col: 2, player: 'X' },
+    ]
+
+    for (const move of moves) {
+      const moveResponse = await fetch(
+        `${localBaseUrl}/games/${created.gameId}/moves`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ move }),
+        },
+      )
+      expect(moveResponse.status).toBe(200)
+    }
+
+    const finalStateResponse = await fetch(`${localBaseUrl}/games/${created.gameId}`)
+    expect(finalStateResponse.status).toBe(200)
+
+    const payload = await finalStateResponse.json()
+    expect(payload.game.status).toBe('over')
+    expect(payload.game.players).toEqual({ X: 'Host', O: 'Joiner' })
+    expect(payload.game.state.winner).toBe('X')
+    expect(payload.game.state.moveHistory).toHaveLength(5)
+
+    await new Promise((resolve) => localServer.close(resolve))
+  })
+
+  it('returns 404 when a spectator retrieves a non-existent game state', async () => {
+    const response = await fetch(`${baseUrl}/games/non-existent-game`)
+
+    expect(response.status).toBe(404)
+    const payload = await response.json()
+    expect(payload.error).toBe('Game not found.')
   })
 })

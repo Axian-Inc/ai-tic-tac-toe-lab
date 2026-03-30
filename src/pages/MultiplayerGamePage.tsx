@@ -13,7 +13,8 @@ import {
 
 type MultiplayerGamePageProps = {
   initialGame: MultiplayerGame
-  playerSymbol: PlayerSymbol
+  mode: 'player' | 'spectator'
+  playerSymbol?: PlayerSymbol
   onQuit: () => void
   showApiLog: boolean
   onLogApiMessage: (message: string) => void
@@ -21,6 +22,7 @@ type MultiplayerGamePageProps = {
 
 const MultiplayerGamePage = ({
   initialGame,
+  mode,
   playerSymbol,
   onQuit,
   showApiLog,
@@ -35,6 +37,8 @@ const MultiplayerGamePage = ({
   useEffect(() => {
     setGame(initialGame)
   }, [initialGame.id])
+
+  const viewerSymbol = playerSymbol ?? null
 
   useEffect(() => {
     if (showApiLog) {
@@ -58,16 +62,29 @@ const MultiplayerGamePage = ({
   }, [initialGame.id])
 
   const status = useMemo(() => {
+    if (mode === 'spectator') {
+      if (game.state.endReason === 'resign') {
+        return game.state.winner
+          ? `${game.players[game.state.winner] || game.state.winner} wins by resignation.`
+          : 'Game ended by resignation.'
+      }
+      if (game.state.winner) {
+        return `${game.players[game.state.winner] || game.state.winner} wins.`
+      }
+      if (game.state.isDraw) return 'Draw game.'
+      return `${game.players[game.state.currentPlayer] || game.state.currentPlayer} to move.`
+    }
+
     if (game.state.endReason === 'resign') {
-      return game.state.winner === playerSymbol
+      return game.state.winner === viewerSymbol
         ? 'Your opponent resigned.'
         : 'You resigned.'
     }
     if (game.state.winner) {
-      return game.state.winner === playerSymbol ? 'You win!' : 'You lose.'
+      return game.state.winner === viewerSymbol ? 'You win!' : 'You lose.'
     }
     if (game.state.isDraw) return 'Draw game.'
-    return game.state.currentPlayer === playerSymbol
+    return game.state.currentPlayer === viewerSymbol
       ? 'Your turn.'
       : 'Opponent turn.'
   }, [
@@ -75,17 +92,20 @@ const MultiplayerGamePage = ({
     game.state.endReason,
     game.state.isDraw,
     game.state.winner,
-    playerSymbol,
+    game.players,
+    mode,
+    viewerSymbol,
   ])
 
   const canPlayAt = (position: Position) => {
+    if (mode !== 'player' || !viewerSymbol) return false
     if (game.status !== 'active') return false
-    if (game.state.currentPlayer !== playerSymbol) return false
+    if (game.state.currentPlayer !== viewerSymbol) return false
     return game.state.board[position.row][position.col] === null
   }
 
   const handleSelect = async (position: Position) => {
-    if (!canPlayAt(position)) return
+    if (!viewerSymbol || !canPlayAt(position)) return
     playThud()
     try {
       if (showApiLog) {
@@ -93,7 +113,7 @@ const MultiplayerGamePage = ({
       }
       const response = await postMultiplayerMove({
         gameId: game.id,
-        move: { row: position.row, col: position.col, player: playerSymbol },
+        move: { row: position.row, col: position.col, player: viewerSymbol },
       })
       setGame(response.game)
     } catch {
@@ -102,14 +122,14 @@ const MultiplayerGamePage = ({
   }
 
   const handleResign = async () => {
-    if (game.status !== 'active') return
+    if (mode !== 'player' || !viewerSymbol || game.status !== 'active') return
     try {
       if (showApiLog) {
         onLogApiMessage(`POST /games/${game.id}/resign`)
       }
       const response = await resignMultiplayerGame({
         gameId: game.id,
-        player: playerSymbol,
+        player: viewerSymbol,
       })
       setGame(response.game)
     } catch {
@@ -126,7 +146,7 @@ const MultiplayerGamePage = ({
     if (game.state.winner === lastOutcomeRef.current) return
     lastOutcomeRef.current = game.state.winner
 
-    if (game.state.winner === playerSymbol) {
+    if (game.state.winner === viewerSymbol) {
       playWin()
       confetti({
         particleCount: 140,
@@ -136,9 +156,10 @@ const MultiplayerGamePage = ({
     } else {
       playLose()
     }
-  }, [game.state.winner, playLose, playWin, playerSymbol])
+  }, [game.state.winner, mode, playLose, playWin, viewerSymbol])
 
-  const opponentSymbol: PlayerSymbol = playerSymbol === 'X' ? 'O' : 'X'
+  const playerXName = game.players.X || 'Player 1'
+  const playerOName = game.players.O || 'Player 2'
   const board = game.state.board as GameBoard
 
   return (
@@ -150,24 +171,28 @@ const MultiplayerGamePage = ({
         <div className="game__status" aria-label="Matchup">
           <span
             className={`game__status-pill ${
-              game.state.currentPlayer === playerSymbol
+              game.state.currentPlayer === 'X'
                 ? 'game__status-pill--active'
                 : ''
             }`}
           >
-            <span className="game__status-letter">{playerSymbol}</span>
-            <span className="game__status-role">You</span>
+            <span className="game__status-letter">X</span>
+            <span className="game__status-role">
+              {mode === 'player' && viewerSymbol === 'X' ? 'You' : playerXName}
+            </span>
           </span>
           <span className="game__status-divider">VS</span>
           <span
             className={`game__status-pill ${
-              game.state.currentPlayer === opponentSymbol
+              game.state.currentPlayer === 'O'
                 ? 'game__status-pill--active'
                 : ''
             }`}
           >
-            <span className="game__status-letter">{opponentSymbol}</span>
-            <span className="game__status-role">Opponent</span>
+            <span className="game__status-letter">O</span>
+            <span className="game__status-role">
+              {mode === 'player' && viewerSymbol === 'O' ? 'You' : playerOName}
+            </span>
           </span>
         </div>
         <p className="game__subtitle">{status}</p>
@@ -179,21 +204,23 @@ const MultiplayerGamePage = ({
         onSelect={handleSelect}
       />
 
-      {game.state.winner && game.state.winner !== playerSymbol && (
+      {mode === 'player' && viewerSymbol && game.state.winner && game.state.winner !== viewerSymbol && (
         <div className="game__alert">Try Again</div>
       )}
 
       <div className="game__actions">
-        <button
-          className="btn btn--ghost"
-          onClick={handleResign}
-          disabled={game.status !== 'active' || game.state.endReason === 'resign'}
-        >
-          <span className="btn__icon" aria-hidden="true">
-            ✕
-          </span>
-          Resign
-        </button>
+        {mode === 'player' ? (
+          <button
+            className="btn btn--ghost"
+            onClick={handleResign}
+            disabled={game.status !== 'active' || game.state.endReason === 'resign'}
+          >
+            <span className="btn__icon" aria-hidden="true">
+              ✕
+            </span>
+            Resign
+          </button>
+        ) : null}
         <button className="btn btn--ghost" onClick={onQuit}>
           <span className="btn__icon" aria-hidden="true">
             ⌂

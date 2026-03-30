@@ -9,6 +9,7 @@ It is the source of truth for game payload structure returned by the API.
 ## Content
 
 Date: 2026-03-23
+Update: 2026-03-30 21:30:09 UTC - Added spectator-oriented active-game summary fields and documented read-only WebSocket catch-up behavior.
 
 Game Object Shape:
 - id: string unique game identifier.
@@ -29,6 +30,22 @@ Game Object Shape:
 
 History Retrieval:
 - `GET /games/:id` returns the full game record for replay, including moveHistory.
+
+Game Summary Shape:
+- `GET /games?status=...` returns summary objects with:
+  - id
+  - status
+  - name
+  - createdAt
+  - updatedAt
+  - players
+  - currentPlayer
+
+Spectator Access:
+- `GET /games?status=active` is the server-side discovery endpoint for live games that can be spectated.
+- `WS /ws?gameId=...` sends an immediate `game_state` snapshot on connect so late spectators can catch up to the current board and player names.
+- Subsequent live updates are delivered as `game_update` and `game_over` messages.
+- WebSocket spectators are read-only subscribers and do not consume player slots or change game state by sending messages.
 
 Server Outcomes:
 - A win sets state.winner and status "over".

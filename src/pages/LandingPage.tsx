@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react'
-import { listWaitingGames, type GameSummary } from '../multiplayer'
+import {
+  listActiveGames,
+  listWaitingGames,
+  type GameSummary,
+} from '../multiplayer'
 
 type LandingPageProps = {
   onStartSingle: () => void
@@ -11,6 +15,7 @@ type LandingPageProps = {
     gameId: string
     playerName: string
   }) => Promise<void>
+  onSpectateGame: (gameId: string) => Promise<void>
   onLogApiMessage: (message: string) => void
 }
 
@@ -18,9 +23,11 @@ const LandingPage = ({
   onStartSingle,
   onCreateMultiplayer,
   onJoinMultiplayer,
+  onSpectateGame,
   onLogApiMessage,
 }: LandingPageProps) => {
   const [isMultiplayerOpen, setIsMultiplayerOpen] = useState(false)
+  const [isSpectateOpen, setIsSpectateOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<'create' | 'join'>('create')
   const [playerName, setPlayerName] = useState(() => {
     if (typeof window === 'undefined') return ''
@@ -38,13 +45,24 @@ const LandingPage = ({
   const [errorMessage, setErrorMessage] = useState('')
 
   const openMultiplayer = () => {
+    setIsSpectateOpen(false)
     setActiveTab('create')
     setIsMultiplayerOpen(true)
     setErrorMessage('')
   }
 
+  const openSpectate = () => {
+    setIsMultiplayerOpen(false)
+    setIsSpectateOpen(true)
+    setErrorMessage('')
+  }
+
   const closeMultiplayer = () => {
     setIsMultiplayerOpen(false)
+  }
+
+  const closeSpectate = () => {
+    setIsSpectateOpen(false)
   }
 
   const ownGameId =
@@ -60,6 +78,7 @@ const LandingPage = ({
     joinName.trim().length > 0 &&
     selectedGameId.trim().length > 0 &&
     !(selectedGameId === ownGameId && joinName.trim() === creatorName)
+  const canSpectate = selectedGameId.trim().length > 0
 
   const loadGames = async () => {
     setIsLoadingGames(true)
@@ -73,6 +92,29 @@ const LandingPage = ({
       } else if (!games.find((game) => game.id === selectedGameId)) {
         const fallback = games.find((game) => game.id !== ownGameId) || games[0]
         setSelectedGameId(fallback.id)
+      }
+    } catch (error) {
+      setAvailableGames([])
+      setSelectedGameId('')
+      const message =
+        error instanceof Error ? error.message : 'Unable to load games.'
+      setErrorMessage(message)
+    } finally {
+      setIsLoadingGames(false)
+    }
+  }
+
+  const loadActiveGames = async () => {
+    setIsLoadingGames(true)
+    setErrorMessage('')
+    onLogApiMessage('GET /games?status=active')
+    try {
+      const games = await listActiveGames()
+      setAvailableGames(games)
+      if (games.length === 0) {
+        setSelectedGameId('')
+      } else if (!games.find((game) => game.id === selectedGameId)) {
+        setSelectedGameId(games[0].id)
       }
     } catch (error) {
       setAvailableGames([])
@@ -135,12 +177,33 @@ const LandingPage = ({
     }
   }
 
+  const handleSpectate = async () => {
+    if (!canSpectate) return
+    setIsSubmitting(true)
+    setErrorMessage('')
+    try {
+      await onSpectateGame(selectedGameId)
+      setIsSpectateOpen(false)
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Unable to spectate game.'
+      setErrorMessage(message)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   useEffect(() => {
     if (!isMultiplayerOpen) return
     if (activeTab === 'join') {
       loadGames()
     }
   }, [activeTab, isMultiplayerOpen])
+
+  useEffect(() => {
+    if (!isSpectateOpen) return
+    loadActiveGames()
+  }, [isSpectateOpen])
 
   return (
     <section className="landing">
@@ -156,17 +219,31 @@ const LandingPage = ({
         The classic game of X's and O's. Can you challenge the CPU or a friend?
       </p>
       <div className="landing__cta">
-        <button className="btn btn--primary" onClick={onStartSingle}>
+        <button
+          className="btn btn--primary"
+          onClick={onStartSingle}
+          aria-label="Play"
+        >
           <span className="btn__icon" aria-hidden="true">
             ▶
           </span>
           Play vs CPU
         </button>
-        <button className="btn btn--ghost" onClick={openMultiplayer}>
+        <button
+          className="btn btn--ghost"
+          onClick={openMultiplayer}
+          aria-label="New match"
+        >
           <span className="btn__icon" aria-hidden="true">
             ➕
           </span>
           New Multiplayer
+        </button>
+        <button className="btn btn--muted" onClick={openSpectate} aria-label="Spectate">
+          <span className="btn__icon" aria-hidden="true">
+            ◉
+          </span>
+          Spectate
         </button>
       </div>
       <div className="landing__stats" aria-label="Matchup">
@@ -324,6 +401,83 @@ const LandingPage = ({
                   </button>
                 </div>
               )}
+            </div>
+            {errorMessage ? (
+              <p className="modal__error" role="alert">
+                {errorMessage}
+              </p>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+      {isSpectateOpen ? (
+        <div className="modal" role="dialog" aria-modal="true">
+          <div className="modal__backdrop" onClick={closeSpectate} />
+          <div className="modal__panel">
+            <header className="modal__header">
+              <h2 className="modal__title">Spectate</h2>
+              <button
+                className="btn btn--icon"
+                type="button"
+                aria-label="Close spectator dialog"
+                onClick={closeSpectate}
+              >
+                ✕
+              </button>
+            </header>
+            <div className="modal__body">
+              <div className="modal__form">
+                <div className="modal__list">
+                  <div className="modal__list-header">
+                    <span>Live Games</span>
+                    <button
+                      className="btn btn--inline"
+                      type="button"
+                      onClick={loadActiveGames}
+                      disabled={isLoadingGames}
+                    >
+                      Refresh
+                    </button>
+                  </div>
+                  {availableGames.length === 0 ? (
+                    <p className="modal__empty">
+                      No live games available right now. Try refreshing in a
+                      moment.
+                    </p>
+                  ) : (
+                    <div className="modal__games">
+                      {availableGames.map((game) => (
+                        <label className="modal__game" key={game.id}>
+                          <input
+                            type="radio"
+                            name="spectator-game"
+                            value={game.id}
+                            checked={selectedGameId === game.id}
+                            onChange={() => setSelectedGameId(game.id)}
+                          />
+                          <div>
+                            <span className="modal__game-name">
+                              {game.name || 'Live Match'}
+                            </span>
+                            <span className="modal__game-meta">
+                              {game.players.X || 'Player X'} vs{' '}
+                              {game.players.O || 'Player O'}
+                            </span>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <button
+                  className="btn btn--primary"
+                  type="button"
+                  disabled={!canSpectate || isSubmitting}
+                  onClick={handleSpectate}
+                >
+                  Spectate Game
+                </button>
+              </div>
             </div>
             {errorMessage ? (
               <p className="modal__error" role="alert">

@@ -34,6 +34,8 @@ export type GameSummary = {
   status: GameStatus
   name: string | null
   createdAt: string
+  updatedAt: string
+  currentPlayer: PlayerSymbol
   players: {
     X: string | null
     O: string | null
@@ -77,6 +79,14 @@ export const createMultiplayerGame = async (payload: {
 export const listWaitingGames = async () => {
   const response = await fetchJson<{ games: GameSummary[] }>(
     `${API_BASE_URL}/games?status=waiting`,
+  )
+  return response.games
+}
+
+// Lists active games for the spectate flow.
+export const listActiveGames = async () => {
+  const response = await fetchJson<{ games: GameSummary[] }>(
+    `${API_BASE_URL}/games?status=active`,
   )
   return response.games
 }
