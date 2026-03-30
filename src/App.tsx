@@ -731,19 +731,26 @@ function LandingPage({
 
                         return (
                           <li key={game.id} className="multiplayer-game-card">
-                            <div>
-                              <p className="multiplayer-game-name">{game.name}</p>
-                              <p className="multiplayer-game-id">{game.id}</p>
-                              <p className="multiplayer-game-meta">
-                                Hosted by {game.hostName} ·{" "}
+                            <div className="multiplayer-game-card-heading">
+                              <span className="multiplayer-game-name">{game.name}</span>
+                              <span className="multiplayer-game-id">{game.id}</span>
+                            </div>
+                            <div className="multiplayer-game-card-details">
+                              <span className="multiplayer-game-meta-item">
+                                Host: {game.hostName}
+                              </span>
+                              <span className="multiplayer-game-meta-item">
                                 {getDiscoveryGameTimestampLabel(game)}
-                              </p>
+                              </span>
+                              <span className="multiplayer-game-meta-item multiplayer-game-status">
+                                {game.status}
+                              </span>
+                              <span className="multiplayer-game-meta-item">
+                                {game.openSeatCount} open seat
+                                {game.openSeatCount === 1 ? "" : "s"}
+                              </span>
                             </div>
                             <div className="multiplayer-game-actions">
-                              <div className="multiplayer-game-badge">
-                                <span>{game.status}</span>
-                                <span>{game.openSeatCount} seat open</span>
-                              </div>
                               <button
                                 type="button"
                                 className="multiplayer-join-button"
@@ -789,30 +796,35 @@ function LandingPage({
                         const isSpectating = spectatingGameId === game.id;
 
                         return (
-                          <li key={game.id} className="multiplayer-game-card">
-                            <div>
-                              <p className="multiplayer-game-name">{game.name}</p>
-                              <p className="multiplayer-game-id">{game.id}</p>
-                              <p className="multiplayer-game-meta">
-                                Hosted by {game.hostName} ·{" "}
-                                {getDiscoveryGameTimestampLabel(game)}
-                              </p>
-                            </div>
-                            <div className="multiplayer-game-actions">
-                              <div className="multiplayer-game-badge">
-                                <span>{game.status}</span>
-                                <span>Live</span>
+                          <li
+                            key={game.id}
+                            className="multiplayer-game-card multiplayer-game-card-active"
+                          >
+                            <p className="multiplayer-game-id">{game.id}</p>
+                            <div className="multiplayer-game-card-content">
+                              <div className="multiplayer-game-card-details">
+                                <p className="multiplayer-game-name">{game.name}</p>
+                                <p className="multiplayer-game-meta">
+                                  Hosted by {game.hostName} ·{" "}
+                                  {getDiscoveryGameTimestampLabel(game)}
+                                </p>
                               </div>
-                              <button
-                                type="button"
-                                className="multiplayer-join-button"
-                                onClick={() => {
-                                  void handleSpectateMultiplayerGame(game.id);
-                                }}
-                                disabled={isSpectating || isCreatingMultiplayerGame}
-                              >
-                                {isSpectating ? "Opening..." : "Spectate"}
-                              </button>
+                              <div className="multiplayer-game-actions">
+                                <div className="multiplayer-game-badge">
+                                  <span>{game.status}</span>
+                                  <span>Live</span>
+                                </div>
+                                <button
+                                  type="button"
+                                  className="multiplayer-join-button"
+                                  onClick={() => {
+                                    void handleSpectateMultiplayerGame(game.id);
+                                  }}
+                                  disabled={isSpectating || isCreatingMultiplayerGame}
+                                >
+                                  {isSpectating ? "Opening..." : "Spectate"}
+                                </button>
+                              </div>
                             </div>
                           </li>
                         );
