@@ -53,6 +53,7 @@ export function getReleaseId(now = new Date()): string {
 export function buildBackendDeployContext(
   config: DevConfig,
   releaseId = process.env.RELEASE_ID ?? getReleaseId(),
+  resolver: typeof resolveStackOutput = resolveStackOutput,
 ): BackendDeployContext {
   const stackName = config.multiplayerStackName;
   const region = config.awsRegion;
@@ -64,9 +65,9 @@ export function buildBackendDeployContext(
     region,
     servicePort: config.multiplayerServicePort,
     releaseId,
-    deploymentBucket: resolveStackOutput(stackName, region, "DeploymentBucketName"),
-    instanceId: resolveStackOutput(stackName, region, "BackendInstanceId"),
-    backendBaseUrl: resolveStackOutput(stackName, region, "BackendBaseUrl"),
+    deploymentBucket: resolver(stackName, region, "DeploymentBucketName"),
+    instanceId: resolver(stackName, region, "BackendInstanceId"),
+    backendBaseUrl: resolver(stackName, region, "BackendBaseUrl"),
     bundleKey: `releases/${releaseId}.zip`,
     bundleUri: "",
   };
@@ -143,8 +144,9 @@ export function getSsmCommandInvocationDetails(
   commandId: string,
   instanceId: string,
   region: string,
+  capture: typeof captureCommand = captureCommand,
 ): SsmCommandFailureDetails {
-  const status = captureCommand("aws", [
+  const status = capture("aws", [
     "ssm",
     "get-command-invocation",
     "--region",
@@ -159,7 +161,7 @@ export function getSsmCommandInvocationDetails(
     "text",
   ]);
 
-  const standardOutput = captureCommand("aws", [
+  const standardOutput = capture("aws", [
     "ssm",
     "get-command-invocation",
     "--region",
@@ -174,7 +176,7 @@ export function getSsmCommandInvocationDetails(
     "text",
   ]);
 
-  const standardError = captureCommand("aws", [
+  const standardError = capture("aws", [
     "ssm",
     "get-command-invocation",
     "--region",
@@ -200,8 +202,9 @@ export function getSsmCommandFailureDetails(
   commandId: string,
   instanceId: string,
   region: string,
+  capture: typeof captureCommand = captureCommand,
 ): SsmCommandFailureDetails {
-  return getSsmCommandInvocationDetails(commandId, instanceId, region);
+  return getSsmCommandInvocationDetails(commandId, instanceId, region, capture);
 }
 
 export function createBackendPackageManifest(
@@ -273,6 +276,7 @@ export function waitForSsmCommand(
   instanceId: string,
   region: string,
   pollIntervalMs = 2000,
+  capture: typeof captureCommand = captureCommand,
 ): SsmCommandFailureDetails {
   let lastStatus = "";
   const outputCursor: SsmCommandOutputCursor = {
@@ -281,7 +285,7 @@ export function waitForSsmCommand(
   };
 
   while (true) {
-    const details = getSsmCommandInvocationDetails(commandId, instanceId, region);
+    const details = getSsmCommandInvocationDetails(commandId, instanceId, region, capture);
 
     if (details.status !== lastStatus) {
       console.log(`SSM command status: ${details.status}`);

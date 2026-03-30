@@ -193,7 +193,7 @@ Acceptance criteria:
 
 # User-stories = Phase 2
 
-Last updated: 2026-03-16
+Last updated: 2026-03-30
 
 ## Sequencing Rule
 - Each story must leave production deployable with no broken routes or blocked single-player flow.
@@ -606,6 +606,12 @@ Acceptance criteria:
 ### US-45 Terminal Code Coverage Reporting
 As a developer, I want a code coverage report that runs from the terminal so that I can measure automated test coverage locally and in CI.
 
+Status note (2026-03-30):
+- Moved the repo-root `npm test` coverage workflow to the Playwright unit-test suite under `tests/unit`.
+- Confirmed the Playwright coverage wrapper prints terminal coverage and writes artifacts to the stable `coverage/` directory.
+- Migrated the former Vitest game and AWS helper suites into Playwright-managed tests under `tests/unit`, and replaced the spectate jsdom test with a Playwright browser spec under `tests/e2e`.
+- Updated pull-request CI and project docs to use the same `npm test` coverage workflow alongside the existing build validation step.
+
 Technical notes:
 - Add or confirm a repo-root npm command that runs the existing unit-test stack with coverage enabled.
   Meaning and objective: This means developers and CI should be able to use one standard command from the repository root to produce coverage instead of needing manual flags or local knowledge. The goal is to make coverage generation easy to run and easy to document.
@@ -619,5 +625,5 @@ Technical notes:
 Acceptance criteria:
 - A repository command runnable from the repo root generates a coverage report from automated tests.
 - Running the command produces coverage output in the terminal and writes a coverage artifact directory to disk.
-- The coverage report includes the project's Vitest unit-test coverage for the configured source files.
+- The coverage report includes the project's Playwright unit-test coverage for the configured source files.
 - The command exits with a non-zero status when tests fail or coverage generation cannot complete.
