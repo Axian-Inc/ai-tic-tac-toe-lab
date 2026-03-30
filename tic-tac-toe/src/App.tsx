@@ -7,6 +7,7 @@ import { selectIsDarkMode, toggleDarkMode } from './features/app/appSlice';
 import GamePage from './pages/GamePage';
 import LandingPage from './pages/LandingPage';
 import ResultPage from './pages/ResultPage';
+import SpectatePage from './pages/SpectatePage';
 import SinglePlayerPage from './pages/SinglePlayerPage';
 
 function App() {
@@ -34,6 +35,8 @@ function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/single" element={<SinglePlayerPage />} />
+          <Route path="/spectate" element={<SpectatePage />} />
+          <Route path="/spectate/:gameId" element={<SpectatePage />} />
           <Route path="/game" element={<GamePage />} />
           <Route path="/result/:outcome" element={<ResultPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />

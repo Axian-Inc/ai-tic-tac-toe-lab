@@ -39,11 +39,25 @@ Optional websocket override:
 REACT_APP_WS_BASE_URL=http://localhost:4000 npm start
 ```
 
-## Frontend: Run Tests
+## Frontend: Run Unit Tests
 
 ```bash
 cd tic-tac-toe
 npm test -- --watchAll=false
+```
+
+## Frontend: Coverage Report
+
+```bash
+cd tic-tac-toe
+npm run test:coverage
+```
+
+## Frontend: TypeScript Check
+
+```bash
+cd tic-tac-toe
+npm run typecheck
 ```
 
 ## Frontend: Run Playwright

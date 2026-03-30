@@ -266,4 +266,18 @@ export class GameStore {
     game.updatedAt = new Date().toISOString();
     return buildPublicState(game);
   }
+
+  listActiveGames(): PublicGameState[] {
+    const activeGames: PublicGameState[] = [];
+
+    for (const game of this.games.values()) {
+      const publicGame = buildPublicState(game);
+      if (publicGame.status !== 'over') {
+        activeGames.push(publicGame);
+      }
+    }
+
+    activeGames.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+    return activeGames;
+  }
 }

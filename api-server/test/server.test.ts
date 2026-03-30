@@ -169,6 +169,33 @@ test('multiplayer lifecycle: create, join, move, and reject invalid turn', async
   }
 });
 
+test('lists active games', async () => {
+  const server = createAppServer(new GameStore());
+  server.listen(0, '127.0.0.1');
+  await once(server, 'listening');
+
+  try {
+    const address = server.address();
+    if (!address || typeof address === 'string') {
+      throw new Error('Invalid server address');
+    }
+
+    const listEmpty = await requestJson(address.port, 'GET', '/games');
+    assert.equal(listEmpty.statusCode, 200);
+    assert.deepEqual(listEmpty.body.games, []);
+
+    const created = await requestJson(address.port, 'POST', '/games');
+    const gameId = created.body.game.id;
+
+    const listAfterCreate = await requestJson(address.port, 'GET', '/games');
+    assert.equal(listAfterCreate.statusCode, 200);
+    assert.ok(Array.isArray(listAfterCreate.body.games));
+    assert.ok(listAfterCreate.body.games.some((game: any) => game.id === gameId));
+  } finally {
+    server.close();
+  }
+});
+
 test('returns not found for unknown game', async () => {
   const server = createAppServer();
   server.listen(0, '127.0.0.1');

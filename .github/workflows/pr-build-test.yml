@@ -1,0 +1,64 @@
+name: PR Build and Test
+
+on:
+  pull_request:
+    branches:
+      - mgibson-axianld
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: |
+            api-server/package-lock.json
+            tic-tac-toe/package-lock.json
+
+      - name: Install API dependencies
+        working-directory: api-server
+        run: npm ci
+
+      - name: Typecheck API
+        working-directory: api-server
+        run: npm run typecheck
+
+      - name: Build API
+        working-directory: api-server
+        run: npm run build
+
+      - name: Test API
+        working-directory: api-server
+        run: npm test
+
+      - name: Install frontend dependencies
+        working-directory: tic-tac-toe
+        run: npm ci
+
+      - name: Typecheck frontend
+        working-directory: tic-tac-toe
+        run: npm run typecheck
+
+      - name: Build frontend
+        working-directory: tic-tac-toe
+        run: npm run build
+
+      - name: Test frontend
+        working-directory: tic-tac-toe
+        run: npm test -- --watchAll=false
+
+      - name: Test frontend with coverage
+        working-directory: tic-tac-toe
+        run: npm run test:coverage
+
+      - name: Upload frontend coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: tic-tac-toe/coverage

@@ -62,6 +62,9 @@ Example response:
 }
 ```
 
+### `GET /games`
+Returns a list of active games (waiting or active).
+
 ### `POST /games/:gameId/join`
 Joins an existing game as player `O`.
 

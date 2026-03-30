@@ -128,6 +128,12 @@ export function createAppServer(store: GameStore = new GameStore()): http.Server
         return;
       }
 
+      if (req.method === 'GET' && requestUrl === '/games') {
+        const games = store.listActiveGames();
+        json(res, 200, { games });
+        return;
+      }
+
       const gameMatch = requestUrl.match(/^\/games\/([0-9a-fA-F-]+)$/);
       if (req.method === 'GET' && gameMatch) {
         const game = store.getGame(gameMatch[1]);

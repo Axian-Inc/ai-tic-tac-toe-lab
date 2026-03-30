@@ -86,6 +86,14 @@ function LandingPage() {
           >
             Multiplayer
           </button>
+          <button
+            className="mode-button"
+            type="button"
+            onClick={() => navigate('/spectate')}
+            disabled={isLoading}
+          >
+            Spectate
+          </button>
         </div>
         <p className="mode-message landing-greeting">
           <span className="landing-greeting-main">

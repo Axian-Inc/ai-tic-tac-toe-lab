@@ -60,6 +60,12 @@ export async function joinGame(gameId: string): Promise<PlayerAssignment> {
   return parseJsonResponse(response);
 }
 
+export async function listActiveGames(): Promise<MultiplayerGame[]> {
+  const response = await fetch(`${API_BASE_URL}/games`);
+  const body = await parseJsonResponse(response);
+  return Array.isArray(body.games) ? (body.games as MultiplayerGame[]) : [];
+}
+
 export async function getGame(gameId: string): Promise<MultiplayerGame> {
   const response = await fetch(`${API_BASE_URL}/games/${gameId}`);
   const body = await parseJsonResponse(response);
