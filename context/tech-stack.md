@@ -10,6 +10,7 @@ It serves as the concise source of truth for major dependencies and tool categor
 ## Content
 
 Date: 2026-03-19
+Update: 2026-03-30 20:31:29 UTC - Phase 3 adds GitHub Actions-based pull-request automation and terminal-generated coverage reporting requirements.
 
 Frontend:
 - React 19
@@ -23,6 +24,7 @@ Styling:
 Testing:
 - Vitest
 - Playwright
+- Coverage reporting via test tooling, invokable from the terminal
 
 Infrastructure:
 - Terraform
@@ -31,6 +33,7 @@ Infrastructure:
 
 Automation:
 - Bash deployment scripts in `/scripts`
+- GitHub Actions for pull-request validation
 
 Backend:
 - Node.js HTTP server (no framework) for multiplayer API endpoints
