@@ -34,6 +34,13 @@ cd api-server
 npm test
 ```
 
+## Test Coverage
+
+```bash
+cd api-server
+npm run test:coverage
+```
+
 ## API
 
 ### `GET /health`
