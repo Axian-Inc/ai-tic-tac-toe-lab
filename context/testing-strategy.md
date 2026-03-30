@@ -1,13 +1,14 @@
 # Testing Strategy
 
-Last updated: 2026-03-28
+Last updated: 2026-03-30
 
 ## Purpose
-- Define the baseline test framework for fast game-logic regression coverage and browser-level UI automation.
+- Define the baseline test framework for fast unit-test coverage and browser-level UI automation.
 
 ## Test Layers
-- Unit tests use Vitest.
-- Unit tests run in a `jsdom` environment so pure logic and React rendering can share one runner as the app grows.
+- The default repo-root unit-test workflow uses Playwright against `tests/unit/`.
+- Repo-root unit coverage is collected from Node V8 output and reported through Istanbul reporters.
+- Existing logic and deployment helper suites have been migrated into the Playwright runner so one unit-test stack covers the repo-default automated test path.
 - Browser automation uses Playwright with a Chromium project against the local Vite app.
 - Playwright also supports runner-managed unit specs under `tests/unit/` for targeted non-DOM logic coverage when explicitly requested.
 - Playwright browser specs now use a shared fixture layer with page objects for landing, gameplay, and multiplayer modal flows.
@@ -21,7 +22,7 @@ Last updated: 2026-03-28
 - Prefer stable selectors via `data-testid` for automation-critical controls and board cells.
 
 ## Commands
-- `npm test` runs Vitest in CI mode with coverage.
+- `npm test` runs Playwright unit specs with coverage.
 - `npm run test:watch` runs Vitest in watch mode for local development.
 - `npm run test:ui` runs Playwright headless for `tests/e2e/`.
 - `npm run test:ui:full` runs Playwright headless for `tests/e2e/` with both frontend and backend startup.
@@ -30,8 +31,9 @@ Last updated: 2026-03-28
 - `npm run test:ui:headed:full` runs Playwright headed for `tests/e2e/` with both frontend and backend startup.
 
 ## Notes
-- Vitest coverage is currently scoped to `src/game/**/*.ts` to align with US-19 core-logic goals.
-- React rendering coverage now includes `src/App.test.tsx` for landing-page spectate entry behavior, using jsdom plus repo-local React DOM rendering without adding a second component-test runner.
+- `npm test` prints coverage in the terminal and writes the stable coverage artifact directory to `coverage/`.
+- The current coverage wrapper reports on Playwright-executed project files under `src/`, `server/`, and `scripts/`.
+- The former spectate jsdom test has been replaced by Playwright browser coverage in `tests/e2e/spectate.spec.ts`.
 - Playwright now emits JUnit XML to `test-results/playwright/junit.xml`.
 - Playwright starts the local Vite dev server automatically through `playwright.config.ts`.
 - Playwright supports two browser automation runtime modes through `UI_AUTOMATION_MODE`:

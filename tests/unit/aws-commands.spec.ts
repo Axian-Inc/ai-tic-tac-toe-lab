@@ -1,9 +1,12 @@
-import { describe, expect, it } from "vitest";
+import { expect, test } from "@playwright/test";
 
-import { buildCloudFormationDeployArgs, buildS3SyncArgs } from "./aws-commands.js";
+import {
+  buildCloudFormationDeployArgs,
+  buildS3SyncArgs,
+} from "../../scripts/aws/lib/aws-commands.js";
 
-describe("buildCloudFormationDeployArgs", () => {
-  it("builds deploy arguments with capabilities and parameters", () => {
+test.describe("buildCloudFormationDeployArgs", () => {
+  test("builds deploy arguments with capabilities and parameters", () => {
     expect(
       buildCloudFormationDeployArgs({
         region: "us-west-2",
@@ -11,7 +14,7 @@ describe("buildCloudFormationDeployArgs", () => {
         templatePath: "infra/multiplayer-service-foundation.yaml",
         capabilities: ["CAPABILITY_NAMED_IAM"],
         parameterOverrides: ["ProjectTag=ttt-ms-aj-phase3", "ServicePort=3001"],
-      }),
+      })
     ).toEqual([
       "cloudformation",
       "deploy",
@@ -31,9 +34,11 @@ describe("buildCloudFormationDeployArgs", () => {
   });
 });
 
-describe("buildS3SyncArgs", () => {
-  it("builds sync arguments with delete semantics", () => {
-    expect(buildS3SyncArgs("/repo/dist", "ttt-ms-aj-tic-tac-toe-site", "us-west-2")).toEqual([
+test.describe("buildS3SyncArgs", () => {
+  test("builds sync arguments with delete semantics", () => {
+    expect(
+      buildS3SyncArgs("/repo/dist", "ttt-ms-aj-tic-tac-toe-site", "us-west-2")
+    ).toEqual([
       "s3",
       "sync",
       "/repo/dist",

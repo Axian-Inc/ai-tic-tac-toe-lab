@@ -1,17 +1,15 @@
-import { describe, expect, it, vi } from "vitest";
+import { expect, test } from "@playwright/test";
 
 import {
   buildBackendDeployContext,
   createBackendPackageManifest,
   createSsmCommandParameters,
   getReleaseId,
-  getSsmCommandInvocationDetails,
   getSsmCommandFailureDetails,
+  getSsmCommandInvocationDetails,
   waitForSsmCommand,
-} from "./backend-deploy.js";
-import * as aws from "./aws.js";
-import * as command from "./command.js";
-import type { DevConfig } from "./config.js";
+} from "../../scripts/aws/lib/backend-deploy.js";
+import type { DevConfig } from "../../scripts/aws/lib/config.js";
 
 const config: DevConfig = {
   projectTag: "ttt-ms-aj-phase3",
@@ -28,53 +26,53 @@ const config: DevConfig = {
   multiplayerReadinessPath: "/ready",
 };
 
-describe("getReleaseId", () => {
-  it("formats UTC timestamps as YYYYMMDDHHMMSS", () => {
+test.describe("getReleaseId", () => {
+  test("formats UTC timestamps as YYYYMMDDHHMMSS", () => {
     expect(getReleaseId(new Date("2026-03-23T20:39:45.123Z"))).toBe("20260323203945");
   });
 });
 
-describe("createSsmCommandParameters", () => {
-  it("builds the backend deploy payload with expected commands", () => {
+test.describe("createSsmCommandParameters", () => {
+  test("builds the backend deploy payload with expected commands", () => {
     const parameters = createSsmCommandParameters(
       "s3://bucket/releases/123.zip",
       "us-west-2",
       "20260323203945",
-      "3001",
+      "3001"
     );
 
     expect(parameters.commands).toContain(
-      "aws s3 cp 's3://bucket/releases/123.zip' \"${ARCHIVE_PATH}\" --region 'us-west-2'",
+      "aws s3 cp 's3://bucket/releases/123.zip' \"${ARCHIVE_PATH}\" --region 'us-west-2'"
     );
     expect(parameters.commands).toContain(
-      "echo '[deploy] Downloading release bundle from S3...'",
+      "echo '[deploy] Downloading release bundle from S3...'"
     );
     expect(parameters.commands).toContain(
-      "echo '[deploy] Installing production dependencies...'",
+      "echo '[deploy] Installing production dependencies...'"
     );
     expect(parameters.commands).toContain('mkdir -p "${APP_ROOT}/releases"');
     expect(
       parameters.commands.some((commandLine) =>
-        commandLine.includes("cat > /etc/systemd/system/ttt-multiplayer.service <<'EOF'"),
-      ),
+        commandLine.includes("cat > /etc/systemd/system/ttt-multiplayer.service <<'EOF'")
+      )
     ).toBe(true);
     expect(
       parameters.commands.some((commandLine) =>
-        commandLine.includes("ExecStart=/usr/bin/env npm start"),
-      ),
+        commandLine.includes("ExecStart=/usr/bin/env npm start")
+      )
     ).toBe(true);
     expect(parameters.commands).toContain(
-      "\"${NPM_BIN}\" install --omit=dev --no-audit --no-fund",
+      "\"${NPM_BIN}\" install --omit=dev --no-audit --no-fund"
     );
     expect(parameters.commands.at(-2)).toBe("echo '[deploy] Verifying health endpoint...'");
     expect(parameters.commands.at(-1)).toBe(
-      "for attempt in $(seq 1 15); do if curl --fail --silent 'http://127.0.0.1:3001/health' >/dev/null; then echo '[deploy] Backend release 20260323203945 is healthy.'; break; fi; if [[ \"$attempt\" -eq 15 ]]; then echo 'Backend health check did not succeed before timeout.' >&2; exit 1; fi; sleep 2; done",
+      "for attempt in $(seq 1 15); do if curl --fail --silent 'http://127.0.0.1:3001/health' >/dev/null; then echo '[deploy] Backend release 20260323203945 is healthy.'; break; fi; if [[ \"$attempt\" -eq 15 ]]; then echo 'Backend health check did not succeed before timeout.' >&2; exit 1; fi; sleep 2; done"
     );
   });
 });
 
-describe("createBackendPackageManifest", () => {
-  it("creates a backend-only package manifest from the repo manifest", () => {
+test.describe("createBackendPackageManifest", () => {
+  test("creates a backend-only package manifest from the repo manifest", () => {
     expect(
       createBackendPackageManifest({
         name: "ai-tic-tac-toe-lab",
@@ -88,7 +86,7 @@ describe("createBackendPackageManifest", () => {
           express: "^5.2.1",
           react: "^18.3.1",
         },
-      }),
+      })
     ).toEqual({
       name: "ai-tic-tac-toe-lab-backend",
       private: true,
@@ -104,12 +102,13 @@ describe("createBackendPackageManifest", () => {
   });
 });
 
-describe("buildBackendDeployContext", () => {
-  it("resolves stack outputs into a deploy context", () => {
-    const resolveStackOutputSpy = vi
-      .spyOn(aws, "resolveStackOutput")
-      .mockImplementation(
-        (_stackName: string, _region: string, outputKey: string) => {
+test.describe("buildBackendDeployContext", () => {
+  test("resolves stack outputs into a deploy context", () => {
+    const resolveStackOutput = (
+      _stackName: string,
+      _region: string,
+      outputKey: string
+    ) => {
         switch (outputKey) {
           case "DeploymentBucketName":
             return "bucket-name";
@@ -120,9 +119,13 @@ describe("buildBackendDeployContext", () => {
           default:
             throw new Error(`unexpected output key ${outputKey}`);
         }
-      });
+      };
 
-    const context = buildBackendDeployContext(config, "20260323203945");
+    const context = buildBackendDeployContext(
+      config,
+      "20260323203945",
+      resolveStackOutput
+    );
 
     expect(context).toMatchObject({
       stackName: "ttt-ms-aj-phase3-multiplayer-service",
@@ -133,18 +136,15 @@ describe("buildBackendDeployContext", () => {
       backendBaseUrl: "http://example.com",
       bundleKey: "releases/20260323203945.zip",
     });
-
-    expect(resolveStackOutputSpy).toHaveBeenCalledTimes(3);
-    resolveStackOutputSpy.mockRestore();
   });
 });
 
-describe("getSsmCommandInvocationDetails", () => {
-  it("collects status, stdout, and stderr from the command invocation", () => {
-    const captureCommandSpy = vi
-      .spyOn(command, "captureCommand")
-      .mockImplementation((_commandName: string, args: string[]) => {
+test.describe("getSsmCommandInvocationDetails", () => {
+  test("collects status, stdout, and stderr from the command invocation", () => {
+    const calls: string[] = [];
+    const captureCommand = (_commandName: string, args: string[]) => {
         const query = args[args.indexOf("--query") + 1];
+        calls.push(String(query));
 
         switch (query) {
           case "Status":
@@ -156,27 +156,35 @@ describe("getSsmCommandInvocationDetails", () => {
           default:
             throw new Error(`unexpected query ${query}`);
         }
-      });
+      };
 
     expect(
-      getSsmCommandInvocationDetails("cmd-123", "i-123", "us-west-2"),
+      getSsmCommandInvocationDetails(
+        "cmd-123",
+        "i-123",
+        "us-west-2",
+        captureCommand
+      )
     ).toEqual({
       status: "InProgress",
       standardOutput: "stdout details",
       standardError: "stderr details",
     });
 
-    expect(captureCommandSpy).toHaveBeenCalledTimes(3);
-    captureCommandSpy.mockRestore();
+    expect(calls).toEqual([
+      "Status",
+      "StandardOutputContent",
+      "StandardErrorContent",
+    ]);
   });
 });
 
-describe("getSsmCommandFailureDetails", () => {
-  it("collects status, stdout, and stderr from the failed command", () => {
-    const captureCommandSpy = vi
-      .spyOn(command, "captureCommand")
-      .mockImplementation((_commandName: string, args: string[]) => {
+test.describe("getSsmCommandFailureDetails", () => {
+  test("collects status, stdout, and stderr from the failed command", () => {
+    const calls: string[] = [];
+    const captureCommand = (_commandName: string, args: string[]) => {
         const query = args[args.indexOf("--query") + 1];
+        calls.push(String(query));
 
         switch (query) {
           case "Status":
@@ -188,27 +196,33 @@ describe("getSsmCommandFailureDetails", () => {
           default:
             throw new Error(`unexpected query ${query}`);
         }
-      });
+      };
 
     expect(
-      getSsmCommandFailureDetails("cmd-123", "i-123", "us-west-2"),
+      getSsmCommandFailureDetails(
+        "cmd-123",
+        "i-123",
+        "us-west-2",
+        captureCommand
+      )
     ).toEqual({
       status: "Failed",
       standardOutput: "stdout details",
       standardError: "stderr details",
     });
 
-    expect(captureCommandSpy).toHaveBeenCalledTimes(3);
-    captureCommandSpy.mockRestore();
+    expect(calls).toEqual([
+      "Status",
+      "StandardOutputContent",
+      "StandardErrorContent",
+    ]);
   });
 });
 
-describe("waitForSsmCommand", () => {
-  it("streams incremental output until the command succeeds", () => {
+test.describe("waitForSsmCommand", () => {
+  test("streams incremental output until the command succeeds", () => {
     let invocationCount = 0;
-    const captureCommandSpy = vi
-      .spyOn(command, "captureCommand")
-      .mockImplementation((_commandName: string, args: string[]) => {
+    const captureCommand = (_commandName: string, args: string[]) => {
         invocationCount += 1;
         const cycle = invocationCount <= 3 ? 1 : 2;
         const query = args[args.indexOf("--query") + 1];
@@ -236,31 +250,47 @@ describe("waitForSsmCommand", () => {
           default:
             throw new Error(`unexpected query ${query}`);
         }
+      };
+
+    const stdoutWrites: string[] = [];
+    const stderrWrites: string[] = [];
+    const consoleLogs: string[] = [];
+    const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+    const originalStderrWrite = process.stderr.write.bind(process.stderr);
+    const originalConsoleLog = console.log;
+
+    process.stdout.write = ((chunk: string | Uint8Array) => {
+      stdoutWrites.push(String(chunk));
+      return true;
+    }) as typeof process.stdout.write;
+    process.stderr.write = ((chunk: string | Uint8Array) => {
+      stderrWrites.push(String(chunk));
+      return true;
+    }) as typeof process.stderr.write;
+    console.log = (...args: unknown[]) => {
+      consoleLogs.push(args.join(" "));
+    };
+
+    try {
+      expect(
+        waitForSsmCommand("cmd-123", "i-123", "us-west-2", 0, captureCommand)
+      ).toEqual({
+        status: "Success",
+        standardOutput: "[deploy] Starting\n[deploy] Done\n",
+        standardError: "None",
       });
+    } finally {
+      process.stdout.write = originalStdoutWrite;
+      process.stderr.write = originalStderrWrite;
+      console.log = originalConsoleLog;
+    }
 
-    const stdoutWriteSpy = vi
-      .spyOn(process.stdout, "write")
-      .mockReturnValue(true);
-    const stderrWriteSpy = vi
-      .spyOn(process.stderr, "write")
-      .mockReturnValue(true);
-    const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
-
-    expect(waitForSsmCommand("cmd-123", "i-123", "us-west-2", 0)).toEqual({
-      status: "Success",
-      standardOutput: "[deploy] Starting\n[deploy] Done\n",
-      standardError: "None",
-    });
-
-    expect(captureCommandSpy).toHaveBeenCalledTimes(6);
-    expect(stdoutWriteSpy).toHaveBeenNthCalledWith(1, "[deploy] Starting\n");
-    expect(stdoutWriteSpy).toHaveBeenNthCalledWith(2, "[deploy] Done\n");
-    expect(consoleLogSpy).toHaveBeenNthCalledWith(1, "SSM command status: InProgress");
-    expect(consoleLogSpy).toHaveBeenNthCalledWith(2, "SSM command status: Success");
-
-    captureCommandSpy.mockRestore();
-    stdoutWriteSpy.mockRestore();
-    stderrWriteSpy.mockRestore();
-    consoleLogSpy.mockRestore();
+    expect(invocationCount).toBe(6);
+    expect(stdoutWrites).toEqual(["[deploy] Starting\n", "[deploy] Done\n"]);
+    expect(stderrWrites).toEqual([]);
+    expect(consoleLogs).toEqual([
+      "SSM command status: InProgress",
+      "SSM command status: Success",
+    ]);
   });
 });

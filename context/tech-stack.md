@@ -12,10 +12,9 @@ Last updated: 2026-03-26
 - npm 10
 
 ## Testing Tooling
-- Vitest 4.1
-- `@vitest/coverage-v8`
 - Testing Library (`@testing-library/react`, `@testing-library/jest-dom`)
 - Playwright 1.58
+- Vitest 4.1 remains installed during test-tooling migration, but the repo-default automated suites now run through Playwright
 
 ### Infrastructure Tooling
 - AWS CloudFormation (template-based infrastructure provisioning)

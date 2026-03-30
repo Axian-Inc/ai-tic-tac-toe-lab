@@ -1,12 +1,12 @@
 import { existsSync, mkdirSync, rmSync } from "node:fs";
 import path from "node:path";
 
-import { describe, expect, it } from "vitest";
+import { expect, test } from "@playwright/test";
 
-import { loadDevConfig, parseFlatYaml, resolveRepoRoot } from "./config.js";
+import { loadDevConfig, parseFlatYaml, resolveRepoRoot } from "../../scripts/aws/lib/config.js";
 
-describe("parseFlatYaml", () => {
-  it("parses flat key/value pairs and strips quotes", () => {
+test.describe("parseFlatYaml", () => {
+  test("parses flat key/value pairs and strips quotes", () => {
     const values = parseFlatYaml(`
 # comment
 project_tag: ttt-ms-aj-phase3
@@ -24,8 +24,8 @@ quoted_double: "other"
   });
 });
 
-describe("loadDevConfig", () => {
-  it("loads the current flat dev config shape", () => {
+test.describe("loadDevConfig", () => {
+  test("loads the current flat dev config shape", () => {
     const config = loadDevConfig();
 
     expect(config.projectTag).toBe("ttt-ms-aj-phase3");
@@ -36,8 +36,8 @@ describe("loadDevConfig", () => {
   });
 });
 
-describe("resolveRepoRoot", () => {
-  it("finds the repo root when the working directory is dist-scripts", () => {
+test.describe("resolveRepoRoot", () => {
+  test("finds the repo root when the working directory is dist-scripts", () => {
     const originalCwd = process.cwd();
     const distScriptsPath = path.join(originalCwd, "dist-scripts");
     const distScriptsAlreadyExists = existsSync(distScriptsPath);

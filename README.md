@@ -90,6 +90,16 @@ npm run build
 npm run preview
 ```
 
+## Test Coverage
+
+Run the repo-default coverage workflow with:
+
+```bash
+npm test
+```
+
+This runs the Playwright unit suite, prints coverage in the terminal, and writes the coverage report artifacts to `coverage/`.
+
 ## Deploy to AWS
 
 This project deploys as an S3 static website in two steps: provision the infrastructure, then upload the built app.
@@ -148,6 +158,7 @@ http://<bucket-name>.s3-website-<region>.amazonaws.com
 - `npm run dev:full` - start the local frontend and backend together
 - `npm run build` - create a production build
 - `npm run preview` - preview the production build locally
+- `npm test` - run Playwright unit tests with terminal coverage output and write coverage artifacts to `coverage/`
 - `npm run typecheck` - run TypeScript checks
 - `npm run server:build` - compile the backend scaffold to `dist-server/`
 - `npm run server:start` - build and start the backend scaffold locally

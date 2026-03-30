@@ -17,7 +17,7 @@
     "server:start:automation": "tsx server/index.ts",
     "aws:build-scripts": "tsc -p tsconfig.scripts.json",
     "server:start": "npm run server:build && node dist-server/server/index.js",
-    "test": "vitest run --coverage",
+    "test": "node scripts/test/playwright-unit-coverage.mjs",
     "test:watch": "vitest",
     "test:ui": "UI_AUTOMATION_MODE=frontend playwright test tests/e2e",
     "test:ui:full": "UI_AUTOMATION_MODE=full playwright test tests/e2e",
