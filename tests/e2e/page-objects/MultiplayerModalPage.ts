@@ -5,6 +5,7 @@ export class MultiplayerModalPage {
   readonly dialog: Locator;
   readonly createTab: Locator;
   readonly joinTab: Locator;
+  readonly spectateTab: Locator;
   readonly refreshButton: Locator;
 
   constructor(page: Page) {
@@ -12,6 +13,7 @@ export class MultiplayerModalPage {
     this.dialog = page.getByRole("dialog");
     this.createTab = page.getByRole("button", { name: "Create" });
     this.joinTab = page.getByRole("button", { name: "Join" });
+    this.spectateTab = page.getByRole("button", { name: "Spectate" });
     this.refreshButton = page.getByRole("button", { name: "Refresh" });
   }
 
@@ -25,5 +27,9 @@ export class MultiplayerModalPage {
 
   async switchToJoin(): Promise<void> {
     await this.joinTab.click();
+  }
+
+  async switchToSpectate(): Promise<void> {
+    await this.spectateTab.click();
   }
 }
