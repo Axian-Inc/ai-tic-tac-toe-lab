@@ -11,6 +11,7 @@ It lists the script-based deployment and hosting validation commands.
 ## Content
 
 Date: 2026-03-19
+Update: 2026-03-30 17:34:11 UTC - Simplified the end-to-end deployment section to list only required operator steps and clarified that the deploy script injects runtime endpoints into the client build automatically.
 
 Notes:
 - Vite build via `npm run build`.
@@ -32,30 +33,31 @@ Notes:
 
 ## End-to-End Deployment Steps
 
-These steps deploy the static client and the multiplayer server.
+These are the only required operator steps to deploy the static client and multiplayer server from this repository.
 
 1. Ensure prerequisites:
-   - AWS credentials configured for the target account.
-   - Terraform and AWS CLI installed.
-   - SSM access available in the target AWS account (managed by Terraform).
-   - AWS region set consistently through `AWS_REGION`, `AWS_DEFAULT_REGION`, or `~/.aws/config`; Terraform and the deploy script now follow the same standard AWS region resolution chain.
-   - For the first Terraform apply in a workspace, set `TF_VAR_bucket_name` (or provide `terraform.tfvars`) with a globally unique S3 bucket name.
+   - AWS credentials configured for the target account with permission to run Terraform, S3 operations, and SSM commands.
+   - Terraform, AWS CLI, Node.js, and npm installed locally.
+   - AWS region configured through `AWS_REGION`, `AWS_DEFAULT_REGION`, or `~/.aws/config`.
+   - For the first apply in a workspace, set `TF_VAR_bucket_name` (or provide `terraform.tfvars`) with a globally unique S3 bucket name.
 
 2. Select the Terraform workspace:
-   - `terraform -chdir=terraform workspace select stanb` (or create it if missing).
+   - `terraform -chdir=terraform workspace select stanb`
+   - If it does not exist yet, create it first with `terraform -chdir=terraform workspace new stanb`.
 
-3. Ensure the multiplayer server EC2 instance can receive SSM commands:
-   - The Terraform configuration attaches the required SSM IAM role automatically.
+3. Install project dependencies:
+   - `npm install`
 
-4. Run the deployment script:
-   - `npm run deploy` (which runs scripts/deploy.sh)
-   - This applies Terraform, uploads the server code to S3, updates the EC2 instance via SSM, builds the client, and uploads `dist/` to S3.
+4. Run the end-to-end deployment:
+   - `npm run deploy` or `./scripts/deploy.sh`
+   - This script applies Terraform, waits for the EC2 instance to become reachable through SSM, uploads the multiplayer server files, recreates/reloads the systemd service on the instance, exports `VITE_MULTIPLAYER_URL`, `VITE_MULTIPLAYER_WS_URL`, and `VITE_SHOW_API_LOG=false`, builds the client, and syncs `dist/` to the website S3 bucket.
+   - No separate manual step is required to prepare SSM on the EC2 instance; Terraform attaches the required IAM role and the deploy script waits until SSM reports the instance online.
 
-5. Validate the deployment:
-   - `npm run deploy:validate` (which runs scripts/validate-hosting.sh)
-   - Confirms the S3 website serves HTML and the multiplayer server responds.
+5. Validate the deployed system:
+   - `npm run deploy:validate`
+   - This checks that the website URL serves HTML and that the multiplayer server responds on `/games?status=waiting`.
 
-6. Capture runtime endpoints for client configuration:
-   - `export SERVER_HOME="$(terraform -chdir=terraform output -raw server_url)"`
-   - `export WEBSITE_URL="$(terraform -chdir=terraform output -raw website_url)"`
-   - Use `SERVER_HOME` as the multiplayer API base URL (set `VITE_MULTIPLAYER_URL`/`VITE_MULTIPLAYER_WS_URL` if needed).
+6. (Optional) Retrieve the deployed endpoints if you need to open or share them:
+   - `terraform -chdir=terraform output -raw website_url` - share with other users who want to play Tic-Tac-Toe on your new system.
+   - `terraform -chdir=terraform output -raw server_url` - not necessarily need unless you want to allow others to call API directly.
+   - These outputs are informational after deployment. They are not a required configuration step because `npm run deploy` already reads `server_url` from Terraform and bakes the correct client API/WebSocket endpoints into the built frontend before uploading it to S3.

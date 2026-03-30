@@ -32,7 +32,13 @@ Mar 23, 2026:
 * 2.5 hrs: Phase 2: Finishing server stories and doing UI stories incl. automated tests.  No manual testing done.
 Mar 24, 2026:
 * 1.5 hrs: Manual testing, adding server and UI logs.  Multiplayer mode is basically working.
-
+Mar 30, 2026:
+* 1 hr: switching cleanly to us-west-2 and deploying
+      aws_region = "us-west-2"
+      bucket_name = "i-tic-tac-toe-lab-site-stanb-us-west-2-03302026"
+      server_instance_id = "i-0125f3d8894fe318d"
+      server_url = "http://ec2-44-246-209-95.us-west-2.compute.amazonaws.com:5174"
+      website_url = "http://i-tic-tac-toe-lab-site-stanb-us-west-2-03302026.s3-website-us-west-2.amazonaws.com"
 
 
 ## SCRAP
