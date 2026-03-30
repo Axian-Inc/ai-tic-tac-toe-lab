@@ -2,7 +2,7 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   build: {
-    target: 'node20',
+    target: 'node24',
     outDir: 'dist',
     emptyOutDir: true,
     lib: {

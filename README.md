@@ -9,6 +9,8 @@ The frontend coordinates game state through the API server (HTTP + WebSocket).
 
 ## Run Locally
 
+Requires Node.js 24+.
+
 ```bash
 cd api-server
 npm install

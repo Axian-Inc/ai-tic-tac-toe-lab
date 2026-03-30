@@ -34,6 +34,9 @@
     "typecheck": "tsc --noEmit",
     "eject": "react-scripts eject"
   },
+  "engines": {
+    "node": ">=24"
+  },
   "eslintConfig": {
     "extends": [
       "react-app",
