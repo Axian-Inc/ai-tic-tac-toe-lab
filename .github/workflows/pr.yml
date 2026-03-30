@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - msmith-ajoplin-ttt-*
+  pull_request:
+    branches:
+      - msmith-ajoplin-ttt-lab-phase3
 
 permissions:
   contents: read
