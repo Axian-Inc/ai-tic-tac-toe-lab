@@ -15,6 +15,7 @@ Last updated: 2026-03-28
 
 ## Current Priorities
 - Cover `src/game/` logic with deterministic unit tests.
+- Add targeted React rendering tests for high-risk app-shell flows when a story changes route-entry behavior without introducing backend rule changes.
 - Keep Playwright focused on critical user flows such as app launch, route transition, and core gameplay interaction.
 - Use Playwright unit specs selectively for isolated logic that benefits from sharing the existing Playwright workflow.
 - Prefer stable selectors via `data-testid` for automation-critical controls and board cells.
@@ -30,6 +31,7 @@ Last updated: 2026-03-28
 
 ## Notes
 - Vitest coverage is currently scoped to `src/game/**/*.ts` to align with US-19 core-logic goals.
+- React rendering coverage now includes `src/App.test.tsx` for landing-page spectate entry behavior, using jsdom plus repo-local React DOM rendering without adding a second component-test runner.
 - Playwright now emits JUnit XML to `test-results/playwright/junit.xml`.
 - Playwright starts the local Vite dev server automatically through `playwright.config.ts`.
 - Playwright supports two browser automation runtime modes through `UI_AUTOMATION_MODE`:

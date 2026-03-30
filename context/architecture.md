@@ -227,6 +227,12 @@ Last updated: 2026-03-28
   - Reuses the existing `POST /games/{id}/join` and spectator `GET /games/{id}` navigation flows so modal actions still enter gameplay with the correct session role.
 - Discovery refresh and explicit empty-state messaging remain local UI behavior layered on top of the existing multiplayer summary endpoints rather than a second discovery model.
 
+### Dedicated Landing-Page Spectate Entry (US-44)
+- `US-44` builds on the existing spectator session and gameplay support from `US-36` without changing backend contracts.
+- `src/App.tsx` now exposes a dedicated `Spectate` trigger on the landing page in addition to the existing single-player and multiplayer entry points.
+- The landing-page spectate flow uses its own modal state and reuses the existing `GET /games?status=active` discovery path so spectators see only active matches, not waiting or completed games.
+- Selecting an active match from the spectate list still reuses the existing spectator navigation path into the multiplayer gameplay route with spectator session metadata.
+
 ### Abandonment Detection and Resolution (US-41)
 - `US-41` extends the existing multiplayer game record, completion model, and websocket transport rather than adding a second timeout-specific state store.
 - Multiplayer snapshots in `src/shared/multiplayer.ts` now include `activity` metadata for abandonment checks:

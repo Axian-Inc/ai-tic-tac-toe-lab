@@ -582,6 +582,11 @@ Acceptance criteria:
 ### US-44 Spectate Entry from the UI
 As a spectator, I want a `Spectate` entry point in the UI so that I can discover active games to watch.
 
+Status note (2026-03-30):
+- Added a dedicated landing-page `Spectate` control in `src/App.tsx`.
+- The spectate entry opens a spectate-specific discovery view that loads only `active` multiplayer games via the existing list endpoint.
+- Selecting a listed active game reuses the existing spectator session path into read-only multiplayer gameplay.
+
 Technical notes:
 - Add a dedicated `Spectate` trigger to the landing-page multiplayer entry UI instead of requiring manual game-ID navigation.
   Meaning and objective: This means the landing page should expose a first-class spectator path rather than assuming users already know a target game identifier. The goal is to make spectating discoverable and reduce friction for users who only want to watch active games.
@@ -598,45 +603,7 @@ Acceptance criteria:
 - Waiting games and completed games are not shown in the active-games spectate list.
 - Selecting a listed active game navigates the user into a spectator gameplay view for that game.
 
-### US-45 Real-Time Spectator Game Viewer
-As a spectator, I want to open an active game and see live updates so that I can follow the match in real time.
-
-Technical notes:
-- Extend the gameplay route/session model so it can enter the existing multiplayer gameplay screen in spectator mode.
-  Meaning and objective: This means the gameplay screen should understand spectator sessions as a distinct mode alongside local play and active-player multiplayer sessions. The goal is to reuse the current gameplay shell while applying the correct read-only behavior and labels.
-- Load the authoritative multiplayer snapshot for the selected game before opening or while opening the websocket subscription.
-  Meaning and objective: This means the spectator should receive a full current snapshot from the server as the baseline state rather than waiting for the next live event to populate the screen. The goal is to avoid blank or stale initial rendering when a spectator opens an in-progress match.
-- Reuse the existing websocket live-update path so spectator sessions reconcile remote move and game-over events from the server.
-  Meaning and objective: This means spectators should listen to the same authoritative event stream that active players use instead of polling or inventing a parallel transport path. The goal is to keep live updates consistent across roles and minimize duplicate logic.
-- Render the gameplay board and status from authoritative multiplayer state while disabling all player-only controls and mutations for spectator sessions.
-  Meaning and objective: This means the board, turn indicator, and outcome messaging should still be visible, but interactions that change the game must be unavailable in spectator mode. The goal is to let users follow the match clearly without giving them a way to act like a player.
-
-Acceptance criteria:
-- Opening an active game as a spectator loads the current authoritative board, move history, current turn, and game status before live updates are received.
-- When a player makes a valid move, the spectator view updates automatically without a manual refresh.
-- The spectator gameplay view renders the board in a read-only state with no enabled move controls.
-- Spectator sessions do not render player-only actions such as `Join`, `Move`, or `Resign`.
-
-### US-46 Server Support for Active-Game Spectating
-As a developer, I want the server to expose active games and allow spectator subscriptions so that the client can implement real-time viewing.
-
-Technical notes:
-- Ensure the existing multiplayer list endpoint supports discovery of `active` games with enough summary data for spectator selection.
-  Meaning and objective: This means the backend list response should expose active games in a form the UI can render directly for spectate selection, such as game identifiers and summary labels. The goal is to make active-game discovery reliable without adding a second listing endpoint.
-- Use the existing multiplayer snapshot endpoint to return authoritative game state for spectator hydration without assigning a player seat.
-  Meaning and objective: This means spectators should be able to fetch the same current game snapshot as other clients, but without being recorded as player `X` or `O`. The goal is to support read-only entry into an active game while preserving the two-player model.
-- Allow websocket subscriptions keyed by `gameId` for non-player clients and track them separately from player-role assumptions.
-  Meaning and objective: This means the websocket layer should accept viewers who are attached to a game but are not eligible to take turns or occupy a seat. The goal is to separate watch access from player authorization and avoid coupling subscription logic to player participation.
-- Continue broadcasting authoritative move and terminal-game events through the websocket channel so spectators receive the same live updates as players.
-  Meaning and objective: This means the server should keep one authoritative broadcast path for game changes and include spectators among its subscribers. The goal is to ensure all connected observers stay in sync on moves and completion outcomes.
-
-Acceptance criteria:
-- `GET /games?status=active` returns only active multiplayer games that are valid spectate targets.
-- `GET /games/{id}` returns the current authoritative snapshot for an active game when requested by a spectator client.
-- `WS /ws?gameId=...` accepts spectator subscriptions for an active game without assigning the client to player `X` or `O`.
-- After a valid move or terminal game event, subscribed spectators receive a websocket message for the affected game.
-
-### US-47 Terminal Code Coverage Reporting
+### US-45 Terminal Code Coverage Reporting
 As a developer, I want a code coverage report that runs from the terminal so that I can measure automated test coverage locally and in CI.
 
 Technical notes:

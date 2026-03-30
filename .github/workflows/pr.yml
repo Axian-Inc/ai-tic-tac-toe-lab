@@ -1,10 +1,12 @@
 name: PR Checks
 
 on:
+  push:
+    branches:
+      - msmith-ajoplin-ttt-*
   pull_request:
     branches:
       - msmith-ajoplin-ttt-lab-phase3
-
 
 permissions:
   contents: read
@@ -26,8 +28,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build server
+        run: npm run server:build
+
+      - name: Build front-end
+        run: npm run build
+      
       - name: Run automated unit tests
         run: npm run test:unit
 
-      - name: Build application
-        run: npm run build
+
+

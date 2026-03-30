@@ -41,7 +41,7 @@ interface MultiplayerGameView {
 
 type GameView = SinglePlayerGameView | MultiplayerGameView;
 type LiveSyncState = "idle" | "connecting" | "connected" | "reconnecting" | "unavailable";
-type MultiplayerModalView = "create" | "join";
+type MultiplayerModalView = "create" | "join" | "spectate";
 
 const SINGLE_PLAYER_GAME_VIEW: SinglePlayerGameView = {
   kind: "singleplayer",
@@ -410,6 +410,22 @@ function LandingPage({
     }
   };
 
+  const loadActiveGames = async () => {
+    setIsLoadingActiveGames(true);
+    setMultiplayerError("");
+
+    try {
+      const response = await listMultiplayerGames("active");
+      setActiveGames(response.games);
+    } catch (error) {
+      setMultiplayerError(
+        error instanceof Error ? error.message : "Unable to load active games."
+      );
+    } finally {
+      setIsLoadingActiveGames(false);
+    }
+  };
+
   const handleCreateMultiplayerGame = async () => {
     const request = {
       playerName: normalizeMultiplayerModalInput(playerName),
@@ -464,6 +480,12 @@ function LandingPage({
     await loadDiscoveryGames();
   };
 
+  const handleOpenSpectatePanel = async () => {
+    setIsMultiplayerModalOpen(true);
+    setMultiplayerModalView("spectate");
+    await loadActiveGames();
+  };
+
   const handleSpectateMultiplayerGame = async (gameId: string) => {
     setSpectatingGameId(gameId);
     setMultiplayerError("");
@@ -477,7 +499,11 @@ function LandingPage({
       setMultiplayerError(
         error instanceof Error ? error.message : "Unable to spectate that game."
       );
-      await loadDiscoveryGames();
+      if (multiplayerModalView === "spectate") {
+        await loadActiveGames();
+      } else {
+        await loadDiscoveryGames();
+      }
     } finally {
       setSpectatingGameId(null);
     }
@@ -548,6 +574,15 @@ function LandingPage({
           >
             Multiplayer
           </button>
+          <button
+            type="button"
+            className="landing-cta landing-cta-secondary"
+            onClick={() => {
+              void handleOpenSpectatePanel();
+            }}
+          >
+            Spectate
+          </button>
         </div>
 
         <div className="landing-meta" aria-hidden="true">
@@ -594,21 +629,23 @@ function LandingPage({
               </button>
             </div>
 
-            <label className="multiplayer-field">
-              <span className="multiplayer-field-label">Your Name</span>
-              <input
-                ref={createPlayerNameInputRef}
-                type="text"
-                className="multiplayer-text-input"
-                value={playerName}
-                onChange={(event) => {
-                  setPlayerName(event.target.value);
-                }}
-                placeholder="Enter your name here"
-                autoComplete="nickname"
-                maxLength={MULTIPLAYER_PLAYER_NAME_MAX_LENGTH}
-              />
-            </label>
+            {multiplayerModalView !== "spectate" ? (
+              <label className="multiplayer-field">
+                <span className="multiplayer-field-label">Your Name</span>
+                <input
+                  ref={createPlayerNameInputRef}
+                  type="text"
+                  className="multiplayer-text-input"
+                  value={playerName}
+                  onChange={(event) => {
+                    setPlayerName(event.target.value);
+                  }}
+                  placeholder="Enter your name here"
+                  autoComplete="nickname"
+                  maxLength={MULTIPLAYER_PLAYER_NAME_MAX_LENGTH}
+                />
+              </label>
+            ) : null}
 
             <div className="multiplayer-mode-switch" aria-label="Multiplayer actions">
               <button
@@ -629,6 +666,15 @@ function LandingPage({
                 }}
               >
                 Join
+              </button>
+              <button
+                type="button"
+                className={`multiplayer-mode-button ${multiplayerModalView === "spectate" ? "multiplayer-mode-button-active" : ""}`}
+                onClick={() => {
+                  void handleOpenSpectatePanel();
+                }}
+              >
+                Spectate
               </button>
             </div>
 
@@ -763,24 +809,92 @@ function LandingPage({
                               >
                                 {isJoining ? "Joining..." : "Join"}
                               </button>
-                              <button
-                                type="button"
-                                className="multiplayer-join-button"
-                                onClick={() => {
-                                  void handleSpectateMultiplayerGame(game.id);
-                                }}
-                                disabled={
-                                  isJoining || isSpectating || isCreatingMultiplayerGame
-                                }
-                              >
-                                {isSpectating ? "Opening..." : "Spectate"}
-                              </button>
                             </div>
                           </li>
                         );
                       })}
                     </ul>
                   </section>
+                ) : null}
+
+                {activeGames.length > 0 ? (
+                  <section className="multiplayer-discovery-group">
+                    <div className="multiplayer-discovery-header">
+                      <p className="multiplayer-panel-kicker">Live Games</p>
+                      <span className="multiplayer-discovery-count">
+                        {activeGames.length} active
+                      </span>
+                    </div>
+                    <ul className="multiplayer-game-list">
+                      {activeGames.map((game) => {
+                        const isSpectating = spectatingGameId === game.id;
+
+                        return (
+                          <li
+                            key={game.id}
+                            className="multiplayer-game-card multiplayer-game-card-active"
+                          >
+                            <p className="multiplayer-game-id">{game.id}</p>
+                            <div className="multiplayer-game-card-content">
+                              <div className="multiplayer-game-card-details">
+                                <p className="multiplayer-game-name">{game.name}</p>
+                                <p className="multiplayer-game-meta">
+                                  Hosted by {game.hostName} ·{" "}
+                                  {getDiscoveryGameTimestampLabel(game)}
+                                </p>
+                              </div>
+                              <div className="multiplayer-game-actions">
+                                <div className="multiplayer-game-badge">
+                                  <span>{game.status}</span>
+                                  <span>Live</span>
+                                </div>
+                                <button
+                                  type="button"
+                                  className="multiplayer-join-button"
+                                  onClick={() => {
+                                    void handleSpectateMultiplayerGame(game.id);
+                                  }}
+                                  disabled={isSpectating || isCreatingMultiplayerGame}
+                                >
+                                  {isSpectating ? "Opening..." : "Spectate"}
+                                </button>
+                              </div>
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </section>
+                ) : null}
+              </section>
+            ) : null}
+
+            {multiplayerModalView === "spectate" ? (
+              <section className="multiplayer-panel multiplayer-modal-panel" aria-live="polite">
+                <div className="multiplayer-panel-header">
+                  <div>
+                    <p className="multiplayer-panel-kicker">Watch Live Matches</p>
+                    <h2>Spectate an active multiplayer game</h2>
+                  </div>
+                  <button
+                    type="button"
+                    className="multiplayer-refresh"
+                    onClick={() => {
+                      void loadActiveGames();
+                    }}
+                    disabled={isLoadingActiveGames}
+                  >
+                    Refresh
+                  </button>
+                </div>
+
+                {!multiplayerError &&
+                activeGames.length === 0 &&
+                !isLoadingActiveGames ? (
+                  <p className="multiplayer-message">
+                    No active multiplayer games are available to spectate right now.
+                    Refresh to check again later.
+                  </p>
                 ) : null}
 
                 {activeGames.length > 0 ? (
