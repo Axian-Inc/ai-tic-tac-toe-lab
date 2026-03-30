@@ -582,6 +582,11 @@ Acceptance criteria:
 ### US-44 Spectate Entry from the UI
 As a spectator, I want a `Spectate` entry point in the UI so that I can discover active games to watch.
 
+Status note (2026-03-30):
+- Added a dedicated landing-page `Spectate` control in `src/App.tsx`.
+- The spectate entry opens a spectate-specific discovery view that loads only `active` multiplayer games via the existing list endpoint.
+- Selecting a listed active game reuses the existing spectator session path into read-only multiplayer gameplay.
+
 Technical notes:
 - Add a dedicated `Spectate` trigger to the landing-page multiplayer entry UI instead of requiring manual game-ID navigation.
   Meaning and objective: This means the landing page should expose a first-class spectator path rather than assuming users already know a target game identifier. The goal is to make spectating discoverable and reduce friction for users who only want to watch active games.
