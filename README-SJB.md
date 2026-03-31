@@ -23,8 +23,24 @@ Mar 18, 2026:
   Please, create a prompt for Codex CLI to convert the UI.  And update or create new stylesheets.  I'm attaching also two currently used stylesheets.
   * ChatGPT generated a prompt for Codex and new App.css and index.css
 Mar 19, 2026:
-* 2 hrs: Finished tweaking UI layout/styling to match the provided target screenshots
-* xxx hrs: 
+* 2 hrs: Finished tweaking UI layout/styling to match the provided target screenshots (making Codex tweak it).  Having it 
+  add an e2e test for a bug I spotted and fixing the bug.
+* 2 hrs: Finishing Phase 1.
+Mar 20, 2026:
+* 2 hrs: Phase 2: Creating user stories + implementing backend stories plus tests.
+Mar 23, 2026:
+* 2.5 hrs: Phase 2: Finishing server stories and doing UI stories incl. automated tests.  No manual testing done.
+Mar 24, 2026:
+* 1.5 hrs: Manual testing, adding server and UI logs.  Multiplayer mode is basically working.
+Mar 30, 2026:
+* 1 hr: switching cleanly to us-west-2 and deploying
+      aws_region = "us-west-2"
+      bucket_name = "i-tic-tac-toe-lab-site-stanb-us-west-2-03302026"
+      server_instance_id = "i-0125f3d8894fe318d"
+      server_url = "http://ec2-44-246-209-95.us-west-2.compute.amazonaws.com:5174"
+      website_url = "http://i-tic-tac-toe-lab-site-stanb-us-west-2-03302026.s3-website-us-west-2.amazonaws.com"
+* .5 hr: generating a new detailed set of user stories that already include pointers to target screenshots added 
+  to the project in docs folder.
 
 
 ## SCRAP

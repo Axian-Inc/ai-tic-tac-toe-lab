@@ -22,6 +22,7 @@ if [[ "${workspace}" != "stanb" ]]; then
 fi
 
 website_url="$(terraform -chdir="${TERRAFORM_DIR}" output -raw website_url)"
+server_url="$(terraform -chdir="${TERRAFORM_DIR}" output -raw server_url)"
 response_file="$(mktemp)"
 trap 'rm -f "${response_file}"' EXIT
 
@@ -40,3 +41,14 @@ if ! grep -qi "<title>" "${response_file}"; then
 fi
 
 echo "Hosting validation passed for ${website_url}"
+
+echo "Checking ${server_url}/games?status=waiting"
+server_code="$(curl -sS -o "${response_file}" -w "%{http_code}" "${server_url}/games?status=waiting")"
+
+if [[ "${server_code}" != "200" ]]; then
+  echo "Unexpected HTTP status ${server_code} from ${server_url}/games?status=waiting" >&2
+  cat "${response_file}" >&2
+  exit 1
+fi
+
+echo "Multiplayer server validation passed for ${server_url}"

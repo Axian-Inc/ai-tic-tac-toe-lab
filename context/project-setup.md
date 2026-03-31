@@ -55,6 +55,18 @@ If you need the dev server reachable on all interfaces, use:
 npm run dev -- --host 0.0.0.0 --port 5173
 ```
 
+Start the multiplayer API server (separate process):
+
+```bash
+npm run server
+```
+
+Default server URL:
+
+```text
+http://localhost:5174
+```
+
 ## Common Local Commands
 
 Run unit tests once:
@@ -73,6 +85,12 @@ Run Playwright E2E tests:
 
 ```bash
 npm run test:e2e
+```
+
+Generate the Vitest coverage reports:
+
+```bash
+npm run test:coverage
 ```
 
 If Playwright browsers are not installed yet:
@@ -104,4 +122,12 @@ npm run preview
 - The app is a Vite + React + TypeScript project.
 - No environment variables are required to run the app locally.
 - `npm run test:e2e` starts or reuses a local Vite server automatically through Playwright config.
+- `npm run test:coverage` writes coverage artifacts to `coverage/`, including `coverage/index.html` and `coverage/coverage-summary.json`.
+- Pull requests run the GitHub Actions validation workflow in `.github/workflows/pull-request-checks.yml`.
 - AWS, Terraform, and S3 deployment are not required for local development.
+
+## UI Environment Variables
+
+- `VITE_MULTIPLAYER_URL`: Base HTTP URL for the multiplayer API (default `http://localhost:5174`).
+- `VITE_MULTIPLAYER_WS_URL`: Base WebSocket URL for multiplayer updates (default `ws://localhost:5174`).
+- `VITE_SHOW_API_LOG`: When set to `true`, shows the API activity panel in the UI (default: `false`).

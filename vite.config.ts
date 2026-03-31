@@ -7,7 +7,20 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     pool: 'forks',
-    include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    include: [
+      'src/**/*.{test,spec}.{ts,tsx}',
+      'server/**/*.{test,spec}.{js,ts}',
+    ],
     exclude: ['**/node_modules/**', '**/node_modules.old/**'],
+    coverage: {
+      provider: 'v8',
+      reportsDirectory: './coverage',
+      reporter: ['text-summary', 'json-summary', 'html'],
+      include: ['src/**/*.{ts,tsx}', 'server/**/*.{js,ts}'],
+      exclude: [
+        'src/**/*.{test,spec}.{ts,tsx}',
+        'server/**/*.{test,spec}.{js,ts}',
+      ],
+    },
   },
 })

@@ -7,3 +7,18 @@ output "website_url" {
   description = "Public website URL for the static site."
   value       = "http://${aws_s3_bucket_website_configuration.site.website_endpoint}"
 }
+
+output "aws_region" {
+  description = "AWS region used for deployment."
+  value       = data.aws_region.current.name
+}
+
+output "server_url" {
+  description = "Multiplayer server base URL."
+  value       = "http://${aws_instance.server.public_dns}:${var.server_port}"
+}
+
+output "server_instance_id" {
+  description = "EC2 instance ID for the multiplayer server."
+  value       = aws_instance.server.id
+}
