@@ -109,8 +109,7 @@ Coverage is generated from the terminal with `npm run coverage`, which executes 
 Browser-level verification.
 
 - `single-player.spec.ts`: complete winning game flow through the UI
-- `multiplayer.spec.ts`: two-client create/join/live-move browser flow
-- `multiplayer.spec.ts`: multiplayer play and spectator watch coverage
+- `multiplayer.spec.ts`: multiplayer play plus spectator watch coverage
 
 ## Infrastructure Layout
 

@@ -1,17 +1,16 @@
 # ai-tic-tac-toe-lab
 
-Phase 1 currently delivers a local-first Tic Tac Toe app in React + TypeScript with:
+This repo now delivers a staged Tic Tac Toe system with:
 
-- a deterministic CPU opponent
-- a reusable game domain module
-- a landing page and playable single-player flow
-- move feedback, illegal-move messaging, and win/loss/draw celebration cues
-- terminal-runnable unit and end-to-end tests
-- a low-cost AWS static-site deployment baseline
+- a local single-player React + TypeScript game with a deterministic CPU opponent
+- a server-backed multiplayer flow over HTTP and WebSocket
+- a spectator flow for discovering and watching active live matches
+- terminal-runnable tests, coverage reporting, and pull request CI validation
+- low-cost AWS deployment baselines for the frontend and multiplayer API
 
 ## Current Status
 
-Phase 1 and Phase 2 are complete. Story `3.2` is the active Phase 3 milestone for the browser spectator flow.
+Phases 1 and 2 are complete. Story `3.5` is the active Phase 3 close-out milestone for final documentation and acceptance readiness.
 
 The app now supports:
 
@@ -20,7 +19,13 @@ The app now supports:
 - a live multiplayer match screen backed by the HTTP API and WebSocket updates
 - a spectator lobby for discovering and watching active multiplayer games
 
-Phase 2 behavior is now implemented across contract, API, realtime transport, client flow, server hardening, and deployment guidance. Phase 3 now includes both the server-side spectator data surface and the first browser spectator flow.
+Phase 2 behavior is implemented across contract, API, realtime transport, client flow, server hardening, and deployment guidance. Phase 3 now includes the spectator flow, terminal coverage reporting, and the pull request pipeline.
+
+Phase completion state:
+
+- Phase 1: complete and accepted
+- Phase 2: complete and accepted
+- Phase 3: implementation complete through Story `3.4`; Story `3.5` is the final documentation and close-out review
 
 Current server-side hardening now includes:
 
@@ -121,6 +126,17 @@ On every pull request it currently runs:
 - `npm run coverage`
 - `npm run package:server`
 
+## Phase 3 Review Commands
+
+These are the main terminal commands that represent the final Phase 3 validation surface:
+
+- `npm run build`
+- `npm run test:unit`
+- `npm run test:server`
+- `npm run test:e2e`
+- `npm run coverage`
+- `npm run package:server`
+
 ## Gameplay Notes
 
 - The human player is always `X`.
@@ -168,7 +184,7 @@ Notes:
 - [WorkTracker.md](/workspaces/ai-tic-tac-toe-lab/WorkTracker.md): epic/story tracking
 - [LD-WorkLog.md](/workspaces/ai-tic-tac-toe-lab/LD-WorkLog.md): detailed running work log
 - [docs/architecture.md](/workspaces/ai-tic-tac-toe-lab/docs/architecture.md): application architecture and flow
-- [docs/multiplayer-architecture.md](/workspaces/ai-tic-tac-toe-lab/docs/multiplayer-architecture.md): Phase 2 server/client contract baseline
+- [docs/multiplayer-architecture.md](/workspaces/ai-tic-tac-toe-lab/docs/multiplayer-architecture.md): multiplayer server/client transport and contract notes
 - [docs/project-organization.md](/workspaces/ai-tic-tac-toe-lab/docs/project-organization.md): source layout and ownership
 - [infra/README.md](/workspaces/ai-tic-tac-toe-lab/infra/README.md): Phase 1 static-site deployment baseline
 - [phases/phase-1/phase-1.md](/workspaces/ai-tic-tac-toe-lab/phases/phase-1/phase-1.md): Phase 1 requirements

@@ -103,3 +103,4 @@ The server deployment flow will:
 - The template keeps the bucket after stack deletion by default through `DeletionPolicy: Retain` so deployment artifacts are not removed accidentally.
 - The Phase 2 API baseline is intentionally simple and cost-conscious. It is suitable for lab validation, not production traffic.
 - The API host installs dependencies at instance boot time and runs the TypeScript server with `tsx`; a later phase can replace this with a more production-like image or build pipeline.
+- The Phase 3 pull request workflow validates `npm run package:server`, so the packaging path is now part of routine repo automation even though deployment still happens manually.

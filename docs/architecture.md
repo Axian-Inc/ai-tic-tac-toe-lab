@@ -181,3 +181,11 @@ Story `3.4` adds the first pull request validation pipeline.
 - GitHub Actions installs dependencies with `npm ci`.
 - The workflow runs the existing terminal commands for build, unit tests, server tests, and coverage.
 - The workflow also packages the multiplayer server artifact so the backend packaging path is validated on every pull request.
+
+## Phase 3 Story 3.5 Baseline
+
+Story `3.5` is the Phase 3 close-out pass.
+
+- Top-level docs now describe the repo as a completed single-player, multiplayer, spectator, coverage, and CI lab rather than an early scaffold.
+- The remaining review surface is the final acceptance of the documentation package and phase tracker state.
+- No new runtime behavior is introduced in this story; it aligns repo memory with the implemented codebase.

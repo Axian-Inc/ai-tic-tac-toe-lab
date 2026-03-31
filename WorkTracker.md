@@ -151,9 +151,9 @@ This file is the planning tracker for the Tic Tac Toe lab effort. It is intended
 - Title: `Phase 3 - Spectator Mode + CI Pipeline`
 - Description: `Add real-time game spectating, coverage reporting, and a pull-request build pipeline that compiles and tests the project automatically.`
 - Date/Time: `2026-03-30 15:36 UTC`
-- Status: `In Progress`
+- Status: `Done`
 - Assignment: `Codex`
-- Comments: `Execution is active. Story 3.1 is the current milestone and is limited to exposing spectator-oriented server data without building the spectator UI yet.`
+- Comments: `Phase 3 is complete and accepted on 2026-03-31 16:39 UTC. Spectator discovery/viewing, terminal coverage generation, and the pull request workflow are all in place, with the final documentation package aligned to the implemented codebase.`
 
 ### Story STORY-3.1
 
@@ -196,9 +196,9 @@ This file is the planning tracker for the Tic Tac Toe lab effort. It is intended
 - Title: `Finalize docs and close-out criteria`
 - Description: `Update README and supporting docs to reflect spectator mode, CI, coverage, and final operating instructions, then prepare the project for final acceptance review.`
 - Date/Time: `2026-03-30 15:36 UTC`
-- Status: `Proposed`
+- Status: `Done`
 - Assignment: `Codex`
-- Comments: `Epic 03 closes only after the user validates the final experience and documentation package.`
+- Comments: `Completed on 2026-03-31 16:37 UTC, reviewed by the user, and accepted on 2026-03-31 16:39 UTC. Updated the top-level repo guidance to reflect the implemented spectator, coverage, CI, and deployment state; corrected stale project memory in AGENTS.md; and aligned the close-out docs for final Phase 3 acceptance review.`
 
 ## Epic EPIC-04 - Post-Phase UX Enhancements
 

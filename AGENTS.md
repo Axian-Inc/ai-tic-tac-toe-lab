@@ -22,8 +22,8 @@ When requirements are ambiguous, prefer the newest relevant phase doc while pres
 
 As checked into this repository today:
 
-- The repo is still mostly scaffold and phase documentation.
-- `package.json` is minimal and does not yet define the final project scripts.
+- The repo now contains an implemented React client, multiplayer Node server, spectator flow, coverage command, and pull request workflow.
+- `package.json` defines the active local build, test, coverage, packaging, and deployment scripts used by the project today.
 - `codex-cli` exists but is empty and should not be treated as application code.
 - `node_modules/` is dependency output, not source.
 - The user may add substantial work between turns; always re-check the tree before making assumptions.

@@ -324,3 +324,21 @@
 - The user accepted Story `3.4` after confirming there were no visual changes.
 - Marked Story `3.4` as `Done` in `WorkTracker.md`.
 - Preparing the git checkpoint for the accepted CI milestone before starting Story `3.5`.
+
+## 2026-03-31 16:37 UTC
+
+- Started Story `3.5` for the final Phase 3 documentation and close-out pass.
+- Updated `README.md` so the repo is described as the implemented single-player, multiplayer, spectator, coverage, and CI lab it is today rather than as a Phase 1-first project.
+- Added a final Phase 3 review-command section in `README.md` to make the acceptance surface explicit.
+- Updated `docs/architecture.md` with the Story `3.5` close-out note.
+- Corrected the duplicate `multiplayer.spec.ts` listing in `docs/project-organization.md`.
+- Updated `infra/README.md` to note that server packaging is now validated by the pull request workflow.
+- Corrected stale repository memory in `AGENTS.md` so future agents no longer assume the repo is mostly scaffold or that the package scripts are incomplete.
+- Updated `WorkTracker.md` to move Story `STORY-3.5` to `In Review`.
+
+## 2026-03-31 16:39 UTC
+
+- The user accepted Story `3.5`.
+- Marked Story `3.5` as `Done` in `WorkTracker.md`.
+- Closed Epic `EPIC-03` as `Done`, which completes Phase 3.
+- Preparing the final Phase 3 git checkpoint and completion summary.
