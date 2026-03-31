@@ -18,6 +18,7 @@ RUN apt-get update \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && npm install -g @openai/codex \
+    && npm install -g npm@11.12.1 \
     && curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o /tmp/awscliv2.zip \
     && unzip -q /tmp/awscliv2.zip -d /tmp \
     && /tmp/aws/install \
