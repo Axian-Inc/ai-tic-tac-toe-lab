@@ -1,17 +1,17 @@
 # Multiplayer Architecture Baseline
 
-This document captures the Phase 2 Story `2.1` contract and structure decisions. It defines how the client and server are expected to communicate before route handlers and WebSocket plumbing are implemented.
+This document captures the multiplayer transport and structure decisions that started in Phase 2 Story `2.1` and now also support Phase 3 spectator flows.
 
 ## Scope of This Story
 
-Story `2.1` is design and contract work only:
+Story `2.1` started as design and contract work only:
 
 - choose the backend shape
 - define the shared HTTP and WebSocket contracts
 - define the server-side game identifier and state model
 - document the expected project structure for later multiplayer stories
 
-It does not implement the server yet.
+Later Phase 2 and Phase 3 stories implement the server, multiplayer player flow, and spectator flow on top of that baseline.
 
 ## Chosen Backend Shape
 
@@ -121,6 +121,13 @@ Replay and catch-up are handled by the same snapshot payload:
 - `game.moves` preserves ordered move history
 - each move now carries its own `acceptedAt` timestamp
 - reconnecting clients can rebuild the full board from the snapshot without requesting a second replay endpoint
+
+The current browser spectator flow uses that transport in this order:
+
+- list active games over HTTP
+- fetch the chosen game's snapshot over HTTP
+- subscribe to the chosen game over WebSocket
+- replace local spectator state whenever a newer server event arrives
 
 ## Capacity and Timing Rules
 

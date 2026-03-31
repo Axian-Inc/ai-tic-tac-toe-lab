@@ -1,5 +1,6 @@
 import type {
   CreateGameResponse,
+  GetGameResponse,
   JoinGameResponse,
   ListGamesResponse,
   MultiplayerGameId,
@@ -15,6 +16,14 @@ export async function createMultiplayerGame(): Promise<CreateGameResponse> {
 
 export async function listWaitingGames(): Promise<ListGamesResponse> {
   return requestJson('/games?status=waiting');
+}
+
+export async function listActiveGames(): Promise<ListGamesResponse> {
+  return requestJson('/games?status=active');
+}
+
+export async function getMultiplayerGame(gameId: MultiplayerGameId): Promise<GetGameResponse> {
+  return requestJson(`/games/${gameId}`);
 }
 
 export async function joinMultiplayerGame(gameId: MultiplayerGameId): Promise<JoinGameResponse> {

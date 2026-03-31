@@ -169,9 +169,9 @@ This file is the planning tracker for the Tic Tac Toe lab effort. It is intended
 - Title: `Build spectator UI flow`
 - Description: `Add a Spectate entry point, active-game list, selected-game viewer, and live updates in the client so games can be watched in real time.`
 - Date/Time: `2026-03-30 15:36 UTC`
-- Status: `Proposed`
+- Status: `Done`
 - Assignment: `Codex`
-- Comments: `Meaningful milestone. Stop for user testing when a live game can be spectated end-to-end.`
+- Comments: `Completed on 2026-03-31 15:29 UTC, reviewed by the user, and accepted on 2026-03-31 15:30 UTC. Added a spectator entry point on the landing screen, an active-game spectator lobby, and a read-only live viewer that hydrates from GET /games/{id} before following WebSocket updates. Verified with npm run typecheck, npm run build, npm run test:server, and npm run test:e2e.`
 
 ### Story STORY-3.3
 

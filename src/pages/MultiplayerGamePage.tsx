@@ -13,6 +13,10 @@ interface MultiplayerGamePageProps {
   readonly isSubmittingMove: boolean;
   readonly onBackToLobby: () => void;
   readonly onSelectCell: (position: number) => void;
+  readonly backLabel?: string;
+  readonly eyebrow?: string;
+  readonly title?: string;
+  readonly lead?: string;
 }
 
 export function MultiplayerGamePage({
@@ -25,6 +29,11 @@ export function MultiplayerGamePage({
   isSubmittingMove,
   onBackToLobby,
   onSelectCell,
+  backLabel = 'Back to Lobby',
+  eyebrow = 'Phase 2 · Multiplayer Match',
+  title = 'Live Server-Backed Tic Tac Toe',
+  lead = `Game ID ${game.id}. Moves are sent to the server for validation and broadcast
+            to all connected listeners over WebSocket.`,
 }: MultiplayerGamePageProps) {
   const [hoveredCell, setHoveredCell] = useState<number | null>(null);
   const [celebrationState, setCelebrationState] = useState<'win' | 'loss' | 'draw' | null>(null);
@@ -106,12 +115,9 @@ export function MultiplayerGamePage({
           <div className="celebration-banner celebration-banner--draw">Multiplayer draw.</div>
         ) : null}
         <section className="hero-card game-panel">
-          <p className="eyebrow">Phase 2 · Multiplayer Match</p>
-          <h1>Live Server-Backed Tic Tac Toe</h1>
-          <p className="lead">
-            Game ID {game.id}. Moves are sent to the server for validation and broadcast
-            to all connected listeners over WebSocket.
-          </p>
+          <p className="eyebrow">{eyebrow}</p>
+          <h1>{title}</h1>
+          <p className="lead">{lead}</p>
           <div className="status-row">
             <span className="status-pill">Role: {localPlayer ?? 'Observer'}</span>
             <span className="status-pill">Turn: {game.currentPlayer ?? 'Waiting'}</span>
@@ -125,7 +131,7 @@ export function MultiplayerGamePage({
           </div>
           <div className="hero-actions">
             <button className="secondary-button" onClick={onBackToLobby} type="button">
-              Back to Lobby
+              {backLabel}
             </button>
           </div>
           {requestError ? <p className="feedback-banner">{requestError}</p> : null}
@@ -206,6 +212,13 @@ function getStatusMessage(
   }
 
   if (game.status === 'over' && game.winner !== null) {
+    if (localPlayer === null) {
+      return {
+        title: `Player ${game.winner} won the match.`,
+        body: 'The server closed the round and preserved the full move history for replay and spectator catch-up.',
+      };
+    }
+
     const didWin = localPlayer !== null && game.winner === localPlayer;
 
     return {
@@ -218,6 +231,13 @@ function getStatusMessage(
     return {
       title: 'Your move is live.',
       body: 'Choose an open square. The server will validate the command and broadcast it to both clients.',
+    };
+  }
+
+  if (localPlayer === null && game.status === 'active') {
+    return {
+      title: 'Watching a live match.',
+      body: 'Moves are still controlled by the two players. This spectator view updates automatically when the server broadcasts each turn.',
     };
   }
 

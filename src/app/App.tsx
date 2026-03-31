@@ -4,7 +4,9 @@ import { chooseDeterministicCpuMove, createEmptyGameState, applyMove, canPlayMov
 import {
   connectToGameEvents,
   createMultiplayerGame,
+  getMultiplayerGame,
   joinMultiplayerGame,
+  listActiveGames,
   listWaitingGames,
   submitMultiplayerMove,
 } from '../features/multiplayer/api';
@@ -13,20 +15,29 @@ import { GamePage } from '../pages/GamePage';
 import { LandingPage } from '../pages/LandingPage';
 import { MultiplayerGamePage } from '../pages/MultiplayerGamePage';
 import { MultiplayerLobbyPage } from '../pages/MultiplayerLobbyPage';
+import { SpectatorLobbyPage } from '../pages/SpectatorLobbyPage';
 import '../styles/app.css';
 
 export default function App() {
-  const [screen, setScreen] = useState<'landing' | 'single-player' | 'multiplayer-lobby' | 'multiplayer-game'>(
-    'landing',
-  );
+  const [screen, setScreen] = useState<
+    'landing' | 'single-player' | 'multiplayer-lobby' | 'multiplayer-game' | 'spectator-lobby' | 'spectator-game'
+  >('landing');
   const [singlePlayerGameState, setSinglePlayerGameState] = useState<GameState>(createEmptyGameState);
   const [waitingGameSummaries, setWaitingGameSummaries] = useState<readonly MultiplayerGameSummary[]>([]);
+  const [activeGameSummaries, setActiveGameSummaries] = useState<readonly MultiplayerGameSummary[]>([]);
   const [multiplayerGame, setMultiplayerGame] = useState<MultiplayerGameState | null>(null);
   const [multiplayerSessionId, setMultiplayerSessionId] = useState<string | null>(null);
   const [multiplayerFeedback, setMultiplayerFeedback] = useState<string | null>(null);
   const [multiplayerError, setMultiplayerError] = useState<string | null>(null);
   const [isMultiplayerBusy, setIsMultiplayerBusy] = useState(false);
   const [connectionState, setConnectionState] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
+  const [spectatorGame, setSpectatorGame] = useState<MultiplayerGameState | null>(null);
+  const [spectatorFeedback, setSpectatorFeedback] = useState<string | null>(null);
+  const [spectatorError, setSpectatorError] = useState<string | null>(null);
+  const [isSpectatorBusy, setIsSpectatorBusy] = useState(false);
+  const [spectatorConnectionState, setSpectatorConnectionState] = useState<'connecting' | 'connected' | 'disconnected'>(
+    'disconnected',
+  );
 
   useEffect(() => {
     if (
@@ -66,6 +77,14 @@ export default function App() {
   }, [screen]);
 
   useEffect(() => {
+    if (screen !== 'spectator-lobby') {
+      return;
+    }
+
+    void refreshActiveGames();
+  }, [screen]);
+
+  useEffect(() => {
     if (screen !== 'multiplayer-game' || multiplayerGame === null) {
       setConnectionState('disconnected');
       return;
@@ -101,6 +120,42 @@ export default function App() {
     };
   }, [multiplayerGame?.id, screen]);
 
+  useEffect(() => {
+    if (screen !== 'spectator-game' || spectatorGame === null) {
+      setSpectatorConnectionState('disconnected');
+      return;
+    }
+
+    setSpectatorConnectionState('connecting');
+    const disconnect = connectToGameEvents(
+      spectatorGame.id,
+      (event) => {
+        setSpectatorGame(event.game);
+
+        if (event.type === 'game.move.accepted') {
+          setSpectatorFeedback(`Observed turn ${event.move.turn} at cell ${event.move.position}.`);
+        } else if (event.type === 'game.player.joined') {
+          setSpectatorFeedback('A second player joined this match.');
+        } else if (event.type === 'game.snapshot' && event.reason === 'resync') {
+          setSpectatorFeedback('Spectator view resynchronized with the server.');
+        } else if (event.type === 'game.abandoned') {
+          setSpectatorFeedback('The server ended this match due to abandonment.');
+        } else if (event.type === 'game.resigned') {
+          setSpectatorFeedback('The server ended this match due to resignation.');
+        }
+
+        setSpectatorError(null);
+      },
+      (connected) => {
+        setSpectatorConnectionState(connected ? 'connected' : 'disconnected');
+      },
+    );
+
+    return () => {
+      disconnect();
+    };
+  }, [screen, spectatorGame?.id]);
+
   function startSinglePlayerGame() {
     setSinglePlayerGameState(createEmptyGameState());
     setScreen('single-player');
@@ -127,11 +182,27 @@ export default function App() {
     }
   }
 
+  async function refreshActiveGames() {
+    try {
+      const response = await listActiveGames();
+      setActiveGameSummaries(response.games);
+    } catch (error) {
+      setSpectatorError(error instanceof Error ? error.message : 'Unable to load active games.');
+    }
+  }
+
   async function openMultiplayerLobby() {
     setMultiplayerError(null);
     setMultiplayerFeedback(null);
     setScreen('multiplayer-lobby');
     await refreshWaitingGames();
+  }
+
+  async function openSpectatorLobby() {
+    setSpectatorError(null);
+    setSpectatorFeedback(null);
+    setScreen('spectator-lobby');
+    await refreshActiveGames();
   }
 
   async function handleCreateMultiplayerGame() {
@@ -199,8 +270,37 @@ export default function App() {
     setScreen('multiplayer-lobby');
   }
 
+  async function handleWatchGame(gameId: string) {
+    setIsSpectatorBusy(true);
+    setSpectatorError(null);
+
+    try {
+      const response = await getMultiplayerGame(gameId);
+      setSpectatorGame(response.game);
+      setSpectatorFeedback('Spectator view connected to the current server snapshot.');
+      setScreen('spectator-game');
+    } catch (error) {
+      setSpectatorError(error instanceof Error ? error.message : 'Unable to load the selected game.');
+    } finally {
+      setIsSpectatorBusy(false);
+    }
+  }
+
+  function handleBackToSpectatorLobby() {
+    setSpectatorGame(null);
+    setSpectatorFeedback(null);
+    setSpectatorConnectionState('disconnected');
+    setScreen('spectator-lobby');
+  }
+
   if (screen === 'landing') {
-    return <LandingPage onMultiplayer={() => void openMultiplayerLobby()} onPlayCpu={startSinglePlayerGame} />;
+    return (
+      <LandingPage
+        onMultiplayer={() => void openMultiplayerLobby()}
+        onPlayCpu={startSinglePlayerGame}
+        onSpectate={() => void openSpectatorLobby()}
+      />
+    );
   }
 
   if (screen === 'multiplayer-lobby') {
@@ -213,6 +313,19 @@ export default function App() {
         onJoin={(gameId) => void handleJoinMultiplayerGame(gameId)}
         onRefresh={() => void refreshWaitingGames()}
         waitingGames={waitingGameSummaries}
+      />
+    );
+  }
+
+  if (screen === 'spectator-lobby') {
+    return (
+      <SpectatorLobbyPage
+        activeGames={activeGameSummaries}
+        errorMessage={spectatorError}
+        isBusy={isSpectatorBusy}
+        onBack={quitGame}
+        onRefresh={() => void refreshActiveGames()}
+        onWatch={(gameId) => void handleWatchGame(gameId)}
       />
     );
   }
@@ -231,6 +344,26 @@ export default function App() {
         onSelectCell={(position) => void handleMultiplayerMove(position)}
         renderableGameState={toRenderableGameState(multiplayerGame)}
         requestError={multiplayerError}
+      />
+    );
+  }
+
+  if (screen === 'spectator-game' && spectatorGame !== null) {
+    return (
+      <MultiplayerGamePage
+        backLabel="Back to Spectator Lobby"
+        connectionState={spectatorConnectionState}
+        eyebrow="Phase 3 · Spectator View"
+        feedbackMessage={spectatorFeedback}
+        game={spectatorGame}
+        isSubmittingMove={false}
+        lead={`Game ID ${spectatorGame.id}. This client is watching a live multiplayer match and cannot send moves.`}
+        localPlayer={null}
+        onBackToLobby={handleBackToSpectatorLobby}
+        onSelectCell={() => {}}
+        renderableGameState={toRenderableGameState(spectatorGame)}
+        requestError={spectatorError}
+        title="Live Spectator View"
       />
     );
   }

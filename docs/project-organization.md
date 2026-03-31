@@ -26,6 +26,7 @@ Top-level page components.
 - `GamePage.tsx`: active game screen, status messaging, and feedback UI
 - `MultiplayerLobbyPage.tsx`: create/join waiting-game flow
 - `MultiplayerGamePage.tsx`: live multiplayer board and server-backed match status
+- `SpectatorLobbyPage.tsx`: active-game discovery and watch selection for spectators
 
 ### `src/features/game/components/`
 
@@ -102,6 +103,7 @@ Browser-level verification.
 
 - `single-player.spec.ts`: complete winning game flow through the UI
 - `multiplayer.spec.ts`: two-client create/join/live-move browser flow
+- `multiplayer.spec.ts`: multiplayer play and spectator watch coverage
 
 ## Infrastructure Layout
 

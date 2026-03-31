@@ -11,15 +11,16 @@ Phase 1 currently delivers a local-first Tic Tac Toe app in React + TypeScript w
 
 ## Current Status
 
-Phase 1 and Phase 2 are complete. Story `3.1` is the active Phase 3 milestone for spectator-oriented server data exposure.
+Phase 1 and Phase 2 are complete. Story `3.2` is the active Phase 3 milestone for the browser spectator flow.
 
 The app now supports:
 
 - local single-player play against the deterministic CPU
 - a multiplayer lobby for creating and joining waiting games
 - a live multiplayer match screen backed by the HTTP API and WebSocket updates
+- a spectator lobby for discovering and watching active multiplayer games
 
-Phase 2 behavior is now implemented across contract, API, realtime transport, client flow, server hardening, and deployment guidance. Phase 3 starts by exposing spectator-oriented server reads before the spectator UI is built.
+Phase 2 behavior is now implemented across contract, API, realtime transport, client flow, server hardening, and deployment guidance. Phase 3 now includes both the server-side spectator data surface and the first browser spectator flow.
 
 Current server-side hardening now includes:
 
@@ -33,6 +34,13 @@ Current spectator-facing server data now includes:
 - `GET /games?status=active` for active-game discovery
 - `GET /games/{id}` for a selected game's current state snapshot
 - `WS /ws?gameId=...` for live updates and immediate resync snapshots
+
+Current spectator UI behavior now includes:
+
+- a `Spectate Live Games` entry point on the landing page
+- an active-game list fed by `GET /games?status=active`
+- a selected-game viewer that loads the current snapshot before opening live updates
+- a read-only board that updates as players continue the match
 
 ## Prerequisites
 
@@ -93,7 +101,7 @@ npm run preview -- --host 0.0.0.0
 - `npm run typecheck`: run the TypeScript compiler in no-emit mode
 - `npm run test:unit`: run Vitest game-domain coverage
 - `npm run test:server`: run the multiplayer HTTP API tests
-- `npm run test:e2e`: run the Playwright single-player browser flow
+- `npm run test:e2e`: run the Playwright browser flows for single-player, multiplayer, and spectator paths
 - `npm test`: run unit, server, and e2e coverage
 - `npm run deploy:static`: deploy the static-site baseline described in `infra/`
 - `npm run package:server`: create a deployable multiplayer API artifact tarball
@@ -130,7 +138,7 @@ npm run test:e2e
 
 Notes:
 
-- The Playwright suite auto-starts the Vite app through `playwright.config.ts`.
+- The Playwright suite auto-starts isolated Vite and API server instances through `playwright.config.ts`.
 - In this dev container, Chromium system libraries were installed so Playwright can run headless.
 
 ## Documentation Map
@@ -166,10 +174,11 @@ See [infra/README.md](/workspaces/ai-tic-tac-toe-lab/infra/README.md) for the de
 At the moment the application is intentionally simple:
 
 - `src/app/App.tsx` coordinates the screen flow and CPU turn timing
+- `src/features/multiplayer/api.ts` owns both player and spectator browser calls
 - `shared/contracts/multiplayer.ts` defines the Phase 2 multiplayer DTO and event baseline
 - `server/` now contains the multiplayer HTTP and WebSocket server
 - `src/features/game/model/` contains the pure game logic
-- `src/pages/` contains the landing, lobby, single-player, and multiplayer screens
+- `src/pages/` contains the landing, lobby, single-player, multiplayer, and spectator screens
 - `src/features/game/components/BoardPreview.tsx` renders the board UI
 - `tests/unit/` covers the game domain
 - `tests/server/` covers the multiplayer backend

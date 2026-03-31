@@ -273,3 +273,24 @@
 - The user accepted Story `3.1` and directed work to continue.
 - Marked Story `3.1` as `Done` in `WorkTracker.md`.
 - Preparing a git checkpoint for the accepted server-side spectator-data milestone before starting Story `3.2`.
+
+## 2026-03-31 15:29 UTC
+
+- Created git checkpoint `9a5faee` with message `Phase 3 Story 3.1` after the user accepted Story `3.1`.
+- Started Story `3.2` for the browser spectator-flow milestone.
+- Added `listActiveGames` and `getMultiplayerGame` to the browser multiplayer API helper so the client can discover and hydrate spectator views.
+- Added `src/pages/SpectatorLobbyPage.tsx` for active-game discovery and watch selection.
+- Updated `LandingPage.tsx` so the home screen now exposes a `Spectate Live Games` entry point.
+- Extended `App.tsx` with spectator-specific screen state, active-game loading, selected-game hydration, and a dedicated live-update connection path for read-only viewers.
+- Reused `MultiplayerGamePage.tsx` for spectator viewing by parameterizing the page copy and improving the status messaging for `Observer` mode.
+- Expanded `tests/e2e/multiplayer.spec.ts` with a third-browser spectator scenario that verifies a spectator can open an active game and see a live move arrive.
+- Found that Playwright initially reused a stale long-running API server on port `8787`, which hid the new `GET /games/{id}` route during the spectator test.
+- Updated `vite.config.ts` and `playwright.config.ts` so Playwright now starts an isolated API server on `8788` and points the Vite proxy at that port for reliable end-to-end runs.
+- Updated `README.md`, `docs/architecture.md`, `docs/multiplayer-architecture.md`, and `docs/project-organization.md` for the new spectator UI behavior.
+- Updated `WorkTracker.md` to move Story `STORY-3.2` to `In Review`.
+
+## 2026-03-31 15:30 UTC
+
+- The user accepted Story `3.2` and directed work to continue.
+- Marked Story `3.2` as `Done` in `WorkTracker.md`.
+- Preparing a git checkpoint for the accepted spectator UI milestone before starting Story `3.3`.

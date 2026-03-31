@@ -2,9 +2,7 @@
 
 ## Implemented Scope
 
-Phase 1 is implemented as a client-only React application. There is no running backend yet. All gameplay state currently lives in browser memory for the active session.
-
-The architecture is intentionally split so the game rules are reusable and testable before multiplayer/server work is added.
+The app now spans a React client plus a lightweight in-memory multiplayer backend. The architecture is intentionally split so game rules stay reusable and testable while the server remains authoritative for multiplayer lifecycle rules.
 
 ## High-Level Design
 
@@ -22,8 +20,8 @@ The architecture is intentionally split so the game rules are reusable and testa
 ### Landing Page
 
 - The app starts on `LandingPage`.
-- The user can choose either `Play vs. CPU` or `Multiplayer Lobby`.
-- `App.tsx` switches into the selected local or server-backed flow.
+- The user can choose `Play vs. CPU`, `Multiplayer Lobby`, or `Spectate Live Games`.
+- `App.tsx` switches into the selected local, multiplayer, or spectator flow.
 
 ### Multiplayer Flow
 
@@ -33,6 +31,13 @@ The architecture is intentionally split so the game rules are reusable and testa
 - The match screen opens a WebSocket connection to `/ws?gameId=...`.
 - The browser receives an immediate `game.snapshot` resync event, then ongoing join/move/resign/abandonment events.
 - Local move requests go through `POST /games/{id}/moves`, while remote moves arrive asynchronously over the socket.
+
+### Spectator Flow
+
+- The spectator lobby loads active games from `GET /games?status=active`.
+- Selecting a game first reads `GET /games/{id}` to load the current snapshot.
+- The spectator screen then opens a WebSocket connection to `/ws?gameId=...`.
+- The board is rendered read-only and updates when move or lifecycle events arrive from the server.
 
 ### Game Flow
 
@@ -79,7 +84,8 @@ The UI does not define game rules directly. It consumes the domain module.
 ## Testing Strategy
 
 - `tests/unit/game.test.ts` validates the pure game domain.
-- `tests/e2e/single-player.spec.ts` validates the browser flow through Playwright.
+- `tests/e2e/single-player.spec.ts` validates the single-player browser flow through Playwright.
+- `tests/e2e/multiplayer.spec.ts` validates both multiplayer play and spectator watching flows.
 
 This split is important for later phases because server-side validation can reuse the same game-domain concepts while browser tests continue to exercise end-to-end behavior.
 
@@ -148,3 +154,12 @@ Story `3.1` extends the server data surface for spectator use without introducin
 - `GET /games/{id}` now returns the current snapshot for a selected game.
 - the existing WebSocket transport already supports spectator-style subscriptions because it only requires `gameId`
 - the goal of this story is server data exposure and contract alignment, not new browser screens
+
+## Phase 3 Story 3.2 Baseline
+
+Story `3.2` adds the first browser spectator experience.
+
+- `LandingPage.tsx` now exposes a spectator entry point alongside local and multiplayer play.
+- `SpectatorLobbyPage.tsx` lists active matches and lets the user choose one to watch.
+- `App.tsx` now manages a separate spectator screen state, active-game loading, and spectator-specific WebSocket feedback.
+- `MultiplayerGamePage.tsx` is now parameterized so it can render both player and spectator match views without duplicating board/status logic.

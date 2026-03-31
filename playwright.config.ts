@@ -8,15 +8,15 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: 'npm run start:server',
-      port: 8787,
-      reuseExistingServer: true,
+      command: 'PORT=8788 npm run start:server',
+      port: 8788,
+      reuseExistingServer: false,
       timeout: 120000,
     },
     {
-      command: 'npm run dev -- --host 127.0.0.1 --port 4173',
+      command: 'VITE_API_ORIGIN=http://127.0.0.1:8788 npm run dev -- --host 127.0.0.1 --port 4173',
       port: 4173,
-      reuseExistingServer: true,
+      reuseExistingServer: false,
       timeout: 120000,
     },
   ],
