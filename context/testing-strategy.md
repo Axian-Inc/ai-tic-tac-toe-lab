@@ -17,6 +17,7 @@ Update: 2026-03-30 22:32:33 UTC - Added server tests for completed-game exclusio
 Update: 2026-03-30 22:41:06 UTC - Added client unit coverage for the landing-page spectator dialog and the read-only spectator game view with player names.
 Update: 2026-03-30 22:46:46 UTC - Clarified the current project-wide test commands and documented that coverage is not yet produced by a single existing command.
 Update: 2026-03-30 23:20:34 UTC - Added a working coverage command and browser-level spectator flow coverage.
+Update: 2026-03-31 16:38:23 UTC - Added a pull-request GitHub Actions workflow that runs coverage, Playwright, and the production build, then uploads coverage artifacts.
 
 Current:
 - Unit tests via Vitest: `npm run test:run`
@@ -35,6 +36,13 @@ Command Notes:
   - `text-summary` in the terminal
   - `coverage/coverage-summary.json` as a machine-readable summary
   - `coverage/index.html` as a human-readable HTML report
+- Pull requests are validated in GitHub Actions with:
+  - `npm ci`
+  - `npx playwright install --with-deps chromium`
+  - `npm run test:coverage`
+  - `npm run test:e2e`
+  - `npm run build`
+- The workflow uploads the generated `coverage/` directory as an artifact so the HTML and JSON coverage outputs are available from the workflow run.
 
 Priorities:
 - Validate game logic and board interactions.

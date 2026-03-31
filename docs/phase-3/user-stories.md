@@ -89,14 +89,14 @@ Acceptance Criteria:
 3. The coverage workflow includes the server and client test suites that are part of the project.
 
 ### P3.10: Run CI on Pull Requests (Platform)
-As a maintainer, I want a GitHub Actions pipeline on pull requests so code quality checks run automatically before merge.
+As a maintainer, I want a GitHub Actions pipeline on pull requests so code quality checks run automatically 
+when a PR is created.
 
 Acceptance Criteria:
-1. A GitHub Actions workflow runs on pull requests.
+1. A GitHub Actions workflow runs on pull request creation.
 2. The workflow installs dependencies in a clean environment.
-3. The workflow runs the project test command(s).
+3. The workflow runs the project tests (only unit tests).
 4. The workflow builds or packages the application successfully.
-5. The workflow runs the coverage command and publishes coverage artifacts or logs in the workflow output.
 
 ### P3.11: Validate Phase 3 Exit Criteria (Project)
 As a stakeholder, I want the phase to satisfy its stated exit criteria so the release is complete.

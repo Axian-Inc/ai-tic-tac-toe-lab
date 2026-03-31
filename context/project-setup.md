@@ -123,6 +123,7 @@ npm run preview
 - No environment variables are required to run the app locally.
 - `npm run test:e2e` starts or reuses a local Vite server automatically through Playwright config.
 - `npm run test:coverage` writes coverage artifacts to `coverage/`, including `coverage/index.html` and `coverage/coverage-summary.json`.
+- Pull requests run the GitHub Actions validation workflow in `.github/workflows/pull-request-checks.yml`.
 - AWS, Terraform, and S3 deployment are not required for local development.
 
 ## UI Environment Variables
