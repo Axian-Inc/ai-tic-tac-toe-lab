@@ -51,6 +51,9 @@ Client/server protocol definitions.
 Backend ownership boundary for upcoming Phase 2 implementation stories.
 
 - `README.md`: planned responsibilities for the multiplayer HTTP and WebSocket server
+- `index.ts`: API process entry point
+- `http/createApp.ts`: HTTP routing and JSON response handling
+- `multiplayer/service.ts`: in-memory multiplayer lifecycle and validation logic
 
 ### `src/styles/`
 
@@ -67,6 +70,12 @@ Fast domain-level verification.
 
 - `game.test.ts`: state evolution, legality, draw/win detection, and CPU behavior
 - `multiplayer-contracts.test.ts`: shared Phase 2 contract baseline and constants
+
+### `tests/server/`
+
+Server API verification.
+
+- `multiplayer-api.test.ts`: end-to-end HTTP lifecycle coverage for create, list, join, move, resign, and abandonment-check
 
 ### `tests/e2e/`
 

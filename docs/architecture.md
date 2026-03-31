@@ -82,3 +82,13 @@ Story `2.1` adds the multiplayer contract baseline without implementing transpor
 - Shared client/server DTOs and event payloads now live in `shared/contracts/multiplayer.ts`.
 - The contract fixes Phase 2 constants for `25` concurrent games and a `3` minute abandonment timeout.
 - Full details for the backend shape and payload design are in `docs/multiplayer-architecture.md`.
+
+## Phase 2 Story 2.2 Baseline
+
+Story `2.2` adds the first server-backed multiplayer HTTP surface.
+
+- `server/multiplayer/service.ts` owns in-memory multiplayer game lifecycle logic.
+- `server/http/createApp.ts` exposes the HTTP routes for create, list, join, move, resign, and abandonment-check.
+- `server/index.ts` starts the API process.
+- The server remains authoritative for turn validation and lifecycle transitions.
+- WebSocket broadcasting is still deferred to Story `2.3`.

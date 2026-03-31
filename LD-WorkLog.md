@@ -180,3 +180,17 @@
 - Marked Story `2.1` as `Done` in `WorkTracker.md`.
 - Added a durable repo rule that accepted stories should be checkpointed with a git commit before moving on, unless the user says otherwise.
 - Added `phases/output/` to `.gitignore` so generated review screenshots do not pollute future commits.
+
+## 2026-03-31 14:32 UTC
+
+- Started Story `2.2` for the multiplayer HTTP lifecycle milestone.
+- Found a contract gap while implementing the server: with no auth layer, move, resign, and abandonment-check requests need the server-issued `sessionId` to identify the acting participant.
+- Updated the shared multiplayer contract and docs so mutation requests include `sessionId`, and create/join responses include the emitted event alongside the full game snapshot.
+- Added the in-memory multiplayer server implementation under `server/`, including create, list, join, move, resign, and abandonment-check HTTP routes.
+- Kept the transport scope inside Story `2.2` by implementing HTTP only and deferring WebSocket broadcast/catch-up behavior to Story `2.3`.
+- Added `npm run dev:server`, `npm run start:server`, and `npm run test:server` so the API is runnable and testable from the terminal.
+- Added server integration coverage in `tests/server/multiplayer-api.test.ts`.
+- Updated `README.md`, `docs/architecture.md`, `docs/multiplayer-architecture.md`, and `docs/project-organization.md` for the new server surface.
+- Updated `WorkTracker.md` to move Story `STORY-2.2` to `In Review`.
+- Story `2.2` was reviewed and accepted by the user.
+- Marked Story `2.2` as `Done` in `WorkTracker.md`.

@@ -11,9 +11,9 @@ Phase 1 currently delivers a local-first Tic Tac Toe app in React + TypeScript w
 
 ## Current Status
 
-Phase 1 is complete. Story `2.1` is the active Phase 2 milestone and defines the multiplayer architecture baseline and shared contracts.
+Phase 1 is complete. Story `2.2` is the active Phase 2 milestone and adds the first multiplayer API server endpoints.
 
-The current application is still a browser-based single-player experience at runtime. Phase 2 contract and structure work is now in place, but multiplayer routes and WebSocket behavior are not implemented yet.
+The browser UI is still the Phase 1 single-player experience. Phase 2 now has a server-side contract baseline and an initial multiplayer HTTP API, but no multiplayer UI or WebSocket live updates yet.
 
 ## Prerequisites
 
@@ -61,12 +61,15 @@ npm run preview -- --host 0.0.0.0
 ## Available Scripts
 
 - `npm run dev`: start the Vite development server
+- `npm run dev:server`: run the multiplayer API in watch mode
 - `npm run build`: typecheck and produce the production bundle in `dist/`
 - `npm run preview`: serve the built bundle locally
+- `npm run start:server`: start the multiplayer API once
 - `npm run typecheck`: run the TypeScript compiler in no-emit mode
 - `npm run test:unit`: run Vitest game-domain coverage
+- `npm run test:server`: run the multiplayer HTTP API tests
 - `npm run test:e2e`: run the Playwright single-player browser flow
-- `npm test`: run both unit and e2e coverage
+- `npm test`: run unit, server, and e2e coverage
 - `npm run deploy:static`: deploy the static-site baseline described in `infra/`
 
 ## Gameplay Notes

@@ -90,7 +90,7 @@ This file is the planning tracker for the Tic Tac Toe lab effort. It is intended
 - Date/Time: `2026-03-30 15:36 UTC`
 - Status: `In Progress`
 - Assignment: `Codex`
-- Comments: `Execution is active. Story 2.1 is done and accepted. Story 2.2 is the next server implementation milestone. Keep Phase 1 behavior intact while Phase 2 is introduced incrementally.`
+- Comments: `Execution is active. Stories 2.1 and 2.2 are done and accepted. Story 2.3 is the next realtime milestone. Keep Phase 1 behavior intact while Phase 2 is introduced incrementally.`
 
 ### Story STORY-2.1
 
@@ -106,9 +106,9 @@ This file is the planning tracker for the Tic Tac Toe lab effort. It is intended
 - Title: `Implement game lifecycle API endpoints`
 - Description: `Add endpoints for game creation, game listing, join, move submission, resign, and abandonment checks with server-side validation.`
 - Date/Time: `2026-03-30 15:36 UTC`
-- Status: `Proposed`
+- Status: `Done`
 - Assignment: `Codex`
-- Comments: `The server must remain authoritative for command validation and game transitions.`
+- Comments: `Completed on 2026-03-31 14:32 UTC and accepted by the user on 2026-03-31 14:29 UTC. Added an in-memory multiplayer service plus HTTP routes for create, list, join, move, resign, and abandonment-check. Corrected the no-auth command contract so mutation requests carry the server-issued sessionId. Added server scripts and HTTP integration tests. Verified with npm install, npm run typecheck, npm run build, npm run test:unit, and npm run test:server.`
 
 ### Story STORY-2.3
 

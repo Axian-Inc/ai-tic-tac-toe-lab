@@ -97,6 +97,7 @@ export interface CreateGameRequest {}
 export interface CreateGameResponse {
   readonly game: MultiplayerGameState;
   readonly participant: MultiplayerParticipantSeat;
+  readonly event: GameSnapshotEvent;
 }
 
 export interface JoinGameRequest {}
@@ -104,16 +105,25 @@ export interface JoinGameRequest {}
 export interface JoinGameResponse {
   readonly game: MultiplayerGameState;
   readonly participant: MultiplayerParticipantSeat;
+  readonly event: PlayerJoinedEvent;
 }
 
 export interface SubmitMoveRequest {
+  readonly sessionId: MultiplayerSessionId;
   readonly position: number;
   readonly expectedTurn: number;
 }
 
-export interface ResignGameRequest {}
+export type SubmitMoveResponse = MutationResponse;
+
+export interface ResignGameRequest {
+  readonly sessionId: MultiplayerSessionId;
+}
+
+export type ResignGameResponse = MutationResponse;
 
 export interface AbandonmentCheckRequest {
+  readonly sessionId: MultiplayerSessionId;
   readonly observedAt?: string;
 }
 

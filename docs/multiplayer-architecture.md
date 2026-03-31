@@ -81,6 +81,7 @@ The shared contract intentionally keeps mutation responses uniform:
 
 - every successful mutation returns the full `game` snapshot
 - every successful mutation that changes state also returns the emitted `event`
+- player-authenticated mutation requests carry the server-issued `sessionId` because Phase 2 has no user auth layer
 
 This reduces client-side branching and makes replay/catch-up logic easier to reason about.
 

@@ -66,12 +66,46 @@ describe('multiplayer contract baseline', () => {
         sessionId: 'session_host_123',
         joinedAt: '2026-03-31T14:10:00.000Z',
       },
+      event: {
+        eventId: 'event_1',
+        gameId: 'game_123',
+        sequence: 1,
+        occurredAt: '2026-03-31T14:10:00.000Z',
+        type: 'game.snapshot',
+        reason: 'initial',
+        game: {
+          id: 'game_123',
+          status: 'waiting',
+          board: Array.from({ length: 9 }).fill(null),
+          currentPlayer: null,
+          winner: null,
+          winningLine: null,
+          endReason: null,
+          createdAt: '2026-03-31T14:10:00.000Z',
+          updatedAt: '2026-03-31T14:10:00.000Z',
+          startedAt: null,
+          endedAt: null,
+          lastMoveAt: null,
+          abandonmentDeadlineAt: null,
+          replayCursor: 0,
+          players: {
+            host: {
+              role: 'host',
+              player: 'X',
+              sessionId: 'session_host_123',
+              joinedAt: '2026-03-31T14:10:00.000Z',
+            },
+            guest: null,
+          },
+          moves: [],
+        },
+      },
     } satisfies CreateGameResponse;
 
     const event = {
-      eventId: 'event_1',
+      eventId: 'event_2',
       gameId: response.game.id,
-      sequence: 1,
+      sequence: 2,
       occurredAt: '2026-03-31T14:10:00.000Z',
       type: 'game.snapshot',
       reason: 'initial',
@@ -80,6 +114,7 @@ describe('multiplayer contract baseline', () => {
 
     expect(response.game.status).toBe('waiting');
     expect(response.participant.player).toBe('X');
+    expect(response.event.type).toBe('game.snapshot');
     expect(event.type).toBe('game.snapshot');
     expect(event.game.players.guest).toBeNull();
   });
