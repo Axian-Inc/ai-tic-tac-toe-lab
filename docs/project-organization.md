@@ -6,6 +6,7 @@
 - `shared/`: client/server shared contracts and protocol types
 - `server/`: planned multiplayer backend location
 - `tests/`: automated tests
+- `.github/workflows/`: CI workflow definitions
 - `docs/`: human-facing architecture and organization notes
 - `infra/`: deployment baseline and infrastructure files
 - `phases/`: phase requirements and visual references
@@ -135,3 +136,9 @@ Uploads the API artifact and deploys the multiplayer API CloudFormation stack.
 ### `infra/README.md`
 
 How the baseline works, what AWS inputs are needed, and how to run it.
+
+## CI Layout
+
+### `.github/workflows/`
+
+- `pull-request.yml`: pull request validation for install, build, tests, coverage, and server packaging

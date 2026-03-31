@@ -1,0 +1,37 @@
+name: Pull Request
+
+on:
+  pull_request:
+
+jobs:
+  validate:
+    name: Validate Build, Tests, and Coverage
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck and build frontend
+        run: npm run build
+
+      - name: Run unit tests
+        run: npm run test:unit
+
+      - name: Run server tests
+        run: npm run test:server
+
+      - name: Generate coverage
+        run: npm run coverage
+
+      - name: Package multiplayer server
+        run: npm run package:server

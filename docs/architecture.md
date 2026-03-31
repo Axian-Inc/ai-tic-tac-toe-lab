@@ -87,6 +87,7 @@ The UI does not define game rules directly. It consumes the domain module.
 - `tests/e2e/single-player.spec.ts` validates the single-player browser flow through Playwright.
 - `tests/e2e/multiplayer.spec.ts` validates both multiplayer play and spectator watching flows.
 - `vitest.coverage.config.ts` combines the unit and server suites into one repeatable terminal coverage run.
+- `.github/workflows/pull-request.yml` runs the validated terminal commands on pull requests.
 
 This split is important for later phases because server-side validation can reuse the same game-domain concepts while browser tests continue to exercise end-to-end behavior.
 
@@ -172,3 +173,11 @@ Story `3.3` adds terminal-runnable coverage reporting for the tested domain and 
 - `package.json` now exposes `npm run coverage`.
 - `vitest.coverage.config.ts` merges the unit and server suites into one coverage pass.
 - Coverage artifacts are written to `coverage/` in text, HTML, and JSON-summary formats so local review and later CI can share the same command.
+
+## Phase 3 Story 3.4 Baseline
+
+Story `3.4` adds the first pull request validation pipeline.
+
+- GitHub Actions installs dependencies with `npm ci`.
+- The workflow runs the existing terminal commands for build, unit tests, server tests, and coverage.
+- The workflow also packages the multiplayer server artifact so the backend packaging path is validated on every pull request.

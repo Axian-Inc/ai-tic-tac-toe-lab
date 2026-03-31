@@ -310,3 +310,17 @@
 - The user accepted Story `3.3`.
 - Marked Story `3.3` as `Done` in `WorkTracker.md`.
 - Preparing the git checkpoint for the accepted coverage milestone before continuing Phase 3 work.
+
+## 2026-03-31 16:08 UTC
+
+- Began Story `3.4` for the pull request pipeline milestone after the repo push succeeded.
+- Removed a duplicate `@vitest/coverage-v8` entry from `package.json` before wiring CI so the workflow starts from a clean dependency manifest.
+- Added `.github/workflows/pull-request.yml` to validate install, build, unit tests, server tests, coverage generation, and multiplayer server packaging on pull requests.
+- Updated `README.md`, `docs/architecture.md`, and `docs/project-organization.md` to document the new CI behavior and workflow location.
+- Updated `WorkTracker.md` to move Story `STORY-3.4` to `In Review`.
+
+## 2026-03-31 16:33 UTC
+
+- The user accepted Story `3.4` after confirming there were no visual changes.
+- Marked Story `3.4` as `Done` in `WorkTracker.md`.
+- Preparing the git checkpoint for the accepted CI milestone before starting Story `3.5`.

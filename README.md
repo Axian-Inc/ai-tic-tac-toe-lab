@@ -108,6 +108,19 @@ npm run preview -- --host 0.0.0.0
 - `npm run package:server`: create a deployable multiplayer API artifact tarball
 - `npm run deploy:server`: upload and deploy the multiplayer API baseline described in `infra/`
 
+## Pull Request Pipeline
+
+Phase 3 adds a GitHub Actions pull request workflow at `.github/workflows/pull-request.yml`.
+
+On every pull request it currently runs:
+
+- `npm ci`
+- `npm run build`
+- `npm run test:unit`
+- `npm run test:server`
+- `npm run coverage`
+- `npm run package:server`
+
 ## Gameplay Notes
 
 - The human player is always `X`.
