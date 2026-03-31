@@ -24,6 +24,8 @@ Top-level page components.
 
 - `LandingPage.tsx`: start screen for local single-player mode
 - `GamePage.tsx`: active game screen, status messaging, and feedback UI
+- `MultiplayerLobbyPage.tsx`: create/join waiting-game flow
+- `MultiplayerGamePage.tsx`: live multiplayer board and server-backed match status
 
 ### `src/features/game/components/`
 
@@ -46,6 +48,13 @@ Client/server protocol definitions.
 - `multiplayer.ts`: Phase 2 HTTP payloads, WebSocket events, identifiers, and capacity constants
 - `index.ts`: barrel exports for shared contracts
 
+### `src/features/multiplayer/`
+
+Browser-side multiplayer helpers.
+
+- `api.ts`: HTTP requests and WebSocket subscription helpers
+- `mappers.ts`: conversion from multiplayer snapshots to board render state
+
 ### `server/`
 
 Backend ownership boundary for upcoming Phase 2 implementation stories.
@@ -54,6 +63,7 @@ Backend ownership boundary for upcoming Phase 2 implementation stories.
 - `index.ts`: API process entry point
 - `http/createApp.ts`: HTTP routing and JSON response handling
 - `multiplayer/service.ts`: in-memory multiplayer lifecycle and validation logic
+- `realtime/attachRealtimeServer.ts`: WebSocket upgrade handling and per-game event fan-out
 
 ### `src/styles/`
 
@@ -76,12 +86,14 @@ Fast domain-level verification.
 Server API verification.
 
 - `multiplayer-api.test.ts`: end-to-end HTTP lifecycle coverage for create, list, join, move, resign, and abandonment-check
+- `multiplayer-websocket.test.ts`: snapshot-on-connect and live WebSocket broadcast coverage
 
 ### `tests/e2e/`
 
 Browser-level verification.
 
 - `single-player.spec.ts`: complete winning game flow through the UI
+- `multiplayer.spec.ts`: two-client create/join/live-move browser flow
 
 ## Infrastructure Layout
 

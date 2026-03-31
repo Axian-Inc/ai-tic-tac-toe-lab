@@ -10,19 +10,29 @@ The architecture is intentionally split so the game rules are reusable and testa
 
 - `src/app/App.tsx` owns application-level flow.
 - `shared/contracts/multiplayer.ts` owns the shared Phase 2 multiplayer DTO and event definitions.
+- `src/features/multiplayer/` owns browser-side API and mapping utilities for server-backed matches.
 - `src/features/game/model/` owns pure game logic.
 - `src/pages/` owns screen composition for landing and in-game views.
 - `src/features/game/components/BoardPreview.tsx` owns board rendering and board input wiring.
 - `src/styles/` owns global and app-level presentation.
-- `server/README.md` captures the intended backend ownership boundary until server code is added.
+- `server/` owns the in-memory multiplayer HTTP and WebSocket backend.
 
 ## Runtime Flow
 
 ### Landing Page
 
 - The app starts on `LandingPage`.
-- The user clicks `Play vs. CPU`.
-- `App.tsx` creates a fresh game state and switches to the game page.
+- The user can choose either `Play vs. CPU` or `Multiplayer Lobby`.
+- `App.tsx` switches into the selected local or server-backed flow.
+
+### Multiplayer Flow
+
+- The lobby loads waiting games from `GET /games?status=waiting`.
+- Creating a match calls `POST /games` and stores the returned `sessionId`.
+- Joining a match calls `POST /games/{id}/join` and stores that player session.
+- The match screen opens a WebSocket connection to `/ws?gameId=...`.
+- The browser receives an immediate `game.snapshot` resync event, then ongoing join/move/resign/abandonment events.
+- Local move requests go through `POST /games/{id}/moves`, while remote moves arrive asynchronously over the socket.
 
 ### Game Flow
 
@@ -92,3 +102,22 @@ Story `2.2` adds the first server-backed multiplayer HTTP surface.
 - `server/index.ts` starts the API process.
 - The server remains authoritative for turn validation and lifecycle transitions.
 - WebSocket broadcasting is still deferred to Story `2.3`.
+
+## Phase 2 Story 2.3 Baseline
+
+Story `2.3` adds the realtime transport and catch-up path.
+
+- `server/realtime/attachRealtimeServer.ts` attaches WebSocket upgrade handling at `/ws`.
+- Subscribers receive a `game.snapshot` with `reason = resync` immediately on connect.
+- The multiplayer service now publishes per-game events so join, move, resign, and abandonment changes can be broadcast asynchronously.
+- Replay and catch-up use the full snapshot plus ordered move history rather than a separate replay endpoint.
+
+## Phase 2 Story 2.4 Baseline
+
+Story `2.4` adds the first visible multiplayer browser flow.
+
+- `LandingPage.tsx` now exposes entry points for both single-player and multiplayer.
+- `MultiplayerLobbyPage.tsx` supports create, refresh, and join flows for waiting games.
+- `MultiplayerGamePage.tsx` renders a live multiplayer board and status messaging backed by server snapshots.
+- `src/features/multiplayer/api.ts` owns the browser HTTP and WebSocket client calls.
+- The board is updated by authoritative server snapshots rather than local rule execution.

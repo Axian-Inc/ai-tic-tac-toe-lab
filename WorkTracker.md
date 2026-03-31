@@ -90,7 +90,7 @@ This file is the planning tracker for the Tic Tac Toe lab effort. It is intended
 - Date/Time: `2026-03-30 15:36 UTC`
 - Status: `In Progress`
 - Assignment: `Codex`
-- Comments: `Execution is active. Stories 2.1 and 2.2 are done and accepted. Story 2.3 is the next realtime milestone. Keep Phase 1 behavior intact while Phase 2 is introduced incrementally.`
+- Comments: `Execution is active. Stories 2.1 through 2.4 are done and accepted. Story 2.5 is the next server-hardening milestone. Keep Phase 1 behavior intact while Phase 2 is introduced incrementally.`
 
 ### Story STORY-2.1
 
@@ -115,18 +115,18 @@ This file is the planning tracker for the Tic Tac Toe lab effort. It is intended
 - Title: `Add websocket broadcast, replay, and catch-up support`
 - Description: `Implement websocket subscriptions and enough persisted state/history for clients and spectators to catch up to live games and replay prior moves.`
 - Date/Time: `2026-03-30 15:36 UTC`
-- Status: `Proposed`
+- Status: `Done`
 - Assignment: `Codex`
-- Comments: `Design this so later spectator work in Phase 3 can build on it without rework.`
+- Comments: `Completed on 2026-03-31 14:44 UTC and accepted by the user on 2026-03-31 14:36 UTC. Added `/ws?gameId=...` subscriptions, immediate resync snapshots on connect, service-level event publication for live join/move/resign/abandonment updates, and timestamped move history for replay/catch-up. Added WebSocket transport tests and updated the multiplayer architecture docs. Verified with npm install, npm run typecheck, npm run build, npm run test:unit, and npm run test:server.`
 
 ### Story STORY-2.4
 
 - Title: `Build multiplayer client create/join/live-update flows`
 - Description: `Update the client so users can create multiplayer games, join waiting games, receive remote moves asynchronously, and play through a full multiplayer session.`
 - Date/Time: `2026-03-30 15:36 UTC`
-- Status: `Proposed`
+- Status: `Done`
 - Assignment: `Codex`
-- Comments: `Meaningful milestone. Stop for user testing once two clients can create, join, and exchange moves in real time.`
+- Comments: `Completed on 2026-03-31 14:58 UTC and accepted by the user on 2026-03-31 14:51 UTC. Added a multiplayer lobby, create/join flows, live multiplayer game screen, browser-side HTTP/WebSocket client helpers, Vite proxying for local development, and a two-client Playwright flow that proves create/join/live-move behavior. Verified with npm run typecheck, npm run test:server, and npm run test:e2e.`
 
 ### Story STORY-2.5
 

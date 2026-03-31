@@ -40,7 +40,7 @@ interface StoredGame {
   abandonmentDeadlineAt: string | null;
   readonly host: MultiplayerParticipantSeat;
   guest: MultiplayerParticipantSeat | null;
-  moves: number[];
+  moves: StoredMove[];
   sequence: number;
   forcedOutcome: {
     readonly reason: Extract<MultiplayerGameEndReason, 'resigned' | 'abandoned'>;
@@ -48,8 +48,16 @@ interface StoredGame {
   } | null;
 }
 
+interface StoredMove {
+  readonly position: number;
+  readonly acceptedAt: string;
+}
+
+type MultiplayerEventListener = (event: MultiplayerServerEvent) => void;
+
 export class MultiplayerService {
   private readonly games = new Map<MultiplayerGameId, StoredGame>();
+  private readonly listeners = new Set<MultiplayerEventListener>();
 
   constructor(private readonly clock: Clock = () => new Date()) {}
 
@@ -76,11 +84,14 @@ export class MultiplayerService {
     const snapshot = toSnapshot(game);
     const event = this.createSnapshotEvent(game, snapshot, 'initial');
 
-    return {
+    const response = {
       game: snapshot,
       participant: host,
       event,
     };
+
+    this.emit(event);
+    return response;
   }
 
   listGames(request: ListGamesRequest = {}): ListGamesResponse {
@@ -109,11 +120,14 @@ export class MultiplayerService {
     const snapshot = toSnapshot(game);
     const event = this.createPlayerJoinedEvent(game, snapshot);
 
-    return {
+    const response = {
       game: snapshot,
       participant: guest,
       event,
     };
+
+    this.emit(event);
+    return response;
   }
 
   submitMove(gameId: MultiplayerGameId, request: SubmitMoveRequest): SubmitMoveResponse {
@@ -129,10 +143,13 @@ export class MultiplayerService {
       throw new HttpError(409, 'Requested move is not legal.');
     }
 
-    game.moves.push(request.position);
-
     const now = this.clock().toISOString();
-    const nextState = createGameState(game.moves);
+    game.moves.push({
+      position: request.position,
+      acceptedAt: now,
+    });
+
+    const nextState = createGameState(getMovePositions(game));
     game.updatedAt = now;
     game.lastMoveAt = now;
     game.endedAt = nextState.isGameOver ? now : null;
@@ -147,10 +164,13 @@ export class MultiplayerService {
 
     const event = this.createMoveAcceptedEvent(game, snapshot, move);
 
-    return {
+    const response = {
       game: snapshot,
       event,
     };
+
+    this.emit(event);
+    return response;
   }
 
   resignGame(gameId: MultiplayerGameId, request: ResignGameRequest): ResignGameResponse {
@@ -183,10 +203,13 @@ export class MultiplayerService {
     const snapshot = toSnapshot(game);
     const event = this.createResignedEvent(game, snapshot, role, winner);
 
-    return {
+    const response = {
       game: snapshot,
       event,
     };
+
+    this.emit(event);
+    return response;
   }
 
   checkAbandonment(gameId: MultiplayerGameId, request: AbandonmentCheckRequest): AbandonmentCheckResponse {
@@ -234,10 +257,36 @@ export class MultiplayerService {
     const abandonedSnapshot = toSnapshot(game);
     const event = this.createAbandonedEvent(game, abandonedSnapshot, abandonedRole, winner);
 
-    return {
+    const response = {
       game: abandonedSnapshot,
       wasAbandoned: true,
       event,
+    };
+
+    this.emit(event);
+    return response;
+  }
+
+  createResyncSnapshotEvent(gameId: MultiplayerGameId): GameSnapshotEvent {
+    const game = this.requireGame(gameId);
+    const snapshot = toSnapshot(game);
+
+    return {
+      eventId: createOpaqueId('event'),
+      gameId: game.id,
+      sequence: game.sequence,
+      occurredAt: this.clock().toISOString(),
+      type: 'game.snapshot',
+      reason: 'resync',
+      game: snapshot,
+    };
+  }
+
+  subscribe(listener: MultiplayerEventListener): () => void {
+    this.listeners.add(listener);
+
+    return () => {
+      this.listeners.delete(listener);
     };
   }
 
@@ -271,7 +320,7 @@ export class MultiplayerService {
       throw new HttpError(403, 'It is not this player session\'s turn.');
     }
 
-    return createGameState(game.moves);
+    return createGameState(getMovePositions(game));
   }
 
   private resolveRole(game: StoredGame, sessionId: string): ActiveRole | null {
@@ -369,6 +418,12 @@ export class MultiplayerService {
   private deriveStatus(game: StoredGame): MultiplayerGameStatus {
     return toSnapshot(game).status;
   }
+
+  private emit(event: MultiplayerServerEvent) {
+    for (const listener of this.listeners) {
+      listener(event);
+    }
+  }
 }
 
 export class HttpError extends Error {
@@ -414,7 +469,7 @@ function toSummary(game: StoredGame): MultiplayerGameSummary {
 }
 
 function toSnapshot(game: StoredGame): MultiplayerGameState {
-  const baseState = game.moves.length > 0 ? createGameState(game.moves) : createEmptyGameState();
+  const baseState = game.moves.length > 0 ? createGameState(getMovePositions(game)) : createEmptyGameState();
   const status = deriveSnapshotStatus(game, baseState);
   const endReason = deriveEndReason(game, baseState, status);
   const winner = deriveWinner(game, baseState);
@@ -438,13 +493,17 @@ function toSnapshot(game: StoredGame): MultiplayerGameState {
       host: game.host,
       guest: game.guest,
     },
-    moves: baseState.moves.map((move) => ({
+    moves: baseState.moves.map((move, index) => ({
       turn: move.turn,
       player: move.player,
       position: move.position,
-      acceptedAt: game.updatedAt,
+      acceptedAt: game.moves[index]?.acceptedAt ?? game.updatedAt,
     })),
   };
+}
+
+function getMovePositions(game: StoredGame): number[] {
+  return game.moves.map((move) => move.position);
 }
 
 function deriveSnapshotStatus(game: StoredGame, baseState: GameState): MultiplayerGameStatus {

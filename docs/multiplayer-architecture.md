@@ -91,6 +91,7 @@ Chosen WebSocket shape:
 
 - connection path: `WS /ws?gameId=...`
 - server sends discriminated event payloads
+- connecting clients immediately receive a `game.snapshot` event with `reason = resync`
 - every event includes:
   - `eventId`
   - `gameId`
@@ -108,6 +109,12 @@ Chosen event types:
 - `game.ended`
 
 Including a full game snapshot on every event is slightly heavier, but it keeps client recovery and spectator catch-up simpler and is acceptable for the low-scale Phase 2 target.
+
+Replay and catch-up are handled by the same snapshot payload:
+
+- `game.moves` preserves ordered move history
+- each move now carries its own `acceptedAt` timestamp
+- reconnecting clients can rebuild the full board from the snapshot without requesting a second replay endpoint
 
 ## Capacity and Timing Rules
 

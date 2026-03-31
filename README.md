@@ -11,9 +11,15 @@ Phase 1 currently delivers a local-first Tic Tac Toe app in React + TypeScript w
 
 ## Current Status
 
-Phase 1 is complete. Story `2.2` is the active Phase 2 milestone and adds the first multiplayer API server endpoints.
+Phase 1 is complete. Story `2.4` is the active Phase 2 milestone and adds the first visible multiplayer client flow.
 
-The browser UI is still the Phase 1 single-player experience. Phase 2 now has a server-side contract baseline and an initial multiplayer HTTP API, but no multiplayer UI or WebSocket live updates yet.
+The app now supports:
+
+- local single-player play against the deterministic CPU
+- a multiplayer lobby for creating and joining waiting games
+- a live multiplayer match screen backed by the HTTP API and WebSocket updates
+
+Resign, abandonment-focused UX, concurrency-limit UX, and infrastructure expansion are still tracked in later Phase 2 stories.
 
 ## Prerequisites
 
@@ -42,6 +48,12 @@ Start the app locally:
 
 ```bash
 npm run dev -- --host 0.0.0.0
+```
+
+For multiplayer development, run the API server in a second terminal:
+
+```bash
+npm run start:server
 ```
 
 If you are running inside the dev container, use the VS Code `Ports` panel to open the forwarded port in your host browser.
@@ -133,11 +145,12 @@ At the moment the application is intentionally simple:
 
 - `src/app/App.tsx` coordinates the screen flow and CPU turn timing
 - `shared/contracts/multiplayer.ts` defines the Phase 2 multiplayer DTO and event baseline
-- `server/README.md` captures the planned backend ownership boundary for upcoming stories
+- `server/` now contains the multiplayer HTTP and WebSocket server
 - `src/features/game/model/` contains the pure game logic
-- `src/pages/` contains the landing and in-game screens
+- `src/pages/` contains the landing, lobby, single-player, and multiplayer screens
 - `src/features/game/components/BoardPreview.tsx` renders the board UI
 - `tests/unit/` covers the game domain
+- `tests/server/` covers the multiplayer backend
 - `tests/e2e/` covers the browser flow
 
 More detail is in [docs/architecture.md](/workspaces/ai-tic-tac-toe-lab/docs/architecture.md).

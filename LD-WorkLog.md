@@ -194,3 +194,32 @@
 - Updated `WorkTracker.md` to move Story `STORY-2.2` to `In Review`.
 - Story `2.2` was reviewed and accepted by the user.
 - Marked Story `2.2` as `Done` in `WorkTracker.md`.
+
+## 2026-03-31 14:44 UTC
+
+- Started Story `2.3` for WebSocket broadcast and catch-up support.
+- Tightened the multiplayer state model so move history stores the real acceptance timestamp for each move instead of reusing the most recent game update timestamp.
+- Added a lightweight event bus to the multiplayer service so live game mutations can be published to transport listeners.
+- Added `server/realtime/attachRealtimeServer.ts` to handle `WS /ws?gameId=...` upgrades and send an immediate `game.snapshot` resync event on subscription.
+- Kept replay and catch-up simple by using the existing full game snapshot plus ordered move history rather than introducing a second replay endpoint in this milestone.
+- Added WebSocket transport coverage in `tests/server/multiplayer-websocket.test.ts`.
+- Updated `README.md`, `docs/architecture.md`, `docs/multiplayer-architecture.md`, and `docs/project-organization.md` for the realtime transport path.
+- Updated `WorkTracker.md` to move Story `STORY-2.3` to `In Review`.
+- Story `2.3` was reviewed and accepted by the user.
+- Marked Story `2.3` as `Done` in `WorkTracker.md`.
+
+## 2026-03-31 14:58 UTC
+
+- Started Story `2.4` for the visible multiplayer client milestone.
+- Added a Vite dev proxy for `/games` and `/ws` so the browser client can talk to the local multiplayer server during development without hard-coded absolute URLs.
+- Added browser-side multiplayer helpers under `src/features/multiplayer/` for HTTP requests, WebSocket subscriptions, and snapshot-to-board mapping.
+- Expanded the landing page to expose both single-player and multiplayer entry points.
+- Added `MultiplayerLobbyPage.tsx` for create/join waiting-game flows.
+- Added `MultiplayerGamePage.tsx` for live server-backed match play and remote move updates.
+- Updated `App.tsx` to coordinate single-player, multiplayer lobby, and multiplayer match state while preserving the existing Phase 1 flow.
+- Added a two-client Playwright test in `tests/e2e/multiplayer.spec.ts` to prove create, join, and live board synchronization across two browser contexts.
+- Corrected two Playwright test issues during implementation: one game-id parsing bug and one overly broad text locator.
+- Updated `README.md`, `docs/architecture.md`, and `docs/project-organization.md` for the new multiplayer client surface.
+- Updated `WorkTracker.md` to move Story `STORY-2.4` to `In Review`.
+- Story `2.4` was reviewed and accepted by the user.
+- Marked Story `2.4` as `Done` in `WorkTracker.md`.
