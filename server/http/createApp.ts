@@ -36,6 +36,14 @@ async function routeRequest(
     return writeJson(response, 200, service.listGames(requestFilter));
   }
 
+  const gameDetailsMatch = url.pathname.match(/^\/games\/([^/]+)$/);
+  if (method === 'GET' && gameDetailsMatch) {
+    const [, gameId] = gameDetailsMatch;
+    return writeJson(response, 200, {
+      game: service.getGame(gameId),
+    });
+  }
+
   const match = url.pathname.match(/^\/games\/([^/]+)\/(join|moves|resign|abandonment-check)$/);
   if (!match) {
     throw new HttpError(404, 'Route not found.');

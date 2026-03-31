@@ -139,3 +139,12 @@ Story `2.6` closes Phase 2 with operational alignment work.
 - the multiplayer API can be packaged independently for infrastructure deployment
 - the repo now includes a low-cost CloudFormation baseline for hosting the API on a single EC2 instance
 - docs and scripts are aligned so multiplayer testing and deployment are callable from the terminal
+
+## Phase 3 Story 3.1 Baseline
+
+Story `3.1` extends the server data surface for spectator use without introducing spectator UI yet.
+
+- `GET /games?status=active` is the active-game discovery path for future spectators.
+- `GET /games/{id}` now returns the current snapshot for a selected game.
+- the existing WebSocket transport already supports spectator-style subscriptions because it only requires `gameId`
+- the goal of this story is server data exposure and contract alignment, not new browser screens

@@ -92,6 +92,10 @@ export interface ListGamesResponse {
   readonly games: readonly MultiplayerGameSummary[];
 }
 
+export interface GetGameResponse {
+  readonly game: MultiplayerGameState;
+}
+
 export interface CreateGameRequest {}
 
 export interface CreateGameResponse {

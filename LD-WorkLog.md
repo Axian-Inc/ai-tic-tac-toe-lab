@@ -253,3 +253,23 @@
 - Marked Story `2.6` as `Done` in `WorkTracker.md`.
 - Closed Epic `EPIC-02` as `Done`, which completes Phase 2.
 - Added `.artifacts/` to `.gitignore` so packaged server tarballs do not pollute future commits.
+
+## 2026-03-31 15:18 UTC
+
+- Started Story `3.1` for the Phase 3 spectator-data milestone.
+- Added `GET /games/{id}` so a spectator client can fetch the current state snapshot for a selected game before opening a WebSocket.
+- Reused the existing `GET /games?status=active` filter as the active-game discovery path for spectator flows.
+- Kept the existing WebSocket subscription model unchanged because it already supports selected-game live updates without requiring a player session.
+- Expanded server integration coverage to verify active-game discovery and per-game snapshot reads.
+- Updated `README.md`, `docs/architecture.md`, `docs/multiplayer-architecture.md`, and `docs/project-organization.md` for the new spectator-oriented server surface.
+- Updated `WorkTracker.md` to move Epic `EPIC-03` to `In Progress` and Story `STORY-3.1` to `In Review`.
+- Story `2.6` was reviewed and accepted by the user.
+- Marked Story `2.6` as `Done` in `WorkTracker.md`.
+- Closed Epic `EPIC-02` as `Done`, which completes Phase 2.
+- Added `.artifacts/` to `.gitignore` so packaged server tarballs do not pollute future commits.
+
+## 2026-03-31 15:21 UTC
+
+- The user accepted Story `3.1` and directed work to continue.
+- Marked Story `3.1` as `Done` in `WorkTracker.md`.
+- Preparing a git checkpoint for the accepted server-side spectator-data milestone before starting Story `3.2`.

@@ -72,6 +72,7 @@ Chosen endpoint set:
 
 - `POST /games`
 - `GET /games?status=waiting|active|over`
+- `GET /games/{id}`
 - `POST /games/{id}/join`
 - `POST /games/{id}/moves`
 - `POST /games/{id}/resign`
@@ -84,6 +85,11 @@ The shared contract intentionally keeps mutation responses uniform:
 - player-authenticated mutation requests carry the server-issued `sessionId` because Phase 2 has no user auth layer
 
 This reduces client-side branching and makes replay/catch-up logic easier to reason about.
+
+For spectator-oriented reads:
+
+- `GET /games?status=active` returns discoverable in-progress games
+- `GET /games/{id}` returns the current full snapshot for a chosen game before the spectator client opens a WebSocket
 
 ## WebSocket Contract
 

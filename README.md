@@ -11,7 +11,7 @@ Phase 1 currently delivers a local-first Tic Tac Toe app in React + TypeScript w
 
 ## Current Status
 
-Phase 1 is complete. Story `2.6` is the active Phase 2 close-out milestone for docs, tests, and infrastructure.
+Phase 1 and Phase 2 are complete. Story `3.1` is the active Phase 3 milestone for spectator-oriented server data exposure.
 
 The app now supports:
 
@@ -19,7 +19,7 @@ The app now supports:
 - a multiplayer lobby for creating and joining waiting games
 - a live multiplayer match screen backed by the HTTP API and WebSocket updates
 
-Phase 2 behavior is now implemented across contract, API, realtime transport, client flow, and server hardening. The remaining work in this milestone is operational packaging and documentation alignment.
+Phase 2 behavior is now implemented across contract, API, realtime transport, client flow, server hardening, and deployment guidance. Phase 3 starts by exposing spectator-oriented server reads before the spectator UI is built.
 
 Current server-side hardening now includes:
 
@@ -27,6 +27,12 @@ Current server-side hardening now includes:
 - resignation rejection before a second player joins
 - abandonment checks that reject invalid timestamps
 - abandonment checks that return a no-op response when the timeout has not elapsed yet
+
+Current spectator-facing server data now includes:
+
+- `GET /games?status=active` for active-game discovery
+- `GET /games/{id}` for a selected game's current state snapshot
+- `WS /ws?gameId=...` for live updates and immediate resync snapshots
 
 ## Prerequisites
 

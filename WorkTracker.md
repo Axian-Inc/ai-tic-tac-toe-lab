@@ -151,18 +151,18 @@ This file is the planning tracker for the Tic Tac Toe lab effort. It is intended
 - Title: `Phase 3 - Spectator Mode + CI Pipeline`
 - Description: `Add real-time game spectating, coverage reporting, and a pull-request build pipeline that compiles and tests the project automatically.`
 - Date/Time: `2026-03-30 15:36 UTC`
-- Status: `Proposed`
+- Status: `In Progress`
 - Assignment: `Codex`
-- Comments: `Planning only until Epic 02 is accepted.`
+- Comments: `Execution is active. Story 3.1 is the current milestone and is limited to exposing spectator-oriented server data without building the spectator UI yet.`
 
 ### Story STORY-3.1
 
 - Title: `Expose active-game spectator data from the server`
 - Description: `Extend the server so clients can list active games, subscribe to a selected game, receive the current state, and continue receiving live updates.`
 - Date/Time: `2026-03-30 15:36 UTC`
-- Status: `Proposed`
+- Status: `Done`
 - Assignment: `Codex`
-- Comments: `Keep the API aligned with the multiplayer event model introduced in Phase 2.`
+- Comments: `Completed on 2026-03-31 15:18 UTC, reviewed by the user, and accepted on 2026-03-31 15:21 UTC. Added a spectator-oriented game-read endpoint, verified active-game discovery through the existing list API, and expanded server tests for current-state reads while keeping the WebSocket event model aligned with Phase 2. Verified with npm run test:server, npm run typecheck, and npm run build.`
 
 ### Story STORY-3.2
 

@@ -108,6 +108,10 @@ export class MultiplayerService {
     return { games };
   }
 
+  getGame(gameId: MultiplayerGameId): MultiplayerGameState {
+    return toSnapshot(this.requireGame(gameId));
+  }
+
   joinGame(gameId: MultiplayerGameId): JoinGameResponse {
     const game = this.requireGame(gameId);
 

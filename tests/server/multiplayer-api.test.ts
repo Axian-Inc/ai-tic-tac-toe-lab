@@ -5,6 +5,7 @@ import { MultiplayerService } from '../../server/multiplayer/service';
 import {
   AbandonmentCheckResponse,
   CreateGameResponse,
+  GetGameResponse,
   JoinGameResponse,
   ListGamesResponse,
   MAX_CONCURRENT_MULTIPLAYER_GAMES,
@@ -53,6 +54,29 @@ describe('multiplayer lifecycle api', () => {
 
     expect(listed.status).toBe(200);
     expect(listed.body.games.some((game) => game.id === created.body.game.id)).toBe(true);
+  });
+
+  it('lists active games and returns the current state for spectator reads', async () => {
+    now = new Date('2026-03-31T15:02:00.000Z');
+    const created = await postJson<CreateGameResponse>('/games', {});
+    const joined = await postJson<JoinGameResponse>(`/games/${created.body.game.id}/join`, {});
+
+    await postJson<SubmitMoveResponse>(`/games/${created.body.game.id}/moves`, {
+      sessionId: created.body.participant.sessionId,
+      position: 0,
+      expectedTurn: 1,
+    });
+
+    const activeList = await fetchJson<ListGamesResponse>('/games?status=active');
+    expect(activeList.status).toBe(200);
+    expect(activeList.body.games.map((game) => game.id)).toContain(created.body.game.id);
+
+    const details = await fetchJson<GetGameResponse>(`/games/${created.body.game.id}`);
+    expect(details.status).toBe(200);
+    expect(details.body.game.id).toBe(created.body.game.id);
+    expect(details.body.game.status).toBe('active');
+    expect(details.body.game.board[0]).toBe('X');
+    expect(details.body.game.players.guest?.sessionId).toBe(joined.body.participant.sessionId);
   });
 
   it('joins a waiting game and validates turn ownership for moves', async () => {

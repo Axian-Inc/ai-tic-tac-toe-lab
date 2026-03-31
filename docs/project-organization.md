@@ -94,6 +94,7 @@ The API test file now also covers:
 - pre-join resign rejection
 - premature abandonment no-op behavior
 - invalid abandonment timestamp rejection
+- active-game spectator discovery and per-game snapshot reads
 
 ### `tests/e2e/`
 
