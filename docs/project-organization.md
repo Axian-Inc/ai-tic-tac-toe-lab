@@ -56,6 +56,10 @@ Browser-side multiplayer helpers.
 - `api.ts`: HTTP requests and WebSocket subscription helpers
 - `mappers.ts`: conversion from multiplayer snapshots to board render state
 
+### Coverage Configuration
+
+- `vitest.coverage.config.ts`: merged unit/server coverage configuration and output settings
+
 ### `server/`
 
 Backend ownership boundary for upcoming Phase 2 implementation stories.
@@ -96,6 +100,8 @@ The API test file now also covers:
 - premature abandonment no-op behavior
 - invalid abandonment timestamp rejection
 - active-game spectator discovery and per-game snapshot reads
+
+Coverage is generated from the terminal with `npm run coverage`, which executes both the unit and server suites under a shared V8 coverage configuration.
 
 ### `tests/e2e/`
 

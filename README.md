@@ -102,6 +102,7 @@ npm run preview -- --host 0.0.0.0
 - `npm run test:unit`: run Vitest game-domain coverage
 - `npm run test:server`: run the multiplayer HTTP API tests
 - `npm run test:e2e`: run the Playwright browser flows for single-player, multiplayer, and spectator paths
+- `npm run coverage`: generate terminal coverage output plus HTML and JSON summary reports in `coverage/`
 - `npm test`: run unit, server, and e2e coverage
 - `npm run deploy:static`: deploy the static-site baseline described in `infra/`
 - `npm run package:server`: create a deployable multiplayer API artifact tarball
@@ -136,10 +137,17 @@ Run only the browser flow:
 npm run test:e2e
 ```
 
+Generate coverage from the terminal:
+
+```bash
+npm run coverage
+```
+
 Notes:
 
 - The Playwright suite auto-starts isolated Vite and API server instances through `playwright.config.ts`.
 - In this dev container, Chromium system libraries were installed so Playwright can run headless.
+- The coverage run writes reports to `coverage/`, including an HTML report and `coverage-summary.json`.
 
 ## Documentation Map
 

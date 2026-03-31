@@ -178,9 +178,9 @@ This file is the planning tracker for the Tic Tac Toe lab effort. It is intended
 - Title: `Add terminal coverage reporting`
 - Description: `Configure the project so code coverage can be generated from the command line and reported in a repeatable way for local use and CI.`
 - Date/Time: `2026-03-30 15:36 UTC`
-- Status: `Proposed`
+- Status: `Done`
 - Assignment: `Codex`
-- Comments: `Prefer simple scripts and clear output paths over overly complex tooling.`
+- Comments: `Completed on 2026-03-31 15:34 UTC, reviewed by the user, and accepted on 2026-03-31 16:00 UTC. Added npm run coverage, a merged Vitest coverage configuration for the unit and server suites, and stable coverage artifacts under coverage/. Verified with npm run coverage, npm run typecheck, and npm run build.`
 
 ### Story STORY-3.4
 

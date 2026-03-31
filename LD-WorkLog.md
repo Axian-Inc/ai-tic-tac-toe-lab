@@ -294,3 +294,19 @@
 - The user accepted Story `3.2` and directed work to continue.
 - Marked Story `3.2` as `Done` in `WorkTracker.md`.
 - Preparing a git checkpoint for the accepted spectator UI milestone before starting Story `3.3`.
+
+## 2026-03-31 15:34 UTC
+
+- Created git checkpoint `9910a8a` with message `Phase 3 Story 3.2` after the user accepted Story `3.2`.
+- Started Story `3.3` for terminal coverage reporting.
+- Added `@vitest/coverage-v8` as a dev dependency so coverage can be generated directly from the existing Vitest stack.
+- Added `vitest.coverage.config.ts` to combine the unit and server suites into one coverage run with text, HTML, and JSON-summary outputs.
+- Added `npm run coverage` to `package.json` and ignored the generated `coverage/` directory in `.gitignore`.
+- Updated `README.md`, `docs/architecture.md`, and `docs/project-organization.md` so the new coverage command and output path are documented.
+- Updated `WorkTracker.md` to move Story `STORY-3.3` to `In Review`.
+
+## 2026-03-31 16:00 UTC
+
+- The user accepted Story `3.3`.
+- Marked Story `3.3` as `Done` in `WorkTracker.md`.
+- Preparing the git checkpoint for the accepted coverage milestone before continuing Phase 3 work.

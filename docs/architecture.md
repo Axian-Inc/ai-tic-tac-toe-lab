@@ -86,6 +86,7 @@ The UI does not define game rules directly. It consumes the domain module.
 - `tests/unit/game.test.ts` validates the pure game domain.
 - `tests/e2e/single-player.spec.ts` validates the single-player browser flow through Playwright.
 - `tests/e2e/multiplayer.spec.ts` validates both multiplayer play and spectator watching flows.
+- `vitest.coverage.config.ts` combines the unit and server suites into one repeatable terminal coverage run.
 
 This split is important for later phases because server-side validation can reuse the same game-domain concepts while browser tests continue to exercise end-to-end behavior.
 
@@ -163,3 +164,11 @@ Story `3.2` adds the first browser spectator experience.
 - `SpectatorLobbyPage.tsx` lists active matches and lets the user choose one to watch.
 - `App.tsx` now manages a separate spectator screen state, active-game loading, and spectator-specific WebSocket feedback.
 - `MultiplayerGamePage.tsx` is now parameterized so it can render both player and spectator match views without duplicating board/status logic.
+
+## Phase 3 Story 3.3 Baseline
+
+Story `3.3` adds terminal-runnable coverage reporting for the tested domain and server layers.
+
+- `package.json` now exposes `npm run coverage`.
+- `vitest.coverage.config.ts` merges the unit and server suites into one coverage pass.
+- Coverage artifacts are written to `coverage/` in text, HTML, and JSON-summary formats so local review and later CI can share the same command.
