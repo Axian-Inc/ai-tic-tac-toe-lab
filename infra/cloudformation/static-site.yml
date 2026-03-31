@@ -1,0 +1,51 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Phase 1 static website baseline for ai-tic-tac-toe-lab
+
+Parameters:
+  SiteBucketName:
+    Type: String
+    Description: Globally unique S3 bucket name for the Phase 1 static website
+
+Resources:
+  StaticSiteBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Ref SiteBucketName
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: index.html
+      Tags:
+        - Key: Project
+          Value: ai-tic-tac-toe-lab
+        - Key: Phase
+          Value: phase-1
+
+  StaticSiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref StaticSiteBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: PublicReadForWebsite
+            Effect: Allow
+            Principal: '*'
+            Action:
+              - s3:GetObject
+            Resource: !Sub '${StaticSiteBucket.Arn}/*'
+
+Outputs:
+  SiteBucketName:
+    Description: Name of the website bucket
+    Value: !Ref StaticSiteBucket
+
+  SiteUrl:
+    Description: S3 website endpoint
+    Value: !GetAtt StaticSiteBucket.WebsiteURL

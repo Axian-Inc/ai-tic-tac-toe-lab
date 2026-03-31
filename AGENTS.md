@@ -118,6 +118,10 @@ Capture durable process learnings in `AGENTS.md` when they will help future work
 - When updating important docs such as `AGENTS.md`, use a reliable edit flow and verify the file contents immediately after the change.
 - Prefer making one precise change, then reading the affected section back before moving on.
 - Do not repeat the same failed update approach multiple times without changing method.
+- When taking over another person's requirements, review the relevant UI or workflow first and confirm what the major named components are before implementing changes.
+- Establish a quick working lexicon for ambiguous terms already in use by the human, such as `status bar`, so shared terminology matches the actual product surface before code changes begin.
+- If a requested term could reasonably map to more than one UI element, verify the target against the existing interface and prefer the smallest change that proves the interpretation is correct.
+- After the user accepts a story, create a git checkpoint commit before moving into the next accepted milestone unless the user explicitly says not to.
 
 ## Working Style
 

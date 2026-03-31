@@ -25,81 +25,81 @@ This file is the planning tracker for the Tic Tac Toe lab effort. It is intended
 - Title: `Phase 1 - Single-Player Tic Tac Toe`
 - Description: `Build the initial React + TypeScript single-player application, including deterministic CPU play, a tested game module, polished gameplay feedback, documentation, and command-line automation.`
 - Date/Time: `2026-03-30 15:36 UTC`
-- Status: `Proposed`
+- Status: `Done`
 - Assignment: `Codex`
-- Comments: `This is the first execution epic. No Phase 2 or Phase 3 implementation should start before this epic is accepted.`
+- Comments: `Phase 1 is complete. Stories 1.1 through 1.6 are done and accepted. Story 1.7 was removed from Phase 1 after it proved to be a future enhancement rather than required Phase 1 scope. Phase 2 remains planning-only until execution is explicitly started.`
 
 ### Story STORY-1.1
 
 - Title: `Scaffold app foundation and developer scripts`
 - Description: `Create the application structure, choose the React/TypeScript toolchain, establish package scripts, and define the initial source layout so future work has a stable base.`
 - Date/Time: `2026-03-30 15:36 UTC`
-- Status: `Proposed`
+- Status: `Done`
 - Assignment: `Codex`
-- Comments: `Meaningful milestone. Stop for user review after the app boots locally and scripts are defined.`
+- Comments: `Completed on 2026-03-31 12:52 UTC and accepted by the user on 2026-03-31. Vite + React + TypeScript scaffold is in place, scripts are defined, production build passes, and the local dev server responded successfully for milestone review. During the story, the unused codex dependency was identified as unnecessary, removed, and the dependency tree was cleaned back to zero audit findings.`
 
 ### Story STORY-1.2
 
 - Title: `Implement core game domain and deterministic CPU`
 - Description: `Build the reusable game module that owns board state, move ordering, turn tracking, winner detection, legal-move validation, and deterministic CPU move selection.`
 - Date/Time: `2026-03-30 15:36 UTC`
-- Status: `Proposed`
+- Status: `Done`
 - Assignment: `Codex`
-- Comments: `Keep this logic UI-independent so it is easy to test and later reuse for multiplayer/server validation.`
+- Comments: `Completed on 2026-03-31 13:13 UTC and accepted by the user on 2026-03-31. Added a pure game-domain module with state creation, move application, legal-move validation, winner detection, draw detection, move history tracking, and deterministic CPU move selection. A read-only domain preview was wired into the scaffold page only to prove integration without moving ahead into Story 1.3 gameplay UI work.`
 
 ### Story STORY-1.3
 
 - Title: `Build landing page and in-game single-player flow`
 - Description: `Implement the landing page, start-game action, game detail view, turn/winner messaging, quit flow, and rematch option for CPU games.`
 - Date/Time: `2026-03-30 15:36 UTC`
-- Status: `Proposed`
+- Status: `Done`
 - Assignment: `Codex`
-- Comments: `Meaningful milestone. Stop for user testing once a full game can be played end-to-end in the UI.`
+- Comments: `Completed on 2026-03-31 13:18 UTC and accepted by the user on 2026-03-31. Added the landing page, start-game flow, in-game detail screen, CPU turn loop, quit action, and rematch action on top of the existing pure game domain. Verified with npm typecheck, production build, and a game-domain smoke test that confirmed deterministic CPU responses after player moves.`
 
 ### Story STORY-1.4
 
 - Title: `Add move feedback, illegal-move handling, and win/loss celebration`
 - Description: `Add hover/validity feedback, prevent illegal moves in the UI, and integrate confetti plus move/win/loss sounds consistent with the brief.`
 - Date/Time: `2026-03-30 15:36 UTC`
-- Status: `Proposed`
+- Status: `Done`
 - Assignment: `Codex`
-- Comments: `Keep assets and behavior lightweight and easy to maintain.`
+- Comments: `Completed on 2026-03-31 13:25 UTC and accepted by the user on 2026-03-31. Added hover-based move hints, blocked-cell styling, explicit illegal-move feedback, lightweight move/win/loss/draw audio cues, and visual win/loss/draw celebration banners and highlighting. Verification passed with npm typecheck and production build.`
 
 ### Story STORY-1.5
 
 - Title: `Add unit tests and Playwright coverage`
 - Description: `Create automated tests for core game behaviors and an end-to-end Playwright script that exercises a full game including winning conditions from the command line.`
 - Date/Time: `2026-03-30 15:36 UTC`
-- Status: `Proposed`
+- Status: `Done`
 - Assignment: `Codex`
-- Comments: `Meaningful milestone. Stop for user review after tests are green and runnable through documented commands.`
+- Comments: `Completed on 2026-03-31 13:35 UTC and accepted by the user on 2026-03-31. Added Vitest unit coverage for the game domain, Playwright coverage for a full winning game flow, and terminal scripts for unit tests, e2e tests, and the combined suite. Verified with npm run test:unit, npm run test:e2e, and npm test.`
 
 ### Story STORY-1.6
 
 - Title: `Document setup and define deployment baseline`
 - Description: `Update the README, document architecture and project organization, and establish the initial IaC/deployment baseline needed to satisfy Phase 1 expectations.`
 - Date/Time: `2026-03-30 15:36 UTC`
-- Status: `Proposed`
+- Status: `Done`
 - Assignment: `Codex`
-- Comments: `Phase 1 closes only after docs are current and the user accepts the deliverable set.`
+- Comments: `Completed on 2026-03-31 13:38 UTC and accepted by the user on 2026-03-31 14:06 UTC. Replaced the starter README with project-specific setup and usage guidance, added architecture and project-organization docs, added a static AWS deployment baseline under infra/, and aligned package scripts and ignore rules with the documented workflow. Verified with npm run build and bash -n infra/deploy-static-site.sh.`
 
 ## Epic EPIC-02 - Phase 2 Multiplayer and WebSockets
 
 - Title: `Phase 2 - Multiplayer + WebSocket Expansion`
 - Description: `Extend the system with a server-backed multiplayer mode that validates moves, broadcasts updates over websockets, handles resign/abandonment, preserves game history, and updates infrastructure and docs.`
 - Date/Time: `2026-03-30 15:36 UTC`
-- Status: `Proposed`
+- Status: `In Progress`
 - Assignment: `Codex`
-- Comments: `Planning only until Epic 01 is accepted. Keep Phase 1 compatibility intact.`
+- Comments: `Execution is active. Story 2.1 is done and accepted. Story 2.2 is the next server implementation milestone. Keep Phase 1 behavior intact while Phase 2 is introduced incrementally.`
 
 ### Story STORY-2.1
 
 - Title: `Define multiplayer architecture and shared contracts`
 - Description: `Choose the backend structure, shared DTO/event contracts, game identifiers, and state model so client and server communicate predictably.`
 - Date/Time: `2026-03-30 15:36 UTC`
-- Status: `Proposed`
+- Status: `Done`
 - Assignment: `Codex`
-- Comments: `Meaningful milestone. Stop for review after the API/event contract and project structure are agreed.`
+- Comments: `Completed on 2026-03-31 14:18 UTC and accepted by the user on 2026-03-31 14:16 UTC. Added a shared multiplayer contract module, documented the backend shape and API/event decisions, established the future server directory boundary, and added unit coverage for contract constants and representative payload shapes. Verified with npm run typecheck, npm run build, and npm run test:unit.`
 
 ### Story STORY-2.2
 
@@ -199,6 +199,24 @@ This file is the planning tracker for the Tic Tac Toe lab effort. It is intended
 - Status: `Proposed`
 - Assignment: `Codex`
 - Comments: `Epic 03 closes only after the user validates the final experience and documentation package.`
+
+## Epic EPIC-04 - Post-Phase UX Enhancements
+
+- Title: `Phase 4 - Optional UX Refinements`
+- Description: `Track non-required UX refinements that should be considered only after the committed phase scope is complete and accepted.`
+- Date/Time: `2026-03-31 14:05 UTC`
+- Status: `Proposed`
+- Assignment: `Codex`
+- Comments: `Backlog only. These items are intentionally deferred so they do not disrupt committed phase work.`
+
+### Story STORY-4.1
+
+- Title: `Relocate the dynamic game-status banner without broad layout churn`
+- Description: `Move the larger changing game-status area, such as the green "Victory achieved." status treatment, away from the top placement that causes layout jump during play. Scope this as a focused UI adjustment rather than a general status-mode system. Preserve the existing compact summary pills and keep the change narrow enough to review visually in isolation.`
+- Date/Time: `2026-03-31 14:05 UTC`
+- Status: `Proposed`
+- Assignment: `Codex`
+- Comments: `This story replaces the earlier Phase 1 Story 1.7 after the original implementation was judged too broad and not required for Phase 1 completion.`
 
 ## Review Notes Requested
 
