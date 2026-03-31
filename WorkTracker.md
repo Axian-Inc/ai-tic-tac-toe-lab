@@ -90,7 +90,7 @@ This file is the planning tracker for the Tic Tac Toe lab effort. It is intended
 - Date/Time: `2026-03-30 15:36 UTC`
 - Status: `In Progress`
 - Assignment: `Codex`
-- Comments: `Execution is active. Stories 2.1 through 2.4 are done and accepted. Story 2.5 is the next server-hardening milestone. Keep Phase 1 behavior intact while Phase 2 is introduced incrementally.`
+- Comments: `Execution is active. Stories 2.1 through 2.5 are done and accepted. Story 2.6 is the Phase 2 close-out milestone for expanded tests, infrastructure guidance, and documentation. Keep Phase 1 behavior intact while Phase 2 is introduced incrementally.`
 
 ### Story STORY-2.1
 
@@ -133,9 +133,9 @@ This file is the planning tracker for the Tic Tac Toe lab effort. It is intended
 - Title: `Implement abandonment, resign, and concurrency controls`
 - Description: `Enforce the 3-minute abandonment rule, allow resign actions, cap concurrent active games at 25, and return the correct failure responses when limits are reached.`
 - Date/Time: `2026-03-30 15:36 UTC`
-- Status: `Proposed`
+- Status: `Done`
 - Assignment: `Codex`
-- Comments: `This story includes edge-case handling that should be heavily test-driven.`
+- Comments: `Completed on 2026-03-31 15:02 UTC and accepted by the user on 2026-03-31 14:57 UTC. Enforced the 25-game concurrent cap with HTTP 429s, hardened abandonment and resign edge-case handling, and expanded server integration coverage for limit and failure-path behavior. Verified with npm run test:server, npm run typecheck, and npm run build.`
 
 ### Story STORY-2.6
 

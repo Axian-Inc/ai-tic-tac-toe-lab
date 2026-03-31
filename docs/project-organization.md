@@ -88,6 +88,13 @@ Server API verification.
 - `multiplayer-api.test.ts`: end-to-end HTTP lifecycle coverage for create, list, join, move, resign, and abandonment-check
 - `multiplayer-websocket.test.ts`: snapshot-on-connect and live WebSocket broadcast coverage
 
+The API test file now also covers:
+
+- concurrent game-cap rejection
+- pre-join resign rejection
+- premature abandonment no-op behavior
+- invalid abandonment timestamp rejection
+
 ### `tests/e2e/`
 
 Browser-level verification.

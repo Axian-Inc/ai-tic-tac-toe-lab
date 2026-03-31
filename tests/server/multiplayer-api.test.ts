@@ -1,23 +1,24 @@
 import { type AddressInfo } from 'node:net';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createApp } from '../../server/http/createApp';
 import { MultiplayerService } from '../../server/multiplayer/service';
-import type {
+import {
   AbandonmentCheckResponse,
   CreateGameResponse,
   JoinGameResponse,
   ListGamesResponse,
+  MAX_CONCURRENT_MULTIPLAYER_GAMES,
   ResignGameResponse,
   SubmitMoveResponse,
 } from '../../shared/contracts';
 
 describe('multiplayer lifecycle api', () => {
   let now = new Date('2026-03-31T15:00:00.000Z');
-  const service = new MultiplayerService(() => new Date(now));
-  const server = createApp(service);
+  let server: ReturnType<typeof createApp>;
   let baseUrl = '';
 
-  beforeAll(async () => {
+  beforeEach(async () => {
+    server = createApp(new MultiplayerService(() => new Date(now)));
     await new Promise<void>((resolve) => {
       server.listen(0, '127.0.0.1', () => {
         const address = server.address() as AddressInfo;
@@ -27,7 +28,7 @@ describe('multiplayer lifecycle api', () => {
     });
   });
 
-  afterAll(async () => {
+  afterEach(async () => {
     await new Promise<void>((resolve, reject) => {
       server.close((error) => {
         if (error) {
@@ -129,6 +130,61 @@ describe('multiplayer lifecycle api', () => {
     expect(abandonment.body.game.status).toBe('over');
     expect(abandonment.body.game.endReason).toBe('abandoned');
     expect(abandonment.body.event?.type).toBe('game.abandoned');
+  });
+
+  it('returns 429 once the concurrent game cap is reached', async () => {
+    now = new Date('2026-03-31T15:30:00.000Z');
+
+    for (let index = 0; index < MAX_CONCURRENT_MULTIPLAYER_GAMES; index += 1) {
+      const created = await postJson<CreateGameResponse>('/games', {});
+      expect(created.status).toBe(201);
+    }
+
+    const rejected = await postJson<{ error: string }>('/games', {});
+
+    expect(rejected.status).toBe(429);
+    expect(rejected.body.error).toMatch(/concurrent game limit/i);
+  });
+
+  it('rejects invalid resign and abandonment edge cases', async () => {
+    now = new Date('2026-03-31T15:40:00.000Z');
+    const created = await postJson<CreateGameResponse>('/games', {});
+
+    const resignBeforeJoin = await postJson<{ error: string }>(`/games/${created.body.game.id}/resign`, {
+      sessionId: created.body.participant.sessionId,
+    });
+
+    expect(resignBeforeJoin.status).toBe(409);
+    expect(resignBeforeJoin.body.error).toMatch(/before a guest joins/i);
+
+    const joined = await postJson<JoinGameResponse>(`/games/${created.body.game.id}/join`, {});
+    await postJson<SubmitMoveResponse>(`/games/${created.body.game.id}/moves`, {
+      sessionId: created.body.participant.sessionId,
+      position: 0,
+      expectedTurn: 1,
+    });
+
+    const tooEarly = await postJson<AbandonmentCheckResponse>(`/games/${created.body.game.id}/abandonment-check`, {
+      sessionId: joined.body.participant.sessionId,
+      observedAt: '2026-03-31T15:41:00.000Z',
+    });
+
+    expect(tooEarly.status).toBe(200);
+    expect(tooEarly.body.wasAbandoned).toBe(false);
+
+    const invalidTimestamp = await postJson<{ error: string }>(`/games/${created.body.game.id}/abandonment-check`, {
+      sessionId: joined.body.participant.sessionId,
+      observedAt: 'not-a-date',
+    });
+
+    expect(invalidTimestamp.status).toBe(400);
+    expect(invalidTimestamp.body.error).toMatch(/valid ISO timestamp/i);
+
+    const unknownSession = await postJson<{ error: string }>(`/games/${created.body.game.id}/resign`, {
+      sessionId: 'session_unknown',
+    });
+
+    expect(unknownSession.status).toBe(403);
   });
 
   async function fetchJson<T>(path: string) {

@@ -223,3 +223,15 @@
 - Updated `WorkTracker.md` to move Story `STORY-2.4` to `In Review`.
 - Story `2.4` was reviewed and accepted by the user.
 - Marked Story `2.4` as `Done` in `WorkTracker.md`.
+
+## 2026-03-31 15:02 UTC
+
+- Started Story `2.5` for multiplayer server hardening.
+- Added enforcement of the `25` concurrent waiting/active game cap in `server/multiplayer/service.ts`.
+- Wired the cap to return `429` on `POST /games` once the allowed concurrency threshold is reached.
+- Expanded server integration tests to cover the cap, resign-before-join rejection, premature abandonment no-op behavior, invalid abandonment timestamps, and unknown-session rejection.
+- Corrected the server test harness so each API test runs against a fresh in-memory service instead of leaking game state across cases.
+- Updated `README.md`, `docs/architecture.md`, `docs/multiplayer-architecture.md`, and `docs/project-organization.md` for the hardening milestone.
+- Updated `WorkTracker.md` to move Story `STORY-2.5` to `In Review`.
+- Story `2.5` was reviewed and accepted by the user.
+- Marked Story `2.5` as `Done` in `WorkTracker.md`.

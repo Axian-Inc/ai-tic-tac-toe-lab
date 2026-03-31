@@ -11,7 +11,7 @@ Phase 1 currently delivers a local-first Tic Tac Toe app in React + TypeScript w
 
 ## Current Status
 
-Phase 1 is complete. Story `2.4` is the active Phase 2 milestone and adds the first visible multiplayer client flow.
+Phase 1 is complete. Story `2.5` is the active Phase 2 milestone and hardens multiplayer server edge-case handling.
 
 The app now supports:
 
@@ -20,6 +20,13 @@ The app now supports:
 - a live multiplayer match screen backed by the HTTP API and WebSocket updates
 
 Resign, abandonment-focused UX, concurrency-limit UX, and infrastructure expansion are still tracked in later Phase 2 stories.
+
+Current server-side hardening now includes:
+
+- a `429` response once the concurrent multiplayer game cap of `25` is reached
+- resignation rejection before a second player joins
+- abandonment checks that reject invalid timestamps
+- abandonment checks that return a no-op response when the timeout has not elapsed yet
 
 ## Prerequisites
 

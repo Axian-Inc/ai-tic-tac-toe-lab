@@ -125,6 +125,13 @@ The shared contract locks in two key Phase 2 rules:
 
 These are exposed as constants so future server and test code can share the same values.
 
+The current server implementation applies those rules as follows:
+
+- `POST /games` returns `429` once `25` waiting/active games already exist
+- abandonment checks return a no-op result until the timeout has actually elapsed
+- invalid abandonment timestamps return `400`
+- resign attempts before a guest joins return `409`
+
 ## Project Structure Decision
 
 The intended repo shape for upcoming multiplayer stories is:

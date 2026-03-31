@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import {
   ABANDONMENT_TIMEOUT_MS,
+  MAX_CONCURRENT_MULTIPLAYER_GAMES,
   type AbandonmentCheckRequest,
   type AbandonmentCheckResponse,
   type BoardCellValue,
@@ -62,6 +63,10 @@ export class MultiplayerService {
   constructor(private readonly clock: Clock = () => new Date()) {}
 
   createGame(): CreateGameResponse {
+    if (this.countConcurrentGames() >= MAX_CONCURRENT_MULTIPLAYER_GAMES) {
+      throw new HttpError(429, `Concurrent game limit of ${MAX_CONCURRENT_MULTIPLAYER_GAMES} reached.`);
+    }
+
     const now = this.clock().toISOString();
     const host = createSeat('host', 'X', now);
     const game: StoredGame = {
@@ -423,6 +428,13 @@ export class MultiplayerService {
     for (const listener of this.listeners) {
       listener(event);
     }
+  }
+
+  private countConcurrentGames(): number {
+    return [...this.games.values()].filter((game) => {
+      const status = this.deriveStatus(game);
+      return status === 'waiting' || status === 'active';
+    }).length;
   }
 }
 

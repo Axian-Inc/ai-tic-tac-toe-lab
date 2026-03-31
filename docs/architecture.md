@@ -121,3 +121,12 @@ Story `2.4` adds the first visible multiplayer browser flow.
 - `MultiplayerGamePage.tsx` renders a live multiplayer board and status messaging backed by server snapshots.
 - `src/features/multiplayer/api.ts` owns the browser HTTP and WebSocket client calls.
 - The board is updated by authoritative server snapshots rather than local rule execution.
+
+## Phase 2 Story 2.5 Baseline
+
+Story `2.5` hardens the server lifecycle rules already introduced in earlier stories.
+
+- `server/multiplayer/service.ts` now enforces the concurrent multiplayer game cap before game creation.
+- The server returns `429` when the cap is reached.
+- Resign and abandonment paths are now explicitly covered for invalid or premature requests.
+- The hardening work is verified through expanded server integration tests rather than new UI behavior.
