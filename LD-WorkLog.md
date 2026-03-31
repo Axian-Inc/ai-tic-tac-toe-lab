@@ -235,3 +235,21 @@
 - Updated `WorkTracker.md` to move Story `STORY-2.5` to `In Review`.
 - Story `2.5` was reviewed and accepted by the user.
 - Marked Story `2.5` as `Done` in `WorkTracker.md`.
+
+## 2026-03-31 15:06 UTC
+
+- Started Story `2.6` for the Phase 2 close-out package.
+- Added `Dockerfile.server` and `.dockerignore` as a deployable packaging baseline for the multiplayer API runtime.
+- Added `infra/cloudformation/multiplayer-api.yml` as a low-cost EC2-based multiplayer API infrastructure baseline.
+- Added `infra/package-multiplayer-api.sh` to create the multiplayer API artifact tarball used for deployment.
+- Added `infra/deploy-multiplayer-api.sh` to upload the artifact to S3 and deploy the API CloudFormation stack.
+- Added `npm run package:server` and `npm run deploy:server` so the multiplayer deployment path is callable from package scripts.
+- Expanded `infra/README.md`, `README.md`, `docs/architecture.md`, and `docs/project-organization.md` to cover the multiplayer deployment footprint and operational model.
+- Verified the artifact packaging path with `npm run package:server`.
+- Verified shell syntax with `bash -n infra/deploy-multiplayer-api.sh`, `bash -n infra/package-multiplayer-api.sh`, and `bash -n infra/deploy-static-site.sh`.
+- Re-ran `npm run test:server` and `npm run build` to confirm the deployment additions did not regress the Phase 2 app/server behavior.
+- Updated `WorkTracker.md` to move Story `STORY-2.6` to `In Review`.
+- Story `2.6` was reviewed and accepted by the user.
+- Marked Story `2.6` as `Done` in `WorkTracker.md`.
+- Closed Epic `EPIC-02` as `Done`, which completes Phase 2.
+- Added `.artifacts/` to `.gitignore` so packaged server tarballs do not pollute future commits.

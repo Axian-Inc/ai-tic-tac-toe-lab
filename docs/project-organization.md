@@ -108,9 +108,20 @@ Browser-level verification.
 
 AWS baseline templates for low-cost deployment.
 
+- `static-site.yml`: S3 website hosting baseline for the frontend
+- `multiplayer-api.yml`: single-instance EC2 baseline for the multiplayer API
+
 ### `infra/deploy-static-site.sh`
 
 Convenience deployment script for the Phase 1 static site.
+
+### `infra/package-multiplayer-api.sh`
+
+Creates the packaged multiplayer API artifact used by the Phase 2 server deployment.
+
+### `infra/deploy-multiplayer-api.sh`
+
+Uploads the API artifact and deploys the multiplayer API CloudFormation stack.
 
 ### `infra/README.md`
 

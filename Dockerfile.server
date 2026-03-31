@@ -1,0 +1,14 @@
+FROM node:20-bookworm-slim
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
+
+COPY server ./server
+COPY shared ./shared
+COPY src/features/game/model ./src/features/game/model
+
+EXPOSE 8787
+
+CMD ["npm", "run", "start:server"]

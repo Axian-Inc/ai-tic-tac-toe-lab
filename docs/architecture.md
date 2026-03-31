@@ -130,3 +130,12 @@ Story `2.5` hardens the server lifecycle rules already introduced in earlier sto
 - The server returns `429` when the cap is reached.
 - Resign and abandonment paths are now explicitly covered for invalid or premature requests.
 - The hardening work is verified through expanded server integration tests rather than new UI behavior.
+
+## Phase 2 Story 2.6 Baseline
+
+Story `2.6` closes Phase 2 with operational alignment work.
+
+- deployment guidance now covers both the static frontend and the multiplayer API
+- the multiplayer API can be packaged independently for infrastructure deployment
+- the repo now includes a low-cost CloudFormation baseline for hosting the API on a single EC2 instance
+- docs and scripts are aligned so multiplayer testing and deployment are callable from the terminal

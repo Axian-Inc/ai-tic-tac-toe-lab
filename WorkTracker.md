@@ -88,9 +88,9 @@ This file is the planning tracker for the Tic Tac Toe lab effort. It is intended
 - Title: `Phase 2 - Multiplayer + WebSocket Expansion`
 - Description: `Extend the system with a server-backed multiplayer mode that validates moves, broadcasts updates over websockets, handles resign/abandonment, preserves game history, and updates infrastructure and docs.`
 - Date/Time: `2026-03-30 15:36 UTC`
-- Status: `In Progress`
+- Status: `Done`
 - Assignment: `Codex`
-- Comments: `Execution is active. Stories 2.1 through 2.5 are done and accepted. Story 2.6 is the Phase 2 close-out milestone for expanded tests, infrastructure guidance, and documentation. Keep Phase 1 behavior intact while Phase 2 is introduced incrementally.`
+- Comments: `Phase 2 is complete. Stories 2.1 through 2.6 are done and accepted. Single-player remains intact, multiplayer is implemented end-to-end, and the repo now includes the Phase 2 deployment/documentation baseline.`
 
 ### Story STORY-2.1
 
@@ -142,9 +142,9 @@ This file is the planning tracker for the Tic Tac Toe lab effort. It is intended
 - Title: `Expand tests, IaC, and docs for multiplayer`
 - Description: `Add server and integration coverage for multiplayer behavior, update infrastructure for the expanded footprint, and document the architecture and operating model.`
 - Date/Time: `2026-03-30 15:36 UTC`
-- Status: `Proposed`
+- Status: `Done`
 - Assignment: `Codex`
-- Comments: `Epic 02 closes only after the user accepts multiplayer behavior and supporting docs/infrastructure updates.`
+- Comments: `Completed on 2026-03-31 15:06 UTC and accepted by the user on 2026-03-31 15:01 UTC. Added low-cost multiplayer API deployment assets, packaging scripts, updated deployment docs, and aligned Phase 2 architecture/project-organization guidance with the server footprint. Verified with npm run package:server, bash -n on deploy scripts, npm run test:server, and npm run build.`
 
 ## Epic EPIC-03 - Phase 3 Spectator View, Coverage, and CI
 

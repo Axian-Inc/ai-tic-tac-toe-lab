@@ -11,7 +11,7 @@ Phase 1 currently delivers a local-first Tic Tac Toe app in React + TypeScript w
 
 ## Current Status
 
-Phase 1 is complete. Story `2.5` is the active Phase 2 milestone and hardens multiplayer server edge-case handling.
+Phase 1 is complete. Story `2.6` is the active Phase 2 close-out milestone for docs, tests, and infrastructure.
 
 The app now supports:
 
@@ -19,7 +19,7 @@ The app now supports:
 - a multiplayer lobby for creating and joining waiting games
 - a live multiplayer match screen backed by the HTTP API and WebSocket updates
 
-Resign, abandonment-focused UX, concurrency-limit UX, and infrastructure expansion are still tracked in later Phase 2 stories.
+Phase 2 behavior is now implemented across contract, API, realtime transport, client flow, and server hardening. The remaining work in this milestone is operational packaging and documentation alignment.
 
 Current server-side hardening now includes:
 
@@ -90,6 +90,8 @@ npm run preview -- --host 0.0.0.0
 - `npm run test:e2e`: run the Playwright single-player browser flow
 - `npm test`: run unit, server, and e2e coverage
 - `npm run deploy:static`: deploy the static-site baseline described in `infra/`
+- `npm run package:server`: create a deployable multiplayer API artifact tarball
+- `npm run deploy:server`: upload and deploy the multiplayer API baseline described in `infra/`
 
 ## Gameplay Notes
 
@@ -143,6 +145,13 @@ Phase 1 uses a low-cost static hosting baseline:
 - build the Vite app into `dist/`
 - provision an S3 website bucket with CloudFormation
 - sync the built assets into the bucket with AWS CLI
+
+Phase 2 adds a low-cost multiplayer API baseline:
+
+- package the server runtime into a tarball
+- upload the artifact to S3
+- provision a single EC2-based API host with CloudFormation
+- run the multiplayer API under `systemd`
 
 See [infra/README.md](/workspaces/ai-tic-tac-toe-lab/infra/README.md) for the deployment flow and [infra/cloudformation/static-site.yml](/workspaces/ai-tic-tac-toe-lab/infra/cloudformation/static-site.yml) for the baseline template.
 
