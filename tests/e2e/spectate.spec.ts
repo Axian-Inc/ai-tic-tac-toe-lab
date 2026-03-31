@@ -162,7 +162,9 @@ test.describe("Spectate flow", () => {
     }).click();
 
     await expect(page.getByTestId("gameplay-page")).toBeVisible();
-    await expect(page.getByText("You are spectating")).toBeVisible();
+    await expect(page.getByTestId("multiplayer-session-role")).toHaveText(
+      "You are spectating"
+    );
     await expect(page.getByRole("button", { name: "Home" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Resign" })).toHaveCount(0);
   });

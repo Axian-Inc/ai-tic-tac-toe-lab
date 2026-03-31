@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import {
   InMemoryMultiplayerGameStore,
   appendHistoryEvent,
+  createGameRecordFromSnapshot,
   createCompletionFromCurrentGame,
   toGameSnapshot,
   toGameSummary,
@@ -554,5 +555,129 @@ test.describe("server multiplayer helpers", () => {
     });
 
     expect(game.historyEvents.map((event) => event.sequence)).toEqual([1, 2, 3]);
+  });
+
+  test("createGameRecordFromSnapshot reconstructs an active game snapshot for automation seeding", () => {
+    const snapshot = {
+      id: "game-seed-1",
+      name: "Automation Seed",
+      status: "active",
+      createdAt: "2026-03-30T12:00:00.000Z",
+      updatedAt: "2026-03-30T12:03:00.000Z",
+      hostName: "Host",
+      openSeatCount: 0,
+      players: {
+        X: {
+          player: "X" as const,
+          name: "Host",
+          joinedAt: "2026-03-30T12:00:00.000Z",
+        },
+        O: {
+          player: "O" as const,
+          name: "Guest",
+          joinedAt: "2026-03-30T12:01:00.000Z",
+        },
+      },
+      state: {
+        board: ["X", null, null, null, "O", null, null, null, "X"],
+        currentPlayer: "O" as const,
+        moves: [
+          { order: 1, player: "X" as const, position: 0 },
+          { order: 2, player: "O" as const, position: 4 },
+          { order: 3, player: "X" as const, position: 8 },
+        ],
+        status: {
+          isDraw: false,
+          isOver: false,
+          winner: null,
+        },
+      },
+      completion: null,
+      history: {
+        retention: {
+          mode: "process-memory" as const,
+          survivesServiceRestart: false as const,
+        },
+        events: [
+          {
+            type: "game-created" as const,
+            sequence: 1,
+            occurredAt: "2026-03-30T12:00:00.000Z",
+            player: "X" as const,
+          },
+          {
+            type: "player-joined" as const,
+            sequence: 2,
+            occurredAt: "2026-03-30T12:01:00.000Z",
+            player: "O" as const,
+          },
+        ],
+      },
+      activity: {
+        lastProgressedAt: "2026-03-30T12:03:00.000Z",
+        awaitingPlayer: "O" as const,
+        awaitingSince: "2026-03-30T12:03:00.000Z",
+        abandonmentTimeoutMs: 180000,
+        abandonmentDeadlineAt: "2026-03-30T12:06:00.000Z",
+      },
+    };
+
+    const record = createGameRecordFromSnapshot(snapshot);
+
+    expect(record.id).toBe(snapshot.id);
+    expect(record.game.getState()).toEqual(snapshot.state);
+    expect(record.historyEvents).toEqual(snapshot.history.events);
+    expect(record.activity).toEqual(snapshot.activity);
+  });
+
+  test("createGameRecordFromSnapshot rejects snapshots whose moves do not match the board state", () => {
+    expect(() =>
+      createGameRecordFromSnapshot({
+        id: "game-seed-bad",
+        name: "Broken Seed",
+        status: "active",
+        createdAt: "2026-03-30T12:00:00.000Z",
+        updatedAt: "2026-03-30T12:00:00.000Z",
+        hostName: "Host",
+        openSeatCount: 0,
+        players: {
+          X: {
+            player: "X",
+            name: "Host",
+            joinedAt: "2026-03-30T12:00:00.000Z",
+          },
+          O: {
+            player: "O",
+            name: "Guest",
+            joinedAt: "2026-03-30T12:01:00.000Z",
+          },
+        },
+        state: {
+          board: ["X", "X", null, null, null, null, null, null, null],
+          currentPlayer: "O",
+          moves: [{ order: 1, player: "X", position: 0 }],
+          status: {
+            isDraw: false,
+            isOver: false,
+            winner: null,
+          },
+        },
+        completion: null,
+        history: {
+          retention: {
+            mode: "process-memory",
+            survivesServiceRestart: false,
+          },
+          events: [],
+        },
+        activity: {
+          lastProgressedAt: "2026-03-30T12:00:00.000Z",
+          awaitingPlayer: "O",
+          awaitingSince: "2026-03-30T12:00:00.000Z",
+          abandonmentTimeoutMs: 180000,
+          abandonmentDeadlineAt: "2026-03-30T12:03:00.000Z",
+        },
+      })
+    ).toThrow("snapshot state does not match moves");
   });
 });

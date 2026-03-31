@@ -5,8 +5,9 @@ const runtime = getUiAutomationRuntimeConfig(process.argv);
 
 export default defineConfig({
   testDir: "./tests",
-  fullyParallel: true,
+  fullyParallel: runtime.mode !== "full",
   retries: 0,
+  workers: runtime.mode === "full" ? 1 : undefined,
   outputDir: "test-results/playwright/artifacts",
   reporter: [
     ["list"],

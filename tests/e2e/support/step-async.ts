@@ -10,12 +10,17 @@ function toStepAttachmentName(stepTitle: string): string {
 }
 
 export function createStepAsync(page: Page, testInfo: TestInfo): StepAsync {
+  let stepIndex = 0;
+
   return async (title, body) => {
+    stepIndex += 1;
+
     await test.step(title, async () => {
       try {
         await body();
       } catch (error) {
-        const attachmentName = toStepAttachmentName(title) || "unnamed-step";
+        const attachmentName =
+          `${String(stepIndex).padStart(2, "0")}-${toStepAttachmentName(title) || "unnamed-step"}`;
         const screenshotPath = testInfo.outputPath(
           `step-failure-${attachmentName}.png`
         );

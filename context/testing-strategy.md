@@ -13,6 +13,7 @@ Last updated: 2026-03-30
 - Playwright also supports runner-managed unit specs under `tests/unit/` for targeted non-DOM logic coverage when explicitly requested.
 - Playwright browser specs now use a shared fixture layer with page objects for landing, gameplay, and multiplayer modal flows.
 - Playwright browser specs now wrap manual-style actions with a `StepAsync` helper so step names appear in runner output and failed steps capture screenshots as attachments.
+- Full-mode Playwright browser runs now serialize workers against the shared in-memory multiplayer backend so deterministic backend-state reset/seed hooks remain safe without per-worker backend instances.
 
 ## Current Priorities
 - Cover `src/game/` logic with deterministic unit tests.
@@ -38,6 +39,7 @@ Last updated: 2026-03-30
 - Playwright starts the local Vite dev server automatically through `playwright.config.ts`.
 - Playwright supports two browser automation runtime modes through `UI_AUTOMATION_MODE`:
   - `frontend` starts only the Vite app.
-  - `full` starts the Vite app plus an automation-only backend server command.
+  - `full` starts the Vite app plus an automation-only backend server command with test-support endpoints enabled through `AUTOMATION_TEST_SUPPORT=1`.
 - Playwright test discovery now spans `tests/`, including `tests/e2e/` and `tests/unit/`.
+- Browser automation fixtures now expose a `TestSupportApi` helper for backend reset, snapshot seeding, capacity seeding, and deterministic forced-failure setup during multiplayer UI tests.
 - Pull request CI validation uses the same repo-root commands documented for local use: `npm test` for automated unit coverage and `npm run build` for build validation.
