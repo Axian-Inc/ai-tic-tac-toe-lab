@@ -56,6 +56,23 @@ describe('multiplayer lifecycle api', () => {
     expect(listed.body.games.some((game) => game.id === created.body.game.id)).toBe(true);
   });
 
+  it('returns deployment-safe cors headers and handles preflight', async () => {
+    const preflight = await fetch(`${baseUrl}/games`, {
+      method: 'OPTIONS',
+      headers: {
+        origin: 'http://example.com',
+        'access-control-request-method': 'POST',
+      },
+    });
+
+    expect(preflight.status).toBe(204);
+    expect(preflight.headers.get('access-control-allow-origin')).toBe('*');
+    expect(preflight.headers.get('access-control-allow-methods')).toContain('POST');
+
+    const listed = await fetch(`${baseUrl}/games?status=waiting`);
+    expect(listed.headers.get('access-control-allow-origin')).toBe('*');
+  });
+
   it('lists active games and returns the current state for spectator reads', async () => {
     now = new Date('2026-03-31T15:02:00.000Z');
     const created = await postJson<CreateGameResponse>('/games', {});

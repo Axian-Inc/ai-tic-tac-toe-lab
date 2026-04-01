@@ -8,6 +8,11 @@ import type {
   SubmitMoveResponse,
 } from '../../../shared/contracts';
 
+const API_ORIGIN = import.meta.env.VITE_API_ORIGIN?.replace(/\/$/, '') ?? '';
+const WEBSOCKET_ORIGIN = API_ORIGIN
+  ? API_ORIGIN.replace(/^https:/, 'wss:').replace(/^http:/, 'ws:')
+  : `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}`;
+
 export async function createMultiplayerGame(): Promise<CreateGameResponse> {
   return requestJson('/games', {
     method: 'POST',
@@ -53,8 +58,7 @@ export function connectToGameEvents(
   onEvent: (event: MultiplayerServerEvent) => void,
   onConnectionChange?: (connected: boolean) => void,
 ): () => void {
-  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const socket = new WebSocket(`${protocol}//${window.location.host}/ws?gameId=${gameId}`);
+  const socket = new WebSocket(`${WEBSOCKET_ORIGIN}/ws?gameId=${gameId}`);
 
   socket.addEventListener('open', () => {
     onConnectionChange?.(true);
@@ -79,7 +83,7 @@ export function connectToGameEvents(
 }
 
 async function requestJson<T>(input: string, init: RequestInit = {}): Promise<T> {
-  const response = await fetch(input, {
+  const response = await fetch(`${API_ORIGIN}${input}`, {
     headers: {
       'content-type': 'application/json',
       ...(init.headers ?? {}),

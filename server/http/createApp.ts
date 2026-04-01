@@ -5,6 +5,8 @@ import { HttpError, MultiplayerService } from '../multiplayer/service';
 
 export function createApp(service: MultiplayerService) {
   return createServer(async (request, response) => {
+    setCorsHeaders(response);
+
     try {
       await routeRequest(request, response, service);
     } catch (error) {
@@ -20,6 +22,12 @@ async function routeRequest(
 ) {
   const method = request.method ?? 'GET';
   const url = new URL(request.url ?? '/', 'http://localhost');
+
+  if (method === 'OPTIONS') {
+    response.statusCode = 204;
+    response.end();
+    return;
+  }
 
   if (method === 'POST' && url.pathname === '/games') {
     return writeJson(response, 201, service.createGame());
@@ -68,6 +76,12 @@ async function routeRequest(
     default:
       throw new HttpError(404, 'Route not found.');
   }
+}
+
+function setCorsHeaders(response: ServerResponse) {
+  response.setHeader('access-control-allow-origin', '*');
+  response.setHeader('access-control-allow-methods', 'GET,POST,OPTIONS');
+  response.setHeader('access-control-allow-headers', 'content-type');
 }
 
 async function readJsonBody(request: IncomingMessage): Promise<any> {

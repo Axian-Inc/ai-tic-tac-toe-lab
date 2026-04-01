@@ -357,3 +357,19 @@
 - Updated `WorkTracker.md` to replace stale planning/review text with current tracker state.
 - Corrected `docs/project-organization.md` so `server/` is described as implemented rather than planned.
 - Rewrote `server/README.md` from a pre-implementation plan to a current backend overview.
+
+## 2026-04-01 00:06 UTC
+
+- Began deployment preparation for the AWS release requested by the user.
+- Verified AWS credentials are now configured and working with `aws sts get-caller-identity`.
+- Confirmed the requested static-site bucket name and the recommended artifact-bucket name are both currently available.
+- Identified two deployment-critical code gaps before release: the frontend still used local-origin API calls, and the API server did not emit CORS headers for the S3-hosted frontend.
+- Updated the browser multiplayer API client to support a configurable `VITE_API_ORIGIN` for production HTTP and WebSocket calls.
+- Updated the HTTP server to emit permissive CORS headers and answer `OPTIONS` preflight requests.
+- Added server coverage for the CORS/preflight behavior so the deployment-specific path is tested.
+
+## 2026-04-01 00:42 UTC
+
+- Created the deployment artifact bucket `rickw-ai-tic-tac-toe-lab-artifacts` in `us-west-2`.
+- The first server deployment attempt exposed a packaging bug: `infra/package-multiplayer-api.sh` wrote both status text and the artifact path to stdout, which broke command substitution in `infra/deploy-multiplayer-api.sh`.
+- Corrected the packaging script so the status message goes to stderr and the artifact path remains clean machine-readable stdout.

@@ -6,7 +6,7 @@ ARTIFACT_PATH="${ARTIFACT_DIR}/multiplayer-api.tgz"
 
 mkdir -p "${ARTIFACT_DIR}"
 
-echo "Packaging multiplayer API artifact at ${ARTIFACT_PATH}..."
+echo "Packaging multiplayer API artifact at ${ARTIFACT_PATH}..." >&2
 tar -czf "${ARTIFACT_PATH}" \
   package.json \
   package-lock.json \
