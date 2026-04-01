@@ -4,7 +4,7 @@
 
 - `src/`: application source
 - `shared/`: client/server shared contracts and protocol types
-- `server/`: planned multiplayer backend location
+- `server/`: multiplayer backend source
 - `tests/`: automated tests
 - `.github/workflows/`: CI workflow definitions
 - `docs/`: human-facing architecture and organization notes
@@ -63,7 +63,7 @@ Browser-side multiplayer helpers.
 
 ### `server/`
 
-Backend ownership boundary for upcoming Phase 2 implementation stories.
+Backend ownership boundary for the implemented multiplayer HTTP and WebSocket server.
 
 - `README.md`: planned responsibilities for the multiplayer HTTP and WebSocket server
 - `index.ts`: API process entry point

@@ -10,7 +10,7 @@ This repo now delivers a staged Tic Tac Toe system with:
 
 ## Current Status
 
-Phases 1 and 2 are complete. Story `3.5` is the active Phase 3 close-out milestone for final documentation and acceptance readiness.
+Phases 1, 2, and 3 are complete and accepted.
 
 The app now supports:
 
@@ -19,13 +19,13 @@ The app now supports:
 - a live multiplayer match screen backed by the HTTP API and WebSocket updates
 - a spectator lobby for discovering and watching active multiplayer games
 
-Phase 2 behavior is implemented across contract, API, realtime transport, client flow, server hardening, and deployment guidance. Phase 3 now includes the spectator flow, terminal coverage reporting, and the pull request pipeline.
+Phase 2 behavior is implemented across contract, API, realtime transport, client flow, server hardening, and deployment guidance. Phase 3 adds the spectator flow, terminal coverage reporting, and the pull request pipeline.
 
 Phase completion state:
 
 - Phase 1: complete and accepted
 - Phase 2: complete and accepted
-- Phase 3: implementation complete through Story `3.4`; Story `3.5` is the final documentation and close-out review
+- Phase 3: complete and accepted
 
 Current server-side hardening now includes:
 

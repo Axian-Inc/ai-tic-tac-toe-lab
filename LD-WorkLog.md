@@ -342,3 +342,18 @@
 - Marked Story `3.5` as `Done` in `WorkTracker.md`.
 - Closed Epic `EPIC-03` as `Done`, which completes Phase 3.
 - Preparing the final Phase 3 git checkpoint and completion summary.
+
+## 2026-03-31 16:44 UTC
+
+- The user asked which files were not included and then approved including output.
+- Removed `phases/output/` from `.gitignore` so the captured phase screenshots can be tracked.
+- Kept generated build, coverage, and packaging artifacts ignored to avoid committing noisy machine output by default.
+
+## 2026-03-31 16:49 UTC
+
+- Performed a markdown documentation audit across the repo for accuracy, completeness, and local link validity.
+- Confirmed all markdown links resolve locally.
+- Updated `README.md` to reflect that Phases 1 through 3 are complete and accepted.
+- Updated `WorkTracker.md` to replace stale planning/review text with current tracker state.
+- Corrected `docs/project-organization.md` so `server/` is described as implemented rather than planned.
+- Rewrote `server/README.md` from a pre-implementation plan to a current backend overview.

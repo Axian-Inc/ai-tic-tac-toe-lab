@@ -3,5 +3,4 @@ dist/
 playwright-report/
 test-results/
 coverage/
-phases/output/
 .artifacts/
