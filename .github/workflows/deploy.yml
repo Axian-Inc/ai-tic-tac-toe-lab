@@ -1,0 +1,126 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      aws_region:
+        description: AWS region for both stacks
+        required: true
+        default: us-west-2
+        type: string
+      static_stack_name:
+        description: CloudFormation stack name for the static site
+        required: true
+        default: ai-tic-tac-toe-phase1
+        type: string
+      site_bucket_name:
+        description: Globally unique S3 bucket for the static site
+        required: true
+        type: string
+      api_stack_name:
+        description: CloudFormation stack name for the multiplayer API
+        required: true
+        default: ai-tic-tac-toe-phase2-api
+        type: string
+      api_artifact_bucket_name:
+        description: S3 bucket for the packaged multiplayer API artifact
+        required: true
+        type: string
+      allowed_api_cidr:
+        description: CIDR allowed to reach the API
+        required: true
+        default: 0.0.0.0/0
+        type: string
+
+jobs:
+  deploy:
+    name: Deploy Frontend and API
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ inputs.aws_region }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ensure API artifact bucket exists
+        env:
+          AWS_REGION: ${{ inputs.aws_region }}
+          API_ARTIFACT_BUCKET_NAME: ${{ inputs.api_artifact_bucket_name }}
+        run: |
+          if aws s3api head-bucket --bucket "${API_ARTIFACT_BUCKET_NAME}" 2>/dev/null; then
+            echo "Artifact bucket ${API_ARTIFACT_BUCKET_NAME} already exists."
+          else
+            aws s3api create-bucket \
+              --bucket "${API_ARTIFACT_BUCKET_NAME}" \
+              --region "${AWS_REGION}" \
+              --create-bucket-configuration "LocationConstraint=${AWS_REGION}"
+          fi
+
+      - name: Deploy multiplayer API
+        env:
+          STACK_NAME: ${{ inputs.api_stack_name }}
+          API_ARTIFACT_BUCKET_NAME: ${{ inputs.api_artifact_bucket_name }}
+          AWS_REGION: ${{ inputs.aws_region }}
+          ALLOWED_API_CIDR: ${{ inputs.allowed_api_cidr }}
+        run: npm run deploy:server
+
+      - name: Resolve API URL
+        id: api
+        env:
+          AWS_REGION: ${{ inputs.aws_region }}
+          STACK_NAME: ${{ inputs.api_stack_name }}
+        run: |
+          API_URL="$(aws cloudformation describe-stacks \
+            --region "${AWS_REGION}" \
+            --stack-name "${STACK_NAME}" \
+            --query "Stacks[0].Outputs[?OutputKey=='ApiBaseUrl'].OutputValue" \
+            --output text)"
+          echo "api_url=${API_URL}" >> "${GITHUB_OUTPUT}"
+
+      - name: Deploy static site
+        env:
+          VITE_API_ORIGIN: ${{ steps.api.outputs.api_url }}
+          STACK_NAME: ${{ inputs.static_stack_name }}
+          SITE_BUCKET_NAME: ${{ inputs.site_bucket_name }}
+          AWS_REGION: ${{ inputs.aws_region }}
+        run: npm run deploy:static
+
+      - name: Resolve site URL
+        id: site
+        env:
+          AWS_REGION: ${{ inputs.aws_region }}
+          STACK_NAME: ${{ inputs.static_stack_name }}
+        run: |
+          SITE_URL="$(aws cloudformation describe-stacks \
+            --region "${AWS_REGION}" \
+            --stack-name "${STACK_NAME}" \
+            --query "Stacks[0].Outputs[?OutputKey=='SiteUrl'].OutputValue" \
+            --output text)"
+          echo "site_url=${SITE_URL}" >> "${GITHUB_OUTPUT}"
+
+      - name: Deployment summary
+        run: |
+          {
+            echo "## Deployment Complete"
+            echo
+            echo "- Frontend: ${{ steps.site.outputs.site_url }}"
+            echo "- API: ${{ steps.api.outputs.api_url }}"
+            echo "- Static stack: ${{ inputs.static_stack_name }}"
+            echo "- API stack: ${{ inputs.api_stack_name }}"
+          } >> "${GITHUB_STEP_SUMMARY}"

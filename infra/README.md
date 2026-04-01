@@ -96,6 +96,27 @@ The server deployment flow will:
 4. create or update a low-cost EC2 instance that runs the multiplayer API through `systemd`
 5. print the resulting API base URL
 
+## Deploy Through GitHub Actions
+
+The repo includes a manual deployment workflow at `.github/workflows/deploy.yml`.
+
+That workflow:
+
+1. configures AWS credentials from repository secrets
+2. ensures the API artifact bucket exists
+3. deploys the multiplayer API stack
+4. reads back the deployed API URL
+5. deploys the static site with `VITE_API_ORIGIN` pointed at that API URL
+6. publishes both URLs in the GitHub Actions summary
+
+Repository secrets expected by the workflow:
+
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `AWS_SESSION_TOKEN`
+
+Workflow inputs still supply the stack names, bucket names, region, and allowed API CIDR so deployments stay explicit.
+
 ## Notes
 
 - The generated S3 website endpoint is plain HTTP because this is a minimal Phase 1 baseline.

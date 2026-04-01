@@ -126,6 +126,32 @@ On every pull request it currently runs:
 - `npm run coverage`
 - `npm run package:server`
 
+## Manual Deploy Workflow
+
+The repo also includes a manual GitHub Actions deployment workflow at `.github/workflows/deploy.yml`.
+
+It is intended for `workflow_dispatch` runs and deploys:
+
+- the multiplayer API first
+- then the static frontend using the resolved API URL as `VITE_API_ORIGIN`
+
+Required repository secrets:
+
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `AWS_SESSION_TOKEN`
+
+Required workflow inputs:
+
+- AWS region
+- static stack name
+- static site bucket name
+- API stack name
+- API artifact bucket name
+- allowed API CIDR
+
+The workflow writes the final frontend and API URLs into the GitHub Actions step summary.
+
 ## Phase 3 Review Commands
 
 These are the main terminal commands that represent the final Phase 3 validation surface:

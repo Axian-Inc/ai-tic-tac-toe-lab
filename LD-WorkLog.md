@@ -373,3 +373,10 @@
 - Created the deployment artifact bucket `rickw-ai-tic-tac-toe-lab-artifacts` in `us-west-2`.
 - The first server deployment attempt exposed a packaging bug: `infra/package-multiplayer-api.sh` wrote both status text and the artifact path to stdout, which broke command substitution in `infra/deploy-multiplayer-api.sh`.
 - Corrected the packaging script so the status message goes to stderr and the artifact path remains clean machine-readable stdout.
+
+## 2026-04-01 12:52 UTC
+
+- Added `.github/workflows/deploy.yml` so deployments can also be run from GitHub Actions through `workflow_dispatch`.
+- The deploy workflow is parameterized with region, stack names, bucket names, and API CIDR rather than hardcoding environment-specific values.
+- The workflow deploys the API first, resolves the live API URL, then deploys the static site with `VITE_API_ORIGIN` pointed at that API.
+- Updated `README.md` and `infra/README.md` to document the required GitHub secrets and the manual deploy workflow behavior.
