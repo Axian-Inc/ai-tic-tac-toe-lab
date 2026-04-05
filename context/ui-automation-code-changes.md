@@ -1,6 +1,6 @@
 # UI Automation Support Code Changes
 
-Last updated: 2026-03-30
+Last updated: 2026-04-05
 
 ## Summary
 
@@ -11,31 +11,31 @@ The baseline support changes required for deterministic Playwright expansion are
 Implemented dedicated `data-testid` attributes for multiplayer and replay surfaces in [src/App.tsx](/workspaces/ai-tic-tac-toe-lab/src/App.tsx).
 
 Required additions:
-- multiplayer modal container
-- modal close button
-- player-name input
-- game-name input
-- create tab button
-- join tab button
-- create submit button
-- create cancel button
-- discovery refresh button
-- modal error message
-- empty-state message
-- waiting games list
-- active games list
-- per-game cards keyed by game ID
-- join and spectate buttons keyed by game ID
-- multiplayer session card
-- match ID text
-- live sync status
-- refresh match button
-- gameplay error message
-- replay panel
-- replay start, back, next, and return-to-live buttons
-- resignation button
-- timeout button
-- loss-feedback text
+- [x] multiplayer modal container
+- [x] modal close button
+- [x] player-name input
+- [x] game-name input
+- [x] create tab button
+- [x] join tab button
+- [x] create submit button
+- [x] create cancel button
+- [x] discovery refresh button
+- [x] modal error message
+- [x] empty-state message
+- [x] waiting games list
+- [x] active games list
+- [x] per-game cards keyed by game ID
+- [x] join and spectate buttons keyed by game ID
+- [x] multiplayer session card
+- [x] match ID text
+- [x] live sync status
+- [x] refresh match button
+- [x] gameplay error message
+- [x] replay panel
+- [x] replay start, back, next, and return-to-live buttons
+- [x] resignation button
+- [x] timeout button
+- [x] loss-feedback text
 
 Why:
 - Current automation would otherwise depend heavily on visible text and DOM shape, which will make the suite brittle.
@@ -45,14 +45,14 @@ Why:
 Implemented test-only support endpoints in [server/index.ts](/workspaces/ai-tic-tac-toe-lab/server/index.ts), guarded behind `AUTOMATION_TEST_SUPPORT=1`.
 
 Required capabilities:
-- reset in-memory game state
-- seed waiting game
-- seed active game with chosen board state and player assignments
-- seed replay history and lifecycle events
-- seed abandonment state with configurable remaining time or expired deadline
-- seed store to 25 waiting-or-active games for capacity testing
-- mark one game as already joined to drive stale-join failure deterministically
-- optionally force specific API failures for create, discovery, detail refresh, join, resign, move, and abandonment-check paths
+- [x] reset in-memory game state
+- [x] seed waiting game
+- [x] seed active game with chosen board state and player assignments
+- [x] seed replay history and lifecycle events
+- [x] seed abandonment state with configurable remaining time or expired deadline
+- [x] seed store to 25 waiting-or-active games for capacity testing
+- [x] mark one game as already joined to drive stale-join failure deterministically
+- [x] optionally force specific API failures for create, discovery, detail refresh, join, resign, move, and abandonment-check paths
 
 Why:
 - Manual timing and shared in-memory state are not reliable enough for CI automation.
@@ -73,11 +73,11 @@ Why:
 Exposed stable test hooks for state that was previously only inferable from prose text.
 
 Recommended additions:
-- current session role
-- game lifecycle status
-- replay active versus live mode
-- abandonment countdown container
-- sync state value
+- [x] current session role
+- [x] game lifecycle status
+- [x] replay active versus live mode
+- [x] abandonment countdown container
+- [x] sync state value
 
 Why:
 - Several manual cases depend on verifying role, state transitions, and replay/live mode without relying on exact user-facing copy.
@@ -94,9 +94,35 @@ Why:
 Provided a dedicated automation startup path in repo scripts and configuration.
 
 Recommended additions:
-- one command for frontend-only UI automation
-- one command for frontend plus backend plus test-support API
-- optional isolated backend port configuration per worker if multiplayer parallelism is expanded later
+- [x] one command for frontend-only UI automation
+- [x] one command for frontend plus backend plus test-support API
+- [ ] optional isolated backend port configuration per worker if multiplayer parallelism is expanded later
 
 Why:
 - The full-mode Playwright runtime now provides the deterministic automation contract; isolated backend ports remain a future optimization if worker parallelism is expanded.
+
+## Feature: RemoteCDP Host Browser Support
+
+Added browser-target runtime support so UI automation can run either against a Playwright-launched local browser or a host Chrome instance exposed through RemoteCDP.
+
+Required additions:
+- [x] browser target selection through `UI_AUTOMATION_BROWSER_TARGET=Local|RemoteCDP`
+- [x] RemoteCDP endpoint override through `UI_AUTOMATION_REMOTE_CDP_ENDPOINT`
+- [x] forced worker cap of `1` for RemoteCDP sessions
+- [x] fixture-level `connectOverCDP(...)` path that preserves the existing local browser flow as the default
+- [x] RemoteCDP support applied through the shared e2e fixture layer so specs do not need browser-mode-specific code
+
+Why:
+- Demo, maintenance, and future UI debugging workflows need a visible host browser outside the container without changing the default CI/browser behavior.
+
+## Requested Change: Single-Player Seed Support for UI-004
+
+`UI-004` currently remains skipped for the player-win portion because the current deterministic minimax CPU may not expose a real UI-playable player-win path.
+
+Requested additions:
+- [ ] add a frontend-only or test-only hook that can initialize single-player gameplay from a provided `GameState`
+- [ ] expose a safe automation path to open gameplay with seeded single-player board, move history, current player, and terminal/non-terminal status
+- [ ] use that support to automate the player-win half of `UI-004` without weakening production CPU behavior
+
+Why:
+- The current manual requirement expects coverage of a player-win outcome, but that outcome is not guaranteed to be reachable through the live UI against the shipped deterministic CPU. A seeded single-player automation path would make the scenario deterministic without changing real gameplay behavior.

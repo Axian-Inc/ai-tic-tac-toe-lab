@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page } from "@playwright/test";
+import type { BoardCell } from "../../../src/shared/game";
 
 export class GameplayPage {
   readonly page: Page;
@@ -6,6 +7,7 @@ export class GameplayPage {
   readonly status: Locator;
   readonly board: Locator;
   readonly playAgainButton: Locator;
+  readonly lossFeedbackText: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -13,10 +15,23 @@ export class GameplayPage {
     this.status = page.getByTestId("game-status");
     this.board = page.getByTestId("game-board");
     this.playAgainButton = page.getByTestId("play-again-button");
+    this.lossFeedbackText = page.getByTestId("loss-feedback-text");
   }
 
   cell(position: number): Locator {
     return this.page.getByTestId(`board-cell-${position}`);
+  }
+
+  boardCells(): Locator {
+    return this.page.locator('[data-testid^="board-cell-"]');
+  }
+
+  quitButton(): Locator {
+    return this.page.getByRole("button", { name: "Quit" });
+  }
+
+  homeButton(): Locator {
+    return this.page.getByRole("button", { name: "Home" });
   }
 
   async expectLoaded(): Promise<void> {
@@ -27,11 +42,15 @@ export class GameplayPage {
   }
 
   async expectBoardCellCount(count: number): Promise<void> {
-    await expect(this.page.locator('[data-testid^="board-cell-"]')).toHaveCount(count);
+    await expect(this.boardCells()).toHaveCount(count);
   }
 
   async expectStatusContains(text: string): Promise<void> {
     await expect(this.status).toContainText(text);
+  }
+
+  async expectStatusEquals(text: string): Promise<void> {
+    await expect(this.status).toHaveText(text);
   }
 
   async playCell(position: number): Promise<void> {
@@ -40,5 +59,88 @@ export class GameplayPage {
 
   async expectCellValue(position: number, value: string): Promise<void> {
     await expect(this.cell(position)).toContainText(value);
+  }
+
+  async expectCellEmpty(position: number): Promise<void> {
+    await expect(this.cell(position)).toHaveText("");
+  }
+
+  async expectCellEnabled(position: number): Promise<void> {
+    await expect(this.cell(position)).toBeEnabled();
+  }
+
+  async expectCellDisabled(position: number): Promise<void> {
+    await expect(this.cell(position)).toBeDisabled();
+  }
+
+  async expectBoardEmpty(): Promise<void> {
+    for (let position = 0; position < 9; position += 1) {
+      await this.expectCellEmpty(position);
+    }
+  }
+
+  async getBoardValues(): Promise<BoardCell[]> {
+    const values = await this.boardCells().evaluateAll((cells) =>
+      cells.map((cell) => {
+        const text = cell.textContent?.trim() ?? "";
+        return text === "X" || text === "O" ? text : null;
+      })
+    );
+
+    return values as BoardCell[];
+  }
+
+  async countMarkedCells(): Promise<number> {
+    const values = await this.getBoardValues();
+    return values.filter((value) => value !== null).length;
+  }
+
+  async waitForMarkedCellCount(count: number): Promise<void> {
+    await expect
+      .poll(async () => this.countMarkedCells(), {
+        message: `expected ${count} marked cells on the board`,
+      })
+      .toBe(count);
+  }
+
+  async waitForGameOver(): Promise<void> {
+    await expect
+      .poll(async () => this.isGameOver(), {
+        message: "expected the game to reach a terminal state",
+      })
+      .toBe(true);
+  }
+
+  async isGameOver(): Promise<boolean> {
+    const statusText = await this.status.textContent();
+    return statusText?.startsWith("Game over:") ?? false;
+  }
+
+  async clickPlayAgain(): Promise<void> {
+    await this.playAgainButton.click();
+  }
+
+  async clickQuit(): Promise<void> {
+    await this.quitButton().click();
+  }
+
+  async clickHome(): Promise<void> {
+    await this.homeButton().click();
+  }
+
+  async expectQuitVisible(): Promise<void> {
+    await expect(this.quitButton()).toBeVisible();
+  }
+
+  async expectHomeVisible(): Promise<void> {
+    await expect(this.homeButton()).toBeVisible();
+  }
+
+  async expectPlayAgainVisible(): Promise<void> {
+    await expect(this.playAgainButton).toBeVisible();
+  }
+
+  async expectLossFeedbackVisible(): Promise<void> {
+    await expect(this.lossFeedbackText).toBeVisible();
   }
 }

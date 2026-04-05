@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures/test-fixture";
 
 import type { MultiplayerGameSnapshot } from "../../src/shared/multiplayer";
 

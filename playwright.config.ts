@@ -7,7 +7,7 @@ export default defineConfig({
   testDir: "./tests",
   fullyParallel: runtime.mode !== "full",
   retries: 0,
-  workers: runtime.mode === "full" ? 1 : undefined,
+  workers: runtime.workers,
   outputDir: "test-results/playwright/artifacts",
   reporter: [
     ["list"],

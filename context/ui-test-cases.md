@@ -1,10 +1,10 @@
 # UI Test Cases
 
-Last updated: 2026-03-28
+Last updated: 2026-04-05
 
 ## Purpose
 
-This document defines manual UI test cases for the current Tic Tac Toe application so a UI automation engineer can later automate the flows. The cases are based on:
+This document defines manual UI test cases for the current Phase 3 Tic Tac Toe application so a UI automation engineer can later automate the flows. The cases are based on:
 
 - `context/project-overview.md`
 - `context/architecture.md`
@@ -17,6 +17,7 @@ This document defines manual UI test cases for the current Tic Tac Toe applicati
 
 - Single-player UI
 - Multiplayer modal flows
+- Dedicated landing-page spectate flow
 - Multiplayer gameplay UI
 - Replay/catch-up UI
 - Error handling visible in the UI
@@ -27,12 +28,15 @@ This document defines manual UI test cases for the current Tic Tac Toe applicati
 - Browser audio quality validation beyond confirming no blocking UI regression
 - Visual design pixel perfection
 - Backend unit/API correctness outside what is surfaced in the UI
+- Terminal-only code coverage generation
+- GitHub Actions or pull-request pipeline behavior
 
 ## Test Environment Notes
 
 - Single-player cases need only the frontend app.
 - Multiplayer cases require frontend and backend running together. Current local command: `npm run dev:full`.
 - Some multiplayer cases require 2 browser windows or 2 isolated browser sessions.
+- Spectate cases require at least one active multiplayer game to exist before opening the spectator view.
 - Some negative and boundary cases require seeded server state or network manipulation.
 - Multiplayer game state is in process memory only. Restarting the backend clears waiting/active games and replay history.
 
@@ -60,7 +64,7 @@ The current app exposes stable selectors for several key elements:
 
 | Test ID | Test Name | Step Number | Test Name | Type | Step | Expected Result |
 | --- | --- | --- | --- | --- | --- | --- |
-| UI-001 | Landing to Single-Player Start | 1 | Landing to Single-Player Start | Happy | Open the app at `/`. | Landing page is visible with title, intro text, `Play vs CPU`, and `Multiplayer`. |
+| UI-001 | Landing to Single-Player Start | 1 | Landing to Single-Player Start | Happy | Open the app at `/`. | Landing page is visible with title, intro text, `Play vs CPU`, `Multiplayer`, and `Spectate`. |
 | UI-001 | Landing to Single-Player Start | 2 | Landing to Single-Player Start | Happy | Click `Play vs CPU`. | App navigates to gameplay and shows the gameplay page, status text, game board, and 9 board cells. |
 | UI-001 | Landing to Single-Player Start | 3 | Landing to Single-Player Start | Happy | Observe the board before making any move. | Board renders as a 3x3 layout with exactly 9 cells, all empty, and status shows `Your turn (X)`. |
 | UI-002 | Single-Player Move Validation and Quit | 1 | Single-Player Move Validation and Quit | Happy | Start a new single-player game. | Gameplay loads with an empty board and `Quit` visible for the in-progress game. |
@@ -81,10 +85,11 @@ The current app exposes stable selectors for several key elements:
 | UI-005 | Single-Player Winning-Line Coverage | 2 | Single-Player Winning-Line Coverage | Boundary | Validate row wins for `1-2-3`, `4-5-6`, and `7-8-9`. | Each completed row ends the game immediately, shows the correct winner, and blocks extra moves. |
 | UI-005 | Single-Player Winning-Line Coverage | 3 | Single-Player Winning-Line Coverage | Boundary | Validate column wins for `1-4-7`, `2-5-8`, and `3-6-9`. | Each completed column ends the game immediately, shows the correct winner, and blocks extra moves. |
 | UI-005 | Single-Player Winning-Line Coverage | 4 | Single-Player Winning-Line Coverage | Boundary | Validate diagonal wins for `1-5-9` and `3-5-7`. | Each completed diagonal ends the game immediately, shows the correct winner, and blocks extra moves. |
-| UI-006 | Multiplayer Modal Open and Close Paths | 1 | Multiplayer Modal Open and Close Paths | Happy | Open the app on the landing page and click `Multiplayer`. | Modal opens above the landing page and shows `Your Name`, `Create`, and `Join`. |
-| UI-006 | Multiplayer Modal Open and Close Paths | 2 | Multiplayer Modal Open and Close Paths | Happy | Click the close button for the modal. | Modal closes and landing page remains visible. |
-| UI-006 | Multiplayer Modal Open and Close Paths | 3 | Multiplayer Modal Open and Close Paths | Happy | Reopen the modal and click the backdrop outside the dialog. | Modal closes again without leaving the landing page. |
-| UI-006 | Multiplayer Modal Open and Close Paths | 4 | Multiplayer Modal Open and Close Paths | Happy | Reopen the modal and press `Esc`. | Modal closes again without changing route or page state. |
+| UI-006 | Multiplayer Modal and Landing Spectate Entry Paths | 1 | Multiplayer Modal and Landing Spectate Entry Paths | Happy | Open the app on the landing page and click `Multiplayer`. | Modal opens above the landing page and shows `Your Name`, `Create`, `Join`, and `Spectate`. |
+| UI-006 | Multiplayer Modal and Landing Spectate Entry Paths | 2 | Multiplayer Modal and Landing Spectate Entry Paths | Happy | Click the close button for the modal. | Modal closes and landing page remains visible. |
+| UI-006 | Multiplayer Modal and Landing Spectate Entry Paths | 3 | Multiplayer Modal and Landing Spectate Entry Paths | Happy | Reopen the modal and click the backdrop outside the dialog. | Modal closes again without leaving the landing page. |
+| UI-006 | Multiplayer Modal and Landing Spectate Entry Paths | 4 | Multiplayer Modal and Landing Spectate Entry Paths | Happy | Reopen the modal and press `Esc`. | Modal closes again without changing route or page state. |
+| UI-006 | Multiplayer Modal and Landing Spectate Entry Paths | 5 | Multiplayer Modal and Landing Spectate Entry Paths | Happy | Click the landing-page `Spectate` button. | Modal opens directly in spectator discovery mode with active-game-only spectate content, `Refresh`, and no `Your Name` input shown. |
 | UI-007 | Multiplayer Create Validation and Success | 1 | Multiplayer Create Validation and Success | Happy | Open the multiplayer modal on the `Create` tab. | Create form is visible and ready for validation. |
 | UI-007 | Multiplayer Create Validation and Success | 2 | Multiplayer Create Validation and Success | Negative | Leave `Your Name` blank, enter a valid game name, and click `Create Game`. | Validation error states player name is required and no game is created. |
 | UI-007 | Multiplayer Create Validation and Success | 3 | Multiplayer Create Validation and Success | Negative | Enter a valid player name, leave `Game Name` blank, and click `Create Game`. | Validation error states game name is required and no game is created. |
@@ -101,8 +106,10 @@ The current app exposes stable selectors for several key elements:
 | UI-010 | Multiplayer Join Success and Stale Join Failure | 1 | Multiplayer Join Success and Stale Join Failure | Happy | In Browser A, create a waiting game; in Browser B, open the `Join` tab. | The waiting game is visible to Browser B as joinable. |
 | UI-010 | Multiplayer Join Success and Stale Join Failure | 2 | Multiplayer Join Success and Stale Join Failure | Happy | In Browser B, click `Join` for the waiting game. | Browser B enters gameplay as player O, the match becomes active, and the board is interactive only when it is O's turn. |
 | UI-010 | Multiplayer Join Success and Stale Join Failure | 3 | Multiplayer Join Success and Stale Join Failure | Negative | In Browser C with stale discovery results, attempt to join the same game after Browser B already joined. | Join attempt fails gracefully with a visible error and Browser C does not enter an invalid gameplay state. |
-| UI-011 | Multiplayer Spectator Entry Paths | 1 | Multiplayer Spectator Entry Paths | Happy | From the `Join` tab, click `Spectate` on a waiting game. | Spectator enters gameplay with a read-only board and status showing the match is still waiting for players. |
-| UI-011 | Multiplayer Spectator Entry Paths | 2 | Multiplayer Spectator Entry Paths | Happy | Return to discovery and click `Spectate` on an active game. | Spectator enters gameplay with a read-only board and sees the current turn status for the active game. |
+| UI-011 | Dedicated Spectate Entry and Live Viewer | 1 | Dedicated Spectate Entry and Live Viewer | Happy | In Browser A and Browser B, create and join a multiplayer match so the game is active; in Browser C, stay on the landing page. | An active game exists and Browser C is ready to enter spectator discovery from the landing page. |
+| UI-011 | Dedicated Spectate Entry and Live Viewer | 2 | Dedicated Spectate Entry and Live Viewer | Happy | In Browser C, click the landing-page `Spectate` button. | Spectate discovery opens directly, shows only active-game entries available to watch, and does not show waiting-game join controls or player-name entry. |
+| UI-011 | Dedicated Spectate Entry and Live Viewer | 3 | Dedicated Spectate Entry and Live Viewer | Happy | Click `Spectate` for the active match. | Browser C enters gameplay as a spectator with a read-only board, spectator role text, live sync status, and `Refresh Match`. |
+| UI-011 | Dedicated Spectate Entry and Live Viewer | 4 | Dedicated Spectate Entry and Live Viewer | Happy | In Browser A or Browser B, make a valid move while Browser C remains on the spectator gameplay page. | Browser C receives the updated board state and turn/status messaging in real time without needing a manual refresh. |
 | UI-012 | Multiplayer Waiting Host Refresh to Active | 1 | Multiplayer Waiting Host Refresh to Active | Happy | Create a multiplayer game as the host and remain on the waiting gameplay view. | Status shows waiting for player O, help text instructs the host to share the match ID, and board is read-only. |
 | UI-012 | Multiplayer Waiting Host Refresh to Active | 2 | Multiplayer Waiting Host Refresh to Active | Happy | Have another session join the game, then click `Refresh Match` in the host session. | Host view updates from waiting to active and shows correct host role, session state, and current turn messaging. |
 | UI-013 | Multiplayer Turn Enforcement and Occupied Cell Blocking | 1 | Multiplayer Turn Enforcement and Occupied Cell Blocking | Happy | Open an active multiplayer game for a player whose turn it is. | Board is interactive for valid empty cells on the local player's turn. |
@@ -130,7 +137,7 @@ The current app exposes stable selectors for several key elements:
 | UI-019 | Multiplayer Create Capacity and API Error Handling | 1 | Multiplayer Create Capacity and API Error Handling | Boundary | Seed the backend with 25 waiting or active games and open the create flow. | Create form is available but system is already at documented capacity. |
 | UI-019 | Multiplayer Create Capacity and API Error Handling | 2 | Multiplayer Create Capacity and API Error Handling | Boundary | Attempt to create one more multiplayer game. | UI shows a visible capacity error and no game is opened. |
 | UI-019 | Multiplayer Create Capacity and API Error Handling | 3 | Multiplayer Create Capacity and API Error Handling | Negative | Force the create endpoint to fail and submit a valid create request. | Visible create error is shown and the modal remains usable. |
-| UI-020 | Multiplayer Discovery and Gameplay Refresh API Errors | 1 | Multiplayer Discovery and Gameplay Refresh API Errors | Negative | Force the discovery endpoint to fail, then open the `Join` tab or click `Refresh`. | Visible discovery error is shown and the modal remains open and stable. |
+| UI-020 | Multiplayer Discovery and Gameplay Refresh API Errors | 1 | Multiplayer Discovery and Gameplay Refresh API Errors | Negative | Force the discovery endpoint to fail, then open the `Join` tab or the landing-page `Spectate` flow and click `Refresh`. | Visible discovery error is shown and the modal remains open and stable. |
 | UI-020 | Multiplayer Discovery and Gameplay Refresh API Errors | 2 | Multiplayer Discovery and Gameplay Refresh API Errors | Negative | Open multiplayer gameplay and force the match detail refresh endpoint to fail. | Current gameplay UI remains rendered and stable before refresh is attempted. |
 | UI-020 | Multiplayer Discovery and Gameplay Refresh API Errors | 3 | Multiplayer Discovery and Gameplay Refresh API Errors | Negative | Click `Refresh Match` while the detail endpoint is failing. | Visible gameplay refresh error is shown and the page does not crash. |
 
