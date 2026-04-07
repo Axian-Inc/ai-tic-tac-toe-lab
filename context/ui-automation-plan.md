@@ -1,6 +1,6 @@
 # UI Automation Plan
 
-Last updated: 2026-04-05
+Last updated: 2026-04-07
 
 ## Purpose
 
@@ -209,9 +209,12 @@ Define the plan to automate the manual UI cases in [ui-test-cases.md](/workspace
 
 ### Phase 6: Error and Boundary Scenarios
 
-- [ ] Automate `UI-019` and `UI-020`.
-- [ ] Drive capacity, stale join, refresh failure, and create/discovery error paths through deterministic support hooks rather than brittle timing or manual backend manipulation.
-- [ ] Reuse the same deterministic failure controls for both join-tab discovery and landing-page spectate discovery because both now depend on the same active-game listing path.
+- [x] Automate `UI-019` and `UI-020`.
+- [x] Drive capacity, stale join, refresh failure, and create/discovery error paths through deterministic support hooks rather than brittle timing or manual backend manipulation.
+- [x] Reuse the same deterministic failure controls for both join-tab discovery and landing-page spectate discovery because both now depend on the same active-game listing path.
+- Phase 6 validation status:
+  - local `UI_AUTOMATION_MODE=full` execution passed `UI-019` and `UI-020`
+  - Phase 6 is complete in local mode; `RemoteCDP` full-mode multiplayer coverage remains deferred with the broader multiplayer runtime work in Phase 7
 
 ### Phase 7: Cleanup and Deferred Runtime Work
 

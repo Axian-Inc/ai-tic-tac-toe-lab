@@ -132,6 +132,22 @@ Why:
 Implementation status note:
 - Phase 5 gameplay specs for `UI-013` through `UI-018` were implemented and locally validated in `UI_AUTOMATION_MODE=full`, but they are currently marked skipped in [multiplayer-gameplay.spec.ts](/workspaces/ai-tic-tac-toe-lab/tests/e2e/multiplayer-gameplay.spec.ts) so the multiplayer phases share one deferred runtime posture until host-browser `RemoteCDP` multiplayer reachability is resolved.
 
+## Feature: Phase 6 Error and Boundary Automation
+
+Implemented local Phase 6 browser coverage in [tests/e2e/multiplayer-errors.spec.ts](/workspaces/ai-tic-tac-toe-lab/tests/e2e/multiplayer-errors.spec.ts).
+
+Implemented additions:
+- [x] create-capacity coverage using deterministic backend capacity seeding
+- [x] forced-create failure coverage with modal-stability assertions
+- [x] join-tab discovery failure coverage using the shared forced `list` failure hook
+- [x] landing-page spectate discovery failure coverage using the same forced `list` failure hook
+- [x] gameplay refresh failure coverage using the forced `detail` failure hook
+- [x] create-flow error persistence fix in [src/App.tsx](/workspaces/ai-tic-tac-toe-lab/src/App.tsx) so create failures remain visible after the follow-on waiting-list refresh
+
+Why:
+- Phase 6 requires deterministic UI coverage of capacity and API-error paths without relying on manual backend manipulation or timing-sensitive failures.
+- The create-flow error message previously cleared itself during the automatic waiting-list reload, which would have made `UI-019` nondeterministic.
+
 ## Requested Change: Single-Player Seed Support for UI-004
 
 `UI-004` currently remains skipped for the player-win portion because the current deterministic minimax CPU may not expose a real UI-playable player-win path.

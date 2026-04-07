@@ -1,6 +1,6 @@
 # UI Test Cases
 
-Last updated: 2026-04-05
+Last updated: 2026-04-07
 
 ## Purpose
 
@@ -134,12 +134,12 @@ The current app exposes stable selectors for several key elements:
 | UI-018 | Multiplayer Abandonment Messaging and Resolution | No | 2 | Multiplayer Abandonment Messaging and Resolution | Happy | Open an active game where the opponent is awaited, then view the same game as a spectator. | Player session explains opponent timeout behavior and spectator session shows which player is awaited with remaining time. |
 | UI-018 | Multiplayer Abandonment Messaging and Resolution | No | 3 | Multiplayer Abandonment Messaging and Resolution | Negative | Click `Check Timeout` before the 3-minute abandonment deadline expires. | UI shows an error that abandonment cannot yet be resolved and the match remains active. |
 | UI-018 | Multiplayer Abandonment Messaging and Resolution | No | 4 | Multiplayer Abandonment Messaging and Resolution | Boundary | After the awaited player has exceeded the 3-minute deadline, click `Check Timeout`. | Match transitions to over, status reflects abandonment outcome, and no more moves are accepted. |
-| UI-019 | Multiplayer Create Capacity and API Error Handling | No | 1 | Multiplayer Create Capacity and API Error Handling | Boundary | Seed the backend with 25 waiting or active games and open the create flow. | Create form is available but system is already at documented capacity. |
-| UI-019 | Multiplayer Create Capacity and API Error Handling | No | 2 | Multiplayer Create Capacity and API Error Handling | Boundary | Attempt to create one more multiplayer game. | UI shows a visible capacity error and no game is opened. |
-| UI-019 | Multiplayer Create Capacity and API Error Handling | No | 3 | Multiplayer Create Capacity and API Error Handling | Negative | Force the create endpoint to fail and submit a valid create request. | Visible create error is shown and the modal remains usable. |
-| UI-020 | Multiplayer Discovery and Gameplay Refresh API Errors | No | 1 | Multiplayer Discovery and Gameplay Refresh API Errors | Negative | Force the discovery endpoint to fail, then open the `Join` tab or the landing-page `Spectate` flow and click `Refresh`. | Visible discovery error is shown and the modal remains open and stable. |
-| UI-020 | Multiplayer Discovery and Gameplay Refresh API Errors | No | 2 | Multiplayer Discovery and Gameplay Refresh API Errors | Negative | Open multiplayer gameplay and force the match detail refresh endpoint to fail. | Current gameplay UI remains rendered and stable before refresh is attempted. |
-| UI-020 | Multiplayer Discovery and Gameplay Refresh API Errors | No | 3 | Multiplayer Discovery and Gameplay Refresh API Errors | Negative | Click `Refresh Match` while the detail endpoint is failing. | Visible gameplay refresh error is shown and the page does not crash. |
+| UI-019 | Multiplayer Create Capacity and API Error Handling | Yes | 1 | Multiplayer Create Capacity and API Error Handling | Boundary | Seed the backend with 25 waiting or active games and open the create flow. | Create form is available but system is already at documented capacity. |
+| UI-019 | Multiplayer Create Capacity and API Error Handling | Yes | 2 | Multiplayer Create Capacity and API Error Handling | Boundary | Attempt to create one more multiplayer game. | UI shows a visible capacity error and no game is opened. |
+| UI-019 | Multiplayer Create Capacity and API Error Handling | Yes | 3 | Multiplayer Create Capacity and API Error Handling | Negative | Force the create endpoint to fail and submit a valid create request. | Visible create error is shown and the modal remains usable. |
+| UI-020 | Multiplayer Discovery and Gameplay Refresh API Errors | Yes | 1 | Multiplayer Discovery and Gameplay Refresh API Errors | Negative | Force the discovery endpoint to fail, then open the `Join` tab or the landing-page `Spectate` flow and click `Refresh`. | Visible discovery error is shown and the modal remains open and stable. |
+| UI-020 | Multiplayer Discovery and Gameplay Refresh API Errors | Yes | 2 | Multiplayer Discovery and Gameplay Refresh API Errors | Negative | Open multiplayer gameplay and force the match detail refresh endpoint to fail. | Current gameplay UI remains rendered and stable before refresh is attempted. |
+| UI-020 | Multiplayer Discovery and Gameplay Refresh API Errors | Yes | 3 | Multiplayer Discovery and Gameplay Refresh API Errors | Negative | Click `Refresh Match` while the detail endpoint is failing. | Visible gameplay refresh error is shown and the page does not crash. |
 
 ## Additional Coverage Notes
 

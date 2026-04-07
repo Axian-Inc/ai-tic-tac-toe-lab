@@ -447,10 +447,11 @@ function LandingPage({
         createMultiplayerGameView(response.session, response.game)
       );
     } catch (error) {
-      setMultiplayerError(
-        error instanceof Error ? error.message : "Unable to create a multiplayer game."
-      );
+      const errorMessage =
+        error instanceof Error ? error.message : "Unable to create a multiplayer game.";
+      setMultiplayerError(errorMessage);
       await loadWaitingGames();
+      setMultiplayerError(errorMessage);
     } finally {
       setIsCreatingMultiplayerGame(false);
     }
