@@ -1,6 +1,8 @@
 import type { MultiplayerGameSnapshot } from "../../../src/shared/multiplayer";
 import {
+  createAbandonmentGameSnapshot,
   createActiveGameSnapshot,
+  createReplayGameSnapshot,
   createWaitingGameSnapshot,
 } from "./multiplayer-test-data";
 
@@ -57,6 +59,24 @@ export class TestSupportApi {
     overrides?: Partial<MultiplayerGameSnapshot>
   ): Promise<MultiplayerGameSnapshot> {
     const game = createActiveGameSnapshot(overrides);
+    await this.seedGame(game);
+    return game;
+  }
+
+  async seedReplayGame(
+    overrides?: Partial<MultiplayerGameSnapshot>
+  ): Promise<MultiplayerGameSnapshot> {
+    const game = createReplayGameSnapshot(overrides);
+    await this.seedGame(game);
+    return game;
+  }
+
+  async seedAbandonmentGame(options?: {
+    awaitingPlayer?: "X" | "O";
+    remainingMs?: number;
+    overrides?: Partial<MultiplayerGameSnapshot>;
+  }): Promise<MultiplayerGameSnapshot> {
+    const game = createAbandonmentGameSnapshot(options);
     await this.seedGame(game);
     return game;
   }

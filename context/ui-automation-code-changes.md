@@ -1,6 +1,6 @@
 # UI Automation Support Code Changes
 
-Last updated: 2026-04-05
+Last updated: 2026-04-07
 
 ## Summary
 
@@ -114,6 +114,23 @@ Required additions:
 
 Why:
 - Demo, maintenance, and future UI debugging workflows need a visible host browser outside the container without changing the default CI/browser behavior.
+
+## Feature: Shared Multiplayer Gameplay Automation Surface
+
+Extended the shared Playwright support layer for upcoming Phase 5 gameplay coverage.
+
+Implemented additions:
+- [x] broader multiplayer gameplay assertions in [GameplayPage.ts](/workspaces/ai-tic-tac-toe-lab/tests/e2e/page-objects/GameplayPage.ts) for session role, game status, live-sync state, help/error messaging, abandonment countdown, replay/live mode, resign dialog, timeout control, and board interactivity
+- [x] broader replay assertions in [ReplayPanel.ts](/workspaces/ai-tic-tac-toe-lab/tests/e2e/page-objects/ReplayPanel.ts) for replay mode, title/summary text, and button disabled states
+- [x] deterministic multiplayer browser-session entry helpers in [MultiplayerBrowserSession.ts](/workspaces/ai-tic-tac-toe-lab/tests/e2e/support/MultiplayerBrowserSession.ts) for direct player and spectator route entry
+- [x] reusable seeded multiplayer snapshot builders in [multiplayer-test-data.ts](/workspaces/ai-tic-tac-toe-lab/tests/e2e/support/multiplayer-test-data.ts) and [TestSupportApi.ts](/workspaces/ai-tic-tac-toe-lab/tests/e2e/support/TestSupportApi.ts) for active, replay, and abandonment-oriented setups
+
+Why:
+- Phase 5 coverage depends on asserting gameplay-state variants through shared page objects rather than raw locators.
+- Direct player/spectator route-entry helpers and concise seeded snapshot builders keep the upcoming gameplay specs readable and manual-step-aligned.
+
+Implementation status note:
+- Phase 5 gameplay specs for `UI-013` through `UI-018` were implemented and locally validated in `UI_AUTOMATION_MODE=full`, but they are currently marked skipped in [multiplayer-gameplay.spec.ts](/workspaces/ai-tic-tac-toe-lab/tests/e2e/multiplayer-gameplay.spec.ts) so the multiplayer phases share one deferred runtime posture until host-browser `RemoteCDP` multiplayer reachability is resolved.
 
 ## Requested Change: Single-Player Seed Support for UI-004
 

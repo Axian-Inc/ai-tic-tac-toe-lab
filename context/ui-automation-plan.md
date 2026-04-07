@@ -194,14 +194,18 @@ Define the plan to automate the manual UI cases in [ui-test-cases.md](/workspace
 - [ ] Automate `UI-013` through `UI-018`.
 - [ ] Wire spectator-mode gameplay behaviors through the shared multiplayer gameplay automation surfaces so spectator sessions are covered alongside player sessions for live sync, refresh, replay, and role-specific controls.
 - [ ] Complete `UI-011` end to end by restoring the skipped test and asserting spectator live-update behavior during an active match.
-- [ ] Cover turn enforcement.
-- [ ] Cover occupied-cell blocking.
-- [ ] Cover live sync and refresh fallback.
-- [ ] Cover role-based controls.
-- [ ] Cover resign flow.
-- [ ] Cover replay and return to live.
-- [ ] Cover refresh recovery.
-- [ ] Cover abandonment messaging and resolution.
+- [x] Cover turn enforcement.
+- [x] Cover occupied-cell blocking.
+- [x] Cover live sync and refresh fallback.
+- [x] Cover role-based controls.
+- [x] Cover resign flow.
+- [x] Cover replay and return to live.
+- [x] Cover refresh recovery.
+- [x] Cover abandonment messaging and resolution.
+- Phase 5 validation status:
+  - local `UI_AUTOMATION_MODE=full` execution passed `UI-013`, `UI-014`, `UI-015`, `UI-016`, `UI-017`, and `UI-018`
+  - the Phase 5 gameplay spec file is currently re-deferred with skip guards so the multiplayer phases share one consistent deferred posture until host-browser `RemoteCDP` multiplayer reachability is resolved
+  - Phase 5 implementation exists, but active suite status remains deferred rather than closed
 
 ### Phase 6: Error and Boundary Scenarios
 
@@ -216,8 +220,10 @@ Define the plan to automate the manual UI cases in [ui-test-cases.md](/workspace
 - [ ] Restore and complete `UI-011` after spectator-mode gameplay automation is fully wired.
 - [ ] Resolve `RemoteCDP` full-mode multiplayer API reachability for host-browser execution.
 - [ ] Restore `RemoteCDP` coverage for `UI-006`, `UI-007`, `UI-008`, `UI-009`, and `UI-012`.
+- [ ] Re-enable the deferred `UI-013` through `UI-018` gameplay specs after the same multiplayer runtime blocker is removed.
+- [ ] Verify the restored Phase 5 gameplay specs in both local full-mode and `RemoteCDP` full-mode after multiplayer host-browser reachability is stable.
 - [ ] Re-run the deferred `RemoteCDP` Phase 4 subset and confirm it matches the local-mode pass/skip posture.
-- [ ] Consolidate the final runtime and skip documentation after deferred tests are re-enabled.
+- [ ] Consolidate the final runtime and skip documentation after deferred multiplayer tests are re-enabled.
 
 ## Execution Strategy
 
@@ -248,6 +254,7 @@ The baseline automation support gaps identified during Phase 1 foundation are no
 - [ ] Expand existing spectate coverage from proof coverage into full manual-case mapping for `UI-006`, `UI-011`, `UI-014`, `UI-015`, `UI-017`, and `UI-020`.
 - [ ] Preserve stale-join join-tab error visibility after a failed join so `UI-010` can be automated end to end without skip.
 - [ ] Resolve host-browser multiplayer API reachability so `RemoteCDP` full-mode coverage can be re-enabled for the deferred Phase 4 cases.
+- [ ] Re-enable the currently skipped Phase 5 gameplay suite after multiplayer runtime cleanup restores a stable end-to-end posture across the deferred multiplayer phases.
 
 ## Planned Deliverables
 
