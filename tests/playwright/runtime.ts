@@ -47,7 +47,9 @@ export function getUiAutomationRuntimeConfig(
   const browserTarget = resolveUiAutomationBrowserTarget();
   const baseURL =
     process.env.UI_AUTOMATION_BASE_URL?.trim() ||
-    `http://127.0.0.1:${FRONTEND_PORT}`;
+    (browserTarget === "RemoteCDP"
+      ? `http://localhost:${FRONTEND_PORT}`
+      : `http://127.0.0.1:${FRONTEND_PORT}`);
   const reuseExistingServer = !process.env.CI;
   const remoteCdpEndpoint =
     browserTarget === "RemoteCDP"
@@ -55,6 +57,7 @@ export function getUiAutomationRuntimeConfig(
         DEFAULT_REMOTE_CDP_ENDPOINT
       : null;
   const workers = browserTarget === "RemoteCDP" || mode === "full" ? 1 : undefined;
+  const frontendHost = browserTarget === "RemoteCDP" ? "0.0.0.0" : "127.0.0.1";
 
   if (isUnitOnlyRun(argv)) {
     return {
@@ -69,7 +72,7 @@ export function getUiAutomationRuntimeConfig(
 
   const webServers: UiAutomationRuntimeConfig["webServers"] = [
     {
-      command: `npm run dev -- --host 127.0.0.1 --port ${FRONTEND_PORT}`,
+      command: `npm run dev -- --host ${frontendHost} --port ${FRONTEND_PORT}`,
       port: FRONTEND_PORT,
       reuseExistingServer,
       timeout: 120 * 1000,

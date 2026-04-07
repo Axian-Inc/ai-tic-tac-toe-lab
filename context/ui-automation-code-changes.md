@@ -126,3 +126,29 @@ Requested additions:
 
 Why:
 - The current manual requirement expects coverage of a player-win outcome, but that outcome is not guaranteed to be reachable through the live UI against the shipped deterministic CPU. A seeded single-player automation path would make the scenario deterministic without changing real gameplay behavior.
+
+## Requested Change: Preserve Join Error Visibility for UI-010
+
+`UI-010` now has deterministic automation setup, but the stale-join failure still does not remain visible in the modal long enough to satisfy the UI requirement.
+
+Requested additions:
+- [ ] keep the join-tab error visible after a failed `POST /games/{id}/join` stale-join response instead of clearing it during the immediate waiting-list refresh
+- [ ] if discovery is refreshed after a failed join, refresh waiting games without resetting the active modal error first
+- [ ] re-enable end-to-end automation for `UI-010` after the stale-join error remains observable in the modal
+
+Why:
+- The current join failure path sets `multiplayerError`, but the follow-on waiting-game reload clears that value before the UI can reliably expose the error state.
+- This is a product-behavior gap, not a missing automation-framework capability.
+
+## Requested Change: RemoteCDP Host-Browser Multiplayer API Reachability
+
+`RemoteCDP` browser connectivity now works for host Chrome sessions, but the host browser does not yet consume multiplayer create/discovery/detail flows reliably in full-mode runs because the frontend still needs a host-browser-reachable multiplayer API path.
+
+Requested additions:
+- [ ] resolve the multiplayer API base URL automatically for `RemoteCDP` full-mode runs so the host browser does not fall back to container-local assumptions
+- [ ] ensure seeded create, discovery, and detail-refresh multiplayer flows remain reachable from the host browser during `RemoteCDP` runs
+- [ ] re-enable end-to-end `RemoteCDP` coverage for `UI-006`, `UI-007`, `UI-008`, `UI-009`, and `UI-012` after host-browser API reachability is stable
+
+Why:
+- Current `RemoteCDP` full-mode failures are no longer CDP connection failures; they are multiplayer-flow failures after the host browser reaches the frontend.
+- This is a runtime/API reachability gap specific to host-browser execution rather than a Playwright fixture gap.

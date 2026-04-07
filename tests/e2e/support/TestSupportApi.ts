@@ -1,4 +1,8 @@
 import type { MultiplayerGameSnapshot } from "../../../src/shared/multiplayer";
+import {
+  createActiveGameSnapshot,
+  createWaitingGameSnapshot,
+} from "./multiplayer-test-data";
 
 const TEST_SUPPORT_BASE_URL = "http://127.0.0.1:3001/test-support";
 
@@ -39,6 +43,22 @@ export class TestSupportApi {
         body: JSON.stringify({ game }),
       })
     );
+  }
+
+  async seedWaitingGame(
+    overrides?: Partial<MultiplayerGameSnapshot>
+  ): Promise<MultiplayerGameSnapshot> {
+    const game = createWaitingGameSnapshot(overrides);
+    await this.seedGame(game);
+    return game;
+  }
+
+  async seedActiveGame(
+    overrides?: Partial<MultiplayerGameSnapshot>
+  ): Promise<MultiplayerGameSnapshot> {
+    const game = createActiveGameSnapshot(overrides);
+    await this.seedGame(game);
+    return game;
   }
 
   async seedStaleJoin(options?: {

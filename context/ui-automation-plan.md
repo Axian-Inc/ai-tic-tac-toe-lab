@@ -133,6 +133,7 @@ Define the plan to automate the manual UI cases in [ui-test-cases.md](/workspace
   - use `Local` for normal container-run automation
   - switch to `RemoteCDP` only when a visible host browser session is needed for demo or debugging
   - example toggle shape: `UI_AUTOMATION_BROWSER_TARGET=RemoteCDP npm run test:ui` or `UI_AUTOMATION_BROWSER_TARGET=RemoteCDP npm run test:ui:full`
+  - in `RemoteCDP`, the runtime should default the app `baseURL` to a host-browser-reachable address such as `http://localhost:4173`; use `UI_AUTOMATION_BASE_URL` only as an explicit override when local host forwarding differs
 - Host browser startup note:
   - assume the host user is running Chrome on a Windows PC and must start Chrome with remote debugging enabled before running the suite in `RemoteCDP` mode
   - example Windows PowerShell command:
@@ -145,8 +146,10 @@ Define the plan to automate the manual UI cases in [ui-test-cases.md](/workspace
       --no-default-browser-check
     ```
   - `--remote-debugging-address=0.0.0.0` is required when the container must connect to the host browser from outside the Windows desktop session
+  - when the suite starts the frontend dev server for `RemoteCDP`, it must bind the Vite server to `0.0.0.0` so the host browser can reach the app instead of only the container loopback interface
   - use a dedicated `--user-data-dir` so the RemoteCDP Chrome instance does not fight with the user's normal Chrome profile
   - if the container cannot resolve the Windows host by default, document the host address the container should use for the CDP endpoint, such as `host.docker.internal` where supported
+  - Chrome 146 host-browser sessions may reject DevTools HTTP discovery when the request `Host` header is a DNS name like `host.docker.internal`; prefer an IP-literal endpoint or a direct `ws://.../devtools/browser/...` endpoint when overriding `UI_AUTOMATION_REMOTE_CDP_ENDPOINT`
 
 ### Phase 3: Single-Player
 
@@ -170,20 +173,27 @@ Define the plan to automate the manual UI cases in [ui-test-cases.md](/workspace
 ### Phase 4: Multiplayer Modal and Discovery
 
 - [ ] Automate `UI-006` through `UI-012`.
-- [ ] Use isolated browser contexts for host, joiner, and spectator roles.
-- [ ] Cover modal open and close paths.
-- [ ] Cover the dedicated landing-page `Spectate` entry.
-- [ ] Cover create validation and field boundaries.
-- [ ] Cover empty-state discovery.
-- [ ] Cover refresh behavior.
+- [x] Use isolated browser contexts for host, joiner, and spectator roles.
+- [x] Cover modal open and close paths.
+- [x] Cover the dedicated landing-page `Spectate` entry.
+- [x] Cover create validation and field boundaries.
+- [x] Cover empty-state discovery.
+- [x] Cover refresh behavior.
 - [ ] Cover join and spectate entry paths.
-- [ ] Cover active-games-only spectator discovery.
-- [ ] Cover spectator gameplay entry from the dedicated landing flow.
-- [ ] Cover waiting host refresh to active.
+- [x] Cover active-games-only spectator discovery.
+- [x] Cover spectator gameplay entry from the dedicated landing flow.
+- [x] Cover waiting host refresh to active.
+- Phase 4 validation status:
+  - local `UI_AUTOMATION_MODE=full` execution now passes `UI-006`, `UI-007`, `UI-008`, `UI-009`, and `UI-012`
+  - `UI-010` remains skipped because the stale-join requirement is blocked by current product behavior rather than by remaining framework work
+  - `UI-011` remains skipped because spectator live-update validation is deferred to the shared multiplayer gameplay coverage planned for Phase 5
+  - Phase 4 is partially complete, but not closed
 
 ### Phase 5: Multiplayer Gameplay
 
 - [ ] Automate `UI-013` through `UI-018`.
+- [ ] Wire spectator-mode gameplay behaviors through the shared multiplayer gameplay automation surfaces so spectator sessions are covered alongside player sessions for live sync, refresh, replay, and role-specific controls.
+- [ ] Complete `UI-011` end to end by restoring the skipped test and asserting spectator live-update behavior during an active match.
 - [ ] Cover turn enforcement.
 - [ ] Cover occupied-cell blocking.
 - [ ] Cover live sync and refresh fallback.
@@ -198,6 +208,16 @@ Define the plan to automate the manual UI cases in [ui-test-cases.md](/workspace
 - [ ] Automate `UI-019` and `UI-020`.
 - [ ] Drive capacity, stale join, refresh failure, and create/discovery error paths through deterministic support hooks rather than brittle timing or manual backend manipulation.
 - [ ] Reuse the same deterministic failure controls for both join-tab discovery and landing-page spectate discovery because both now depend on the same active-game listing path.
+
+### Phase 7: Cleanup and Deferred Runtime Work
+
+- [ ] Resolve the remaining `UI-004` player-win support gap without weakening production CPU behavior.
+- [ ] Restore and complete `UI-010` after stale-join error visibility remains observable in the modal.
+- [ ] Restore and complete `UI-011` after spectator-mode gameplay automation is fully wired.
+- [ ] Resolve `RemoteCDP` full-mode multiplayer API reachability for host-browser execution.
+- [ ] Restore `RemoteCDP` coverage for `UI-006`, `UI-007`, `UI-008`, `UI-009`, and `UI-012`.
+- [ ] Re-run the deferred `RemoteCDP` Phase 4 subset and confirm it matches the local-mode pass/skip posture.
+- [ ] Consolidate the final runtime and skip documentation after deferred tests are re-enabled.
 
 ## Execution Strategy
 
@@ -226,6 +246,8 @@ The baseline automation support gaps identified during Phase 1 foundation are no
 - [ ] Add snapshot-builder helpers on top of the generic seed endpoint so replay, timeout, and role-specific multiplayer setups stay concise across tests.
 - [x] Add runtime support for selecting `Local` versus `RemoteCDP` browser execution without changing existing CI defaults.
 - [ ] Expand existing spectate coverage from proof coverage into full manual-case mapping for `UI-006`, `UI-011`, `UI-014`, `UI-015`, `UI-017`, and `UI-020`.
+- [ ] Preserve stale-join join-tab error visibility after a failed join so `UI-010` can be automated end to end without skip.
+- [ ] Resolve host-browser multiplayer API reachability so `RemoteCDP` full-mode coverage can be re-enabled for the deferred Phase 4 cases.
 
 ## Planned Deliverables
 

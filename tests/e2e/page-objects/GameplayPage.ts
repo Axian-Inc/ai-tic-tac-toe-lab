@@ -8,6 +8,13 @@ export class GameplayPage {
   readonly board: Locator;
   readonly playAgainButton: Locator;
   readonly lossFeedbackText: Locator;
+  readonly multiplayerSessionCard: Locator;
+  readonly matchIdText: Locator;
+  readonly refreshMatchButton: Locator;
+  readonly multiplayerSessionRole: Locator;
+  readonly multiplayerGameStatus: Locator;
+  readonly liveSyncStatus: Locator;
+  readonly gameplayErrorMessage: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -16,6 +23,13 @@ export class GameplayPage {
     this.board = page.getByTestId("game-board");
     this.playAgainButton = page.getByTestId("play-again-button");
     this.lossFeedbackText = page.getByTestId("loss-feedback-text");
+    this.multiplayerSessionCard = page.getByTestId("multiplayer-session-card");
+    this.matchIdText = page.getByTestId("match-id-text");
+    this.refreshMatchButton = page.getByTestId("refresh-match-button");
+    this.multiplayerSessionRole = page.getByTestId("multiplayer-session-role");
+    this.multiplayerGameStatus = page.getByTestId("multiplayer-game-status");
+    this.liveSyncStatus = page.getByTestId("live-sync-status");
+    this.gameplayErrorMessage = page.getByTestId("gameplay-error-message");
   }
 
   cell(position: number): Locator {
@@ -142,5 +156,43 @@ export class GameplayPage {
 
   async expectLossFeedbackVisible(): Promise<void> {
     await expect(this.lossFeedbackText).toBeVisible();
+  }
+
+  async expectMultiplayerSessionVisible(): Promise<void> {
+    await expect(this.multiplayerSessionCard).toBeVisible();
+  }
+
+  async expectMatchIdText(value: string): Promise<void> {
+    await expect(this.matchIdText).toHaveText(value);
+  }
+
+  async clickRefreshMatch(): Promise<void> {
+    await this.refreshMatchButton.click();
+  }
+
+  async expectRefreshMatchVisible(): Promise<void> {
+    await expect(this.refreshMatchButton).toBeVisible();
+  }
+
+  async expectMultiplayerRoleText(text: string): Promise<void> {
+    await expect(this.multiplayerSessionRole).toHaveText(text);
+  }
+
+  async expectMultiplayerStatusContains(text: string): Promise<void> {
+    await expect(this.multiplayerGameStatus).toContainText(text);
+  }
+
+  async expectLiveSyncContains(text: string): Promise<void> {
+    await expect(this.liveSyncStatus).toContainText(text);
+  }
+
+  async expectGameplayErrorContains(text: string): Promise<void> {
+    await expect(this.gameplayErrorMessage).toContainText(text);
+  }
+
+  async expectBoardReadOnly(): Promise<void> {
+    for (let position = 0; position < 9; position += 1) {
+      await this.expectCellDisabled(position);
+    }
   }
 }

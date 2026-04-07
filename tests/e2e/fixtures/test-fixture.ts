@@ -1,5 +1,6 @@
-import type { Browser, BrowserContextOptions } from "@playwright/test";
+import type { Browser, BrowserContext, BrowserContextOptions } from "@playwright/test";
 import { test as base } from "@playwright/test";
+import { lookup } from "node:dns/promises";
 import { GameplayPage } from "../page-objects/GameplayPage";
 import { LandingPage } from "../page-objects/LandingPage";
 import { MultiplayerModalPage } from "../page-objects/MultiplayerModalPage";
@@ -10,6 +11,7 @@ import { createStepAsync, type StepAsync } from "../support/step-async";
 import { getUiAutomationRuntimeConfig } from "../../playwright/runtime";
 
 interface UiFixture {
+  createAutomationContext: () => Promise<BrowserContext>;
   gameplayPage: GameplayPage;
   landingPage: LandingPage;
   multiplayerModalPage: MultiplayerModalPage;
@@ -73,6 +75,19 @@ function buildBrowserContextOptions(
   };
 }
 
+async function resolveRemoteCdpEndpoint(endpoint: string): Promise<string> {
+  const url = new URL(endpoint);
+
+  if (url.hostname !== "host.docker.internal") {
+    return endpoint;
+  }
+
+  const resolvedAddress = await lookup(url.hostname, { family: 4 });
+  url.hostname = resolvedAddress.address;
+
+  return url.toString();
+}
+
 export const test = base.extend<UiFixture, UiWorkerFixture>({
   automationBrowser: [
     async ({ playwright }, use) => {
@@ -84,7 +99,9 @@ export const test = base.extend<UiFixture, UiWorkerFixture>({
       }
 
       const browser = await playwright.chromium.connectOverCDP(
-        runtime.remoteCdpEndpoint ?? "http://host.docker.internal:9222"
+        await resolveRemoteCdpEndpoint(
+          runtime.remoteCdpEndpoint ?? "http://host.docker.internal:9222"
+        )
       );
 
       await use(browser);
@@ -114,6 +131,24 @@ export const test = base.extend<UiFixture, UiWorkerFixture>({
     const page = await context.newPage();
 
     await use(page);
+  },
+  createAutomationContext: async (
+    { automationBrowser, baseURL, browser, contextOptions },
+    use,
+    testInfo
+  ) => {
+    const browserInstance = automationBrowser ?? browser;
+    const projectUse = testInfo.project.use as Record<string, unknown>;
+
+    await use(async () => {
+      const resolvedContextOptions = buildBrowserContextOptions(
+        contextOptions,
+        projectUse,
+        baseURL
+      );
+
+      return browserInstance.newContext(resolvedContextOptions);
+    });
   },
   landingPage: async ({ page }, use) => {
     await use(new LandingPage(page));
