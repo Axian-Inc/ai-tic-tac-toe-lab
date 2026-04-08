@@ -1,6 +1,6 @@
 # Testing Strategy
 
-Last updated: 2026-03-30
+Last updated: 2026-04-08
 
 ## Purpose
 - Define the baseline test framework for fast unit-test coverage and browser-level UI automation.
@@ -40,6 +40,10 @@ Last updated: 2026-03-30
 - Playwright supports two browser automation runtime modes through `UI_AUTOMATION_MODE`:
   - `frontend` starts only the Vite app.
   - `full` starts the Vite app plus an automation-only backend server command with test-support endpoints enabled through `AUTOMATION_TEST_SUPPORT=1`.
+- `RemoteCDP` host-browser runs require a Chrome instance that is already started with remote debugging enabled and reachable through the configured CDP endpoint.
+- `RemoteCDP` host-browser runs may also require explicit browser-visible origin overrides in local dev-container environments:
+  - `UI_AUTOMATION_BASE_URL=http://localhost:4173/`
+  - `UI_AUTOMATION_MULTIPLAYER_API_BASE_URL=http://localhost:3001`
 - Playwright test discovery now spans `tests/`, including `tests/e2e/` and `tests/unit/`.
 - Browser automation fixtures now expose a `TestSupportApi` helper for backend reset, snapshot seeding, capacity seeding, and deterministic forced-failure setup during multiplayer UI tests.
 - Pull request CI validation uses the same repo-root commands documented for local use: `npm test` for automated unit coverage and `npm run build` for build validation.

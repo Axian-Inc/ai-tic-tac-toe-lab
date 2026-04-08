@@ -9,6 +9,7 @@ export interface UiAutomationRuntimeConfig {
   baseURL: string;
   browserTarget: UiAutomationBrowserTarget;
   mode: UiAutomationMode;
+  multiplayerApiBaseUrl: string | null;
   remoteCdpEndpoint: string | null;
   webServers: Array<{
     command: string;
@@ -29,6 +30,10 @@ function resolveUiAutomationBrowserTarget(): UiAutomationBrowserTarget {
     : "Local";
 }
 
+function resolveRemoteBrowserHostAddress(): string {
+  return process.env.UI_AUTOMATION_REMOTE_BROWSER_HOST?.trim() || "localhost";
+}
+
 export function isUnitOnlyRun(argv: string[]): boolean {
   const positionalArgs = argv
     .slice(2)
@@ -45,11 +50,17 @@ export function getUiAutomationRuntimeConfig(
 ): UiAutomationRuntimeConfig {
   const mode = resolveUiAutomationMode();
   const browserTarget = resolveUiAutomationBrowserTarget();
+  const remoteBrowserHostAddress = resolveRemoteBrowserHostAddress();
   const baseURL =
     process.env.UI_AUTOMATION_BASE_URL?.trim() ||
     (browserTarget === "RemoteCDP"
-      ? `http://localhost:${FRONTEND_PORT}`
+      ? `http://${remoteBrowserHostAddress}:${FRONTEND_PORT}`
       : `http://127.0.0.1:${FRONTEND_PORT}`);
+  const multiplayerApiBaseUrl =
+    process.env.UI_AUTOMATION_MULTIPLAYER_API_BASE_URL?.trim() ||
+    (browserTarget === "RemoteCDP" && mode === "full"
+      ? `http://${remoteBrowserHostAddress}:${BACKEND_PORT}`
+      : null);
   const reuseExistingServer = !process.env.CI;
   const remoteCdpEndpoint =
     browserTarget === "RemoteCDP"
@@ -64,15 +75,19 @@ export function getUiAutomationRuntimeConfig(
       baseURL,
       browserTarget,
       mode,
+      multiplayerApiBaseUrl,
       remoteCdpEndpoint,
       webServers: [],
       workers,
     };
   }
 
+  const frontendCommandPrefix = multiplayerApiBaseUrl
+    ? `VITE_MULTIPLAYER_API_BASE_URL=${multiplayerApiBaseUrl} `
+    : "";
   const webServers: UiAutomationRuntimeConfig["webServers"] = [
     {
-      command: `npm run dev -- --host ${frontendHost} --port ${FRONTEND_PORT}`,
+      command: `${frontendCommandPrefix}npm run dev -- --host ${frontendHost} --port ${FRONTEND_PORT}`,
       port: FRONTEND_PORT,
       reuseExistingServer,
       timeout: 120 * 1000,
@@ -92,6 +107,7 @@ export function getUiAutomationRuntimeConfig(
     baseURL,
     browserTarget,
     mode,
+    multiplayerApiBaseUrl,
     remoteCdpEndpoint,
     webServers,
     workers,

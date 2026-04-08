@@ -131,6 +131,10 @@ Why:
 
 Implementation status note:
 - Phase 5 gameplay specs for `UI-013` through `UI-018` were implemented and locally validated in `UI_AUTOMATION_MODE=full`, but they are currently marked skipped in [multiplayer-gameplay.spec.ts](/workspaces/ai-tic-tac-toe-lab/tests/e2e/multiplayer-gameplay.spec.ts) so the multiplayer phases share one deferred runtime posture until host-browser `RemoteCDP` multiplayer reachability is resolved.
+Implementation update:
+- [x] [multiplayer-gameplay.spec.ts](/workspaces/ai-tic-tac-toe-lab/tests/e2e/multiplayer-gameplay.spec.ts) is now re-enabled for end-to-end execution.
+- [x] Local full-mode execution passes `UI-013` through `UI-018`.
+- [x] `RemoteCDP` full-mode execution also passes `UI-013` through `UI-018` when the browser-visible frontend and backend overrides are supplied for the local host environment.
 
 ## Feature: Phase 6 Error and Boundary Automation
 
@@ -153,35 +157,71 @@ Why:
 `UI-004` currently remains skipped for the player-win portion because the current deterministic minimax CPU may not expose a real UI-playable player-win path.
 
 Requested additions:
-- [ ] add a frontend-only or test-only hook that can initialize single-player gameplay from a provided `GameState`
-- [ ] expose a safe automation path to open gameplay with seeded single-player board, move history, current player, and terminal/non-terminal status
-- [ ] use that support to automate the player-win half of `UI-004` without weakening production CPU behavior
+- [x] add a frontend-only or test-only hook that can initialize single-player gameplay from a provided `GameState`
+- [x] expose a safe automation path to open gameplay with seeded single-player board, move history, current player, and terminal/non-terminal status
+- [x] use that support to automate the player-win half of `UI-004` without weakening production CPU behavior
 
 Why:
 - The current manual requirement expects coverage of a player-win outcome, but that outcome is not guaranteed to be reachable through the live UI against the shipped deterministic CPU. A seeded single-player automation path would make the scenario deterministic without changing real gameplay behavior.
+
+Implementation status note:
+- `src/App.tsx` now accepts an explicit single-player seed query parameter for `/game` and hydrates single-player gameplay from that state only when the seed validates successfully.
+- `src/shared/game.ts` now validates candidate `GameState` snapshots against reconstructed move history before the app accepts them as seeded single-player state.
+- `tests/e2e/single-player-outcomes.spec.ts` now uses the seeded single-player route to cover the player-win and CPU-win halves of `UI-004` in local mode without weakening production CPU behavior.
+- `RemoteCDP` re-validation of the updated `UI-004` automation path remains pending.
 
 ## Requested Change: Preserve Join Error Visibility for UI-010
 
 `UI-010` now has deterministic automation setup, but the stale-join failure still does not remain visible in the modal long enough to satisfy the UI requirement.
 
 Requested additions:
-- [ ] keep the join-tab error visible after a failed `POST /games/{id}/join` stale-join response instead of clearing it during the immediate waiting-list refresh
-- [ ] if discovery is refreshed after a failed join, refresh waiting games without resetting the active modal error first
-- [ ] re-enable end-to-end automation for `UI-010` after the stale-join error remains observable in the modal
+- [x] keep the join-tab error visible after a failed `POST /games/{id}/join` stale-join response instead of clearing it during the immediate waiting-list refresh
+- [x] if discovery is refreshed after a failed join, refresh waiting games without resetting the active modal error first
+- [x] re-enable end-to-end automation for `UI-010` after the stale-join error remains observable in the modal
 
 Why:
 - The current join failure path sets `multiplayerError`, but the follow-on waiting-game reload clears that value before the UI can reliably expose the error state.
 - This is a product-behavior gap, not a missing automation-framework capability.
+
+Implementation status note:
+- `src/App.tsx` multiplayer discovery loaders now support refresh paths that preserve an already-visible modal error instead of always clearing it before the waiting-list reconciliation call.
+- The stale-join path now refreshes waiting games after a failed join without wiping the visible join error first.
+- `tests/e2e/multiplayer-discovery.spec.ts` now runs `UI-010` in local full mode and `RemoteCDP` full mode when the browser-visible frontend and backend overrides are supplied.
 
 ## Requested Change: RemoteCDP Host-Browser Multiplayer API Reachability
 
 `RemoteCDP` browser connectivity now works for host Chrome sessions, but the host browser does not yet consume multiplayer create/discovery/detail flows reliably in full-mode runs because the frontend still needs a host-browser-reachable multiplayer API path.
 
 Requested additions:
-- [ ] resolve the multiplayer API base URL automatically for `RemoteCDP` full-mode runs so the host browser does not fall back to container-local assumptions
-- [ ] ensure seeded create, discovery, and detail-refresh multiplayer flows remain reachable from the host browser during `RemoteCDP` runs
-- [ ] re-enable end-to-end `RemoteCDP` coverage for `UI-006`, `UI-007`, `UI-008`, `UI-009`, and `UI-012` after host-browser API reachability is stable
+- [x] resolve the multiplayer API base URL automatically for `RemoteCDP` full-mode runs so the host browser does not fall back to container-local assumptions
+- [x] ensure seeded create, discovery, and detail-refresh multiplayer flows remain reachable from the host browser during `RemoteCDP` runs
+- [x] re-enable end-to-end `RemoteCDP` coverage for `UI-006`, `UI-007`, `UI-008`, `UI-009`, and `UI-012` after host-browser API reachability is stable
 
 Why:
 - Current `RemoteCDP` full-mode failures are no longer CDP connection failures; they are multiplayer-flow failures after the host browser reaches the frontend.
 - This is a runtime/API reachability gap specific to host-browser execution rather than a Playwright fixture gap.
+
+Implementation status note:
+- `tests/playwright/runtime.ts` now accepts and applies explicit host-browser origin overrides for both the frontend app and multiplayer API in `RemoteCDP` full mode.
+- `tests/e2e/support/app-url.ts` now retries browser-visible app origins for `RemoteCDP` navigation so host-browser startup can accommodate local-environment forwarding differences.
+- In the current local host environment, the working `RemoteCDP` full-mode override pair is:
+  - `UI_AUTOMATION_BASE_URL=http://localhost:4173/`
+  - `UI_AUTOMATION_MULTIPLAYER_API_BASE_URL=http://localhost:3001`
+- With those overrides, `RemoteCDP` full-mode execution now passes `UI-006`, `UI-007`, `UI-008`, `UI-009`, `UI-010`, `UI-011`, `UI-012`, and `UI-013` through `UI-018`.
+
+## Requested Change: Restore UI-011 Live Spectator Coverage
+
+`UI-011` was intentionally deferred until spectator-mode gameplay automation and `RemoteCDP` multiplayer reachability were both stable enough to prove the live update path end to end.
+
+Requested additions:
+- [x] restore the skipped `UI-011` discovery test
+- [x] assert that the dedicated landing-page `Spectate` flow reaches read-only spectator gameplay for an active match
+- [x] assert that a live player move updates the spectator board and turn messaging without a manual refresh
+
+Why:
+- The manual suite requires dedicated landing-page spectator entry plus real-time spectator updates during an active match.
+- Placeholder discovery coverage was no longer sufficient once the runtime blockers were removed.
+
+Implementation status note:
+- `tests/e2e/multiplayer-discovery.spec.ts` now executes `UI-011` end to end by creating a live match, entering spectator gameplay from the landing-page `Spectate` flow, and asserting that a subsequent host move appears in the spectator session without using `Refresh Match`.
+- Local full-mode and `RemoteCDP` full-mode validation both pass for `UI-011` with the same explicit host-browser override pair used for the restored multiplayer runtime coverage.

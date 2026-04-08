@@ -2,8 +2,6 @@ import { expect, test } from "./fixtures/test-fixture";
 import { MultiplayerBrowserSession } from "./support/MultiplayerBrowserSession";
 
 test.describe("Phase 4 Multiplayer Discovery", () => {
-  const isRemoteCdp = process.env.UI_AUTOMATION_BROWSER_TARGET === "RemoteCDP";
-
   test.beforeEach(async ({ testSupportApi }) => {
     test.skip(
       process.env.UI_AUTOMATION_MODE !== "full",
@@ -13,7 +11,7 @@ test.describe("Phase 4 Multiplayer Discovery", () => {
     await testSupportApi.reset();
   });
 
-  test.skip("UI-010 multiplayer join success and stale join failure", async ({
+  test("UI-010 multiplayer join success and stale join failure", async ({
     StepAsync,
     createAutomationContext,
     gameplayPage,
@@ -79,7 +77,7 @@ test.describe("Phase 4 Multiplayer Discovery", () => {
     }
   });
 
-  test.skip("UI-011 dedicated spectate entry and live viewer", async ({
+  test("UI-011 dedicated spectate entry and live viewer", async ({
     StepAsync,
     createAutomationContext,
     gameplayPage,
@@ -122,10 +120,23 @@ test.describe("Phase 4 Multiplayer Discovery", () => {
         await spectatorSession.gameplayPage.expectMultiplayerRoleText("You are spectating");
         await spectatorSession.gameplayPage.expectRefreshMatchVisible();
         await spectatorSession.gameplayPage.expectBoardReadOnly();
+        await spectatorSession.gameplayPage.expectLiveSyncState("connected");
       });
 
-      await StepAsync("Leave live spectator-update validation ready for later execution review", async () => {
-        await expect(spectatorSession.gameplayPage.liveSyncStatus).toBeVisible();
+      await StepAsync("Make a live move and verify the spectator session updates without refresh", async () => {
+        await gameplayPage.playCell(0);
+        await gameplayPage.expectCellValue(0, "X");
+        await gameplayPage.expectStatusContains("Opponent turn (O)");
+
+        await expect
+          .poll(async () => await joinerSession.gameplayPage.cell(0).textContent())
+          .toContain("X");
+        await joinerSession.gameplayPage.expectStatusContains("Your turn (O)");
+
+        await expect
+          .poll(async () => await spectatorSession.gameplayPage.cell(0).textContent())
+          .toContain("X");
+        await spectatorSession.gameplayPage.expectStatusContains("Player O's turn");
       });
     } finally {
       await joinerSession.close();
@@ -140,11 +151,6 @@ test.describe("Phase 4 Multiplayer Discovery", () => {
     landingPage,
     multiplayerModalPage,
   }) => {
-    test.skip(
-      isRemoteCdp,
-      "UI-012 remains skipped in RemoteCDP until host-browser multiplayer API reachability is resolved."
-    );
-
     const joinerSession = await MultiplayerBrowserSession.create(createAutomationContext);
 
     try {

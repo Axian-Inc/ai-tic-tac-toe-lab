@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page } from "@playwright/test";
+import { gotoAppPath } from "../support/app-url";
 
 export class LandingPage {
   readonly page: Page;
@@ -16,7 +17,7 @@ export class LandingPage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto("/");
+    await gotoAppPath(this.page, "/");
   }
 
   async expectLoaded(): Promise<void> {

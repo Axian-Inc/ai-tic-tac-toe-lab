@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { Game, type GameState } from "../../src/shared/game";
+import { Game, type GameState, validateGameState } from "../../src/shared/game";
 
 function createInitialState(): GameState {
   return {
@@ -76,5 +76,33 @@ test.describe("shared Game immutability", () => {
     firstState.status.isDraw = true;
 
     expect(game.getState()).toEqual(createInitialState());
+  });
+
+  test("validateGameState accepts and clones a consistent state snapshot", () => {
+    const initialState = createInitialState();
+    const validatedState = validateGameState(initialState);
+
+    expect(validatedState).toEqual(createInitialState());
+    expect(validatedState).not.toBe(initialState);
+    expect(validatedState?.board).not.toBe(initialState.board);
+    expect(validatedState?.moves).not.toBe(initialState.moves);
+    expect(validatedState?.status).not.toBe(initialState.status);
+  });
+
+  test("validateGameState rejects a snapshot whose board does not match its move history", () => {
+    const invalidState = createInitialState();
+    invalidState.board[1] = "X";
+
+    expect(validateGameState(invalidState)).toBeNull();
+  });
+
+  test("validateGameState rejects a snapshot with non-sequential move ordering", () => {
+    const invalidState = createInitialState();
+    invalidState.moves[1] = {
+      ...invalidState.moves[1],
+      order: 3,
+    };
+
+    expect(validateGameState(invalidState)).toBeNull();
   });
 });

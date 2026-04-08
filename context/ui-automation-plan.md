@@ -1,6 +1,6 @@
 # UI Automation Plan
 
-Last updated: 2026-04-07
+Last updated: 2026-04-08
 
 ## Purpose
 
@@ -134,6 +134,9 @@ Define the plan to automate the manual UI cases in [ui-test-cases.md](/workspace
   - switch to `RemoteCDP` only when a visible host browser session is needed for demo or debugging
   - example toggle shape: `UI_AUTOMATION_BROWSER_TARGET=RemoteCDP npm run test:ui` or `UI_AUTOMATION_BROWSER_TARGET=RemoteCDP npm run test:ui:full`
   - in `RemoteCDP`, the runtime should default the app `baseURL` to a host-browser-reachable address such as `http://localhost:4173`; use `UI_AUTOMATION_BASE_URL` only as an explicit override when local host forwarding differs
+  - when full-mode multiplayer flows depend on host-browser port forwarding, provide both explicit browser-visible overrides:
+    `UI_AUTOMATION_BASE_URL=http://localhost:4173/`
+    `UI_AUTOMATION_MULTIPLAYER_API_BASE_URL=http://localhost:3001`
 - Host browser startup note:
   - assume the host user is running Chrome on a Windows PC and must start Chrome with remote debugging enabled before running the suite in `RemoteCDP` mode
   - example Windows PowerShell command:
@@ -157,43 +160,46 @@ Define the plan to automate the manual UI cases in [ui-test-cases.md](/workspace
 - [x] Automate `UI-001`.
 - [x] Automate `UI-002`.
 - [x] Automate `UI-003`.
-- [ ] Automate `UI-004` end to end without conditional skip.
+- [x] Automate `UI-004` end to end without conditional skip.
 - [x] Automate `UI-005`.
 - [x] Prioritize landing to gameplay navigation.
 - [x] Prioritize move validation.
 - [x] Prioritize quit, home, and play-again flows.
-- [ ] Prioritize win and loss outcomes completely.
+- [x] Prioritize win and loss outcomes completely.
 - [x] Prioritize draw outcomes.
 - [x] Prioritize board lock after game over.
 - [x] Use parameterized board-path helpers for winning-line coverage instead of duplicating long click scripts.
 - [x] Verify the implemented single-player suite in `Local` mode.
 - [x] Verify the implemented single-player suite in `RemoteCDP` mode.
-- [ ] Close the remaining `UI-004` player-win gap through a later support change instead of weakening current CPU behavior.
+- [x] Close the remaining `UI-004` player-win gap through a later support change instead of weakening current CPU behavior.
+- Phase 3 update:
+  - local execution now passes `UI-004` through the seeded single-player route support added for deterministic player-win coverage
+  - `RemoteCDP` re-validation of the updated `UI-004` path remains pending until the requested developer-side cleanup pass reaches that verification step
 
 ### Phase 4: Multiplayer Modal and Discovery
 
-- [ ] Automate `UI-006` through `UI-012`.
+- [x] Automate `UI-006` through `UI-012`.
 - [x] Use isolated browser contexts for host, joiner, and spectator roles.
 - [x] Cover modal open and close paths.
 - [x] Cover the dedicated landing-page `Spectate` entry.
 - [x] Cover create validation and field boundaries.
 - [x] Cover empty-state discovery.
 - [x] Cover refresh behavior.
-- [ ] Cover join and spectate entry paths.
+- [x] Cover join and spectate entry paths.
 - [x] Cover active-games-only spectator discovery.
 - [x] Cover spectator gameplay entry from the dedicated landing flow.
+- [x] Cover spectator live-update behavior during an active match.
 - [x] Cover waiting host refresh to active.
 - Phase 4 validation status:
-  - local `UI_AUTOMATION_MODE=full` execution now passes `UI-006`, `UI-007`, `UI-008`, `UI-009`, and `UI-012`
-  - `UI-010` remains skipped because the stale-join requirement is blocked by current product behavior rather than by remaining framework work
-  - `UI-011` remains skipped because spectator live-update validation is deferred to the shared multiplayer gameplay coverage planned for Phase 5
-  - Phase 4 is partially complete, but not closed
+  - local `UI_AUTOMATION_MODE=full` execution now passes `UI-006`, `UI-007`, `UI-008`, `UI-009`, `UI-010`, `UI-011`, and `UI-012`
+  - `RemoteCDP` full-mode execution now passes `UI-006`, `UI-007`, `UI-008`, `UI-009`, `UI-010`, `UI-011`, and `UI-012` when the browser-visible frontend and backend overrides are supplied for the local host environment
+  - Phase 4 is complete in both local and `RemoteCDP` full-mode execution when the explicit host-browser overrides are supplied
 
 ### Phase 5: Multiplayer Gameplay
 
-- [ ] Automate `UI-013` through `UI-018`.
-- [ ] Wire spectator-mode gameplay behaviors through the shared multiplayer gameplay automation surfaces so spectator sessions are covered alongside player sessions for live sync, refresh, replay, and role-specific controls.
-- [ ] Complete `UI-011` end to end by restoring the skipped test and asserting spectator live-update behavior during an active match.
+- [x] Automate `UI-013` through `UI-018`.
+- [x] Wire spectator-mode gameplay behaviors through the shared multiplayer gameplay automation surfaces so spectator sessions are covered alongside player sessions for live sync, refresh, replay, and role-specific controls.
+- [x] Complete `UI-011` end to end by restoring the skipped test and asserting spectator live-update behavior during an active match.
 - [x] Cover turn enforcement.
 - [x] Cover occupied-cell blocking.
 - [x] Cover live sync and refresh fallback.
@@ -204,8 +210,8 @@ Define the plan to automate the manual UI cases in [ui-test-cases.md](/workspace
 - [x] Cover abandonment messaging and resolution.
 - Phase 5 validation status:
   - local `UI_AUTOMATION_MODE=full` execution passed `UI-013`, `UI-014`, `UI-015`, `UI-016`, `UI-017`, and `UI-018`
-  - the Phase 5 gameplay spec file is currently re-deferred with skip guards so the multiplayer phases share one consistent deferred posture until host-browser `RemoteCDP` multiplayer reachability is resolved
-  - Phase 5 implementation exists, but active suite status remains deferred rather than closed
+  - `RemoteCDP` full-mode execution now passes `UI-013`, `UI-014`, `UI-015`, `UI-016`, `UI-017`, and `UI-018` when the browser-visible frontend and backend overrides are supplied for the local host environment
+  - Phase 5 is complete in both local and `RemoteCDP` full-mode execution when the explicit host-browser overrides are supplied
 
 ### Phase 6: Error and Boundary Scenarios
 
@@ -218,15 +224,43 @@ Define the plan to automate the manual UI cases in [ui-test-cases.md](/workspace
 
 ### Phase 7: Cleanup and Deferred Runtime Work
 
-- [ ] Resolve the remaining `UI-004` player-win support gap without weakening production CPU behavior.
-- [ ] Restore and complete `UI-010` after stale-join error visibility remains observable in the modal.
-- [ ] Restore and complete `UI-011` after spectator-mode gameplay automation is fully wired.
-- [ ] Resolve `RemoteCDP` full-mode multiplayer API reachability for host-browser execution.
-- [ ] Restore `RemoteCDP` coverage for `UI-006`, `UI-007`, `UI-008`, `UI-009`, and `UI-012`.
-- [ ] Re-enable the deferred `UI-013` through `UI-018` gameplay specs after the same multiplayer runtime blocker is removed.
-- [ ] Verify the restored Phase 5 gameplay specs in both local full-mode and `RemoteCDP` full-mode after multiplayer host-browser reachability is stable.
-- [ ] Re-run the deferred `RemoteCDP` Phase 4 subset and confirm it matches the local-mode pass/skip posture.
-- [ ] Consolidate the final runtime and skip documentation after deferred multiplayer tests are re-enabled.
+- [x] Resolve the remaining `UI-004` player-win support gap without weakening production CPU behavior.
+- [x] Restore and complete `UI-010` after stale-join error visibility remains observable in the modal.
+- [x] Restore and complete `UI-011` after spectator-mode gameplay automation is fully wired.
+- [x] Resolve `RemoteCDP` full-mode multiplayer API reachability for host-browser execution through explicit browser-visible frontend and backend overrides.
+- [x] Restore `RemoteCDP` coverage for `UI-006`, `UI-007`, `UI-008`, `UI-009`, and `UI-012`.
+- [x] Re-enable the deferred `UI-013` through `UI-018` gameplay specs after the same multiplayer runtime blocker is removed.
+- [x] Verify the restored Phase 5 gameplay specs in both local full-mode and `RemoteCDP` full-mode after multiplayer host-browser reachability is stable.
+- [x] Re-run the deferred `RemoteCDP` Phase 4 subset and confirm it matches the local-mode pass/skip posture.
+- [x] Consolidate the final runtime and skip documentation after deferred multiplayer tests are re-enabled.
+
+### Application Change Plan For Requested Support Work
+
+1. Single-player seeded entry for `UI-004`
+- Add one application-owned single-player seed path that can initialize gameplay from a validated `GameState` without changing shipped CPU behavior for normal users.
+- Keep the seed path explicit and narrow through either an automation-only query parameter or a history-state trigger.
+- Validate that seeded board, move history, current player, and terminal status are internally consistent before the state is accepted.
+- Update single-player gameplay initialization in `src/App.tsx` to hydrate `Game` from that validated state when the seed path is present, and otherwise preserve the current fresh-game path.
+- Re-enable `UI-004` only after the seeded route can deterministically cover both player-win and CPU-win assertions.
+  Status: local implementation and local `UI-004` verification complete; `RemoteCDP` re-verification still pending.
+
+2. Join-error visibility for `UI-010`
+- Refactor the landing-page modal discovery loaders in `src/App.tsx` so refresh-driven list updates do not always clear an active modal error before the user can observe it.
+- Split error-reset behavior by intent: user-initiated mode changes may clear stale errors, but the failed-join follow-up refresh should preserve the join failure message.
+- Keep the waiting-list refresh after stale-join failures so discovery still reconciles with backend truth, but do not wipe `multiplayerError` as part of that refresh path.
+- Re-enable `UI-010` after the stale-join error remains visible through the refresh cycle and the modal stays stable.
+  Status: implementation complete; local and `RemoteCDP` verification passed when explicit browser-visible frontend and backend overrides are supplied for the host environment.
+
+3. `RemoteCDP` full-mode multiplayer API reachability
+- Extend the runtime resolution in `tests/playwright/runtime.ts` so `RemoteCDP` full-mode runs can provide both a host-browser-reachable frontend `baseURL` and a host-browser-reachable multiplayer API base URL for the browser app itself.
+- Prefer runtime-provided API origin injection over hard-coded container-local defaults so the host Chrome session does not fall back to `http://localhost:3001` when that address resolves incorrectly from the host machine.
+- Preserve current defaults for local and CI runs; the new API-origin override must remain scoped to `RemoteCDP` full mode or explicit environment overrides.
+- Re-run the deferred Phase 4 subset first (`UI-006` through `UI-009`, `UI-012`), then restore the deferred Phase 5 gameplay spec file once host-browser multiplayer paths are stable end to end.
+  Status: implementation complete; the current local host environment requires `UI_AUTOMATION_BASE_URL=http://localhost:4173/` and `UI_AUTOMATION_MULTIPLAYER_API_BASE_URL=http://localhost:3001` in addition to a running Chrome `RemoteCDP` target.
+
+4. Verification and documentation sequence
+- Validate each application change locally before re-enabling the blocked automation: targeted typecheck and affected Playwright specs for the single-player seed path, `UI-010` in local full mode, and then the deferred `RemoteCDP` Phase 4 subset followed by Phase 5 gameplay coverage.
+- Update `context/ui-automation-code-changes.md`, `context/ui-test-cases.md`, `context/testing-strategy.md`, and `context/architecture.md` as each requested support item moves from planned to implemented.
 
 ## Execution Strategy
 

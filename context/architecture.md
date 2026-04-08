@@ -1,6 +1,6 @@
 # Architecture
 
-Last updated: 2026-03-30
+Last updated: 2026-04-08
 
 ## Phase 1
 
@@ -77,6 +77,16 @@ Last updated: 2026-03-30
 - Winning moves (`winner !== null`) trigger a transient confetti overlay rendered on the gameplay page.
 - Loss outcomes (`winner = O`) render explicit text feedback: `Try again.`
 - Existing move-thud audio remains tied to successful `placeMove` calls for both human and CPU turns; endgame sounds are additive and outcome-specific.
+
+### Seeded Single-Player Route Support
+- Single-player gameplay route recovery in `src/App.tsx` now supports an explicit seeded-entry path for automation-oriented scenarios:
+  - `/game` continues to start a normal fresh single-player session by default.
+  - `/game` with the dedicated single-player seed query parameter hydrates the gameplay screen from the provided `GameState` only when the seed validates successfully.
+- Seed validation lives in `src/shared/game.ts`:
+  - candidate board, moves, current player, and status shapes are validated
+  - move history is replayed through the shared `Game` rules
+  - the seed is accepted only when reconstructed authoritative state matches the provided snapshot exactly
+- Invalid or malformed single-player seeds are ignored safely, falling back to the normal fresh single-player route behavior rather than partially hydrating inconsistent state.
 
 ### AWS S3 Static Website Infrastructure
 - Added CloudFormation template at `infra/s3-static-website.yaml` to provision static hosting infrastructure for the app.

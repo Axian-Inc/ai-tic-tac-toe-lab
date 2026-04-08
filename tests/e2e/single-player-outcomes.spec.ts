@@ -1,11 +1,51 @@
 import { test } from "./fixtures/test-fixture";
 import {
   SINGLE_PLAYER_WINNING_LINES,
-  planSinglePlayerCpuWinScenario,
   planSinglePlayerDrawScenario,
-  planSinglePlayerPlayerWinScenario,
   planSinglePlayerWinningLineScenario,
 } from "./support/single-player-scenarios";
+import type { GameState } from "../../src/game/Game";
+
+function buildSinglePlayerSeedUrl(state: GameState): string {
+  const query = new URLSearchParams({
+    singlePlayerState: JSON.stringify(state),
+  });
+
+  return `/game?${query.toString()}`;
+}
+
+const PLAYER_WIN_SEED_STATE: GameState = {
+  board: ["X", "X", null, "O", "O", null, null, null, null],
+  moves: [
+    { order: 1, player: "X", position: 0 },
+    { order: 2, player: "O", position: 3 },
+    { order: 3, player: "X", position: 1 },
+    { order: 4, player: "O", position: 4 },
+  ],
+  currentPlayer: "X",
+  status: {
+    winner: null,
+    isDraw: false,
+    isOver: false,
+  },
+};
+
+const CPU_WIN_SEED_STATE: GameState = {
+  board: ["O", "O", null, "X", "X", null, null, "X", null],
+  moves: [
+    { order: 1, player: "X", position: 3 },
+    { order: 2, player: "O", position: 0 },
+    { order: 3, player: "X", position: 4 },
+    { order: 4, player: "O", position: 1 },
+    { order: 5, player: "X", position: 7 },
+  ],
+  currentPlayer: "O",
+  status: {
+    winner: null,
+    isDraw: false,
+    isOver: false,
+  },
+};
 
 test.describe("Phase 3 Single-Player Outcomes", () => {
   test("UI-003 single-player draw, replay, and home", async ({
@@ -59,26 +99,15 @@ test.describe("Phase 3 Single-Player Outcomes", () => {
   test("UI-004 single-player win and loss outcomes", async ({
     StepAsync,
     gameplayPage,
-    landingPage,
-    singlePlayerDriver,
   }) => {
-    const playerWinScenario = planSinglePlayerPlayerWinScenario();
-    const cpuWinScenario = planSinglePlayerCpuWinScenario();
-
-    await StepAsync("Start a fresh single-player game for the player-win scenario", async () => {
-      test.skip(
-        !playerWinScenario,
-        "The deterministic minimax CPU does not expose a player-win path through the current UI-only single-player flow."
-      );
-
-      await landingPage.goto();
-      await landingPage.startCpuGame();
+    await StepAsync("Open seeded single-player gameplay for the player-win scenario", async () => {
+      await gameplayPage.page.goto(buildSinglePlayerSeedUrl(PLAYER_WIN_SEED_STATE));
       await gameplayPage.expectLoaded();
       await gameplayPage.expectStatusEquals("Your turn (X)");
     });
 
     await StepAsync("Complete the winning sequence for X", async () => {
-      await singlePlayerDriver.playPlannedGame(playerWinScenario!.playerMoves);
+      await gameplayPage.playCell(2);
       await gameplayPage.waitForGameOver();
       await gameplayPage.expectStatusEquals("Game over: You win!");
       await gameplayPage.expectPlayAgainVisible();
@@ -90,19 +119,12 @@ test.describe("Phase 3 Single-Player Outcomes", () => {
       await gameplayPage.waitForMarkedCellCount(markedCellCountAtGameOver);
     });
 
-    await StepAsync("Start a fresh single-player game for the CPU-win scenario", async () => {
-      await landingPage.goto();
-      await landingPage.startCpuGame();
+    await StepAsync("Open seeded single-player gameplay for the CPU-win scenario", async () => {
+      await gameplayPage.page.goto(buildSinglePlayerSeedUrl(CPU_WIN_SEED_STATE));
       await gameplayPage.expectLoaded();
-
-      test.skip(
-        !cpuWinScenario,
-        "No deterministic CPU-win path could be planned from the current single-player game logic."
-      );
     });
 
     await StepAsync("Allow the CPU to complete the winning line", async () => {
-      await singlePlayerDriver.playPlannedGame(cpuWinScenario!.playerMoves);
       await gameplayPage.waitForGameOver();
       await gameplayPage.expectStatusEquals("Game over: CPU wins.");
       await gameplayPage.expectLossFeedbackVisible();

@@ -1,8 +1,6 @@
 import { expect, test } from "./fixtures/test-fixture";
 
 test.describe("Phase 4 Multiplayer Modal", () => {
-  const isRemoteCdp = process.env.UI_AUTOMATION_BROWSER_TARGET === "RemoteCDP";
-
   test.beforeEach(async ({ testSupportApi }) => {
     test.skip(
       process.env.UI_AUTOMATION_MODE !== "full",
@@ -18,11 +16,6 @@ test.describe("Phase 4 Multiplayer Modal", () => {
     multiplayerModalPage,
     testSupportApi,
   }) => {
-    test.skip(
-      isRemoteCdp,
-      "UI-006 remains skipped in RemoteCDP until host-browser multiplayer API reachability is resolved."
-    );
-
     const activeGame = await testSupportApi.seedActiveGame();
 
     await StepAsync("Open the multiplayer modal from the landing page", async () => {
@@ -70,11 +63,6 @@ test.describe("Phase 4 Multiplayer Modal", () => {
     landingPage,
     multiplayerModalPage,
   }) => {
-    test.skip(
-      isRemoteCdp,
-      "UI-007 remains skipped in RemoteCDP until host-browser multiplayer API reachability is resolved."
-    );
-
     await StepAsync("Open the create view", async () => {
       await landingPage.goto();
       await landingPage.openMultiplayer();
@@ -114,11 +102,6 @@ test.describe("Phase 4 Multiplayer Modal", () => {
     landingPage,
     multiplayerModalPage,
   }) => {
-    test.skip(
-      isRemoteCdp,
-      "UI-008 remains skipped in RemoteCDP until host-browser multiplayer API reachability is resolved."
-    );
-
     const maxPlayerName = "P".repeat(32);
     const overPlayerName = "P".repeat(33);
     const maxGameName = "G".repeat(48);
@@ -169,11 +152,6 @@ test.describe("Phase 4 Multiplayer Modal", () => {
     multiplayerModalPage,
     testSupportApi,
   }) => {
-    test.skip(
-      isRemoteCdp,
-      "UI-009 remains skipped in RemoteCDP until host-browser multiplayer API reachability is resolved."
-    );
-
     await StepAsync("Open the join discovery view with no waiting or active games", async () => {
       await landingPage.goto();
       await landingPage.openMultiplayer();

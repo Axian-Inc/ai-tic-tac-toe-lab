@@ -64,6 +64,100 @@ function cloneState(state: GameState): GameState {
   };
 }
 
+function isPlayer(value: unknown): value is Player {
+  return value === "X" || value === "O";
+}
+
+function isBoardCell(value: unknown): value is BoardCell {
+  return value === null || isPlayer(value);
+}
+
+function areStatusesEqual(left: GameStatus, right: GameStatus): boolean {
+  return (
+    left.winner === right.winner &&
+    left.isDraw === right.isDraw &&
+    left.isOver === right.isOver
+  );
+}
+
+export function validateGameState(state: unknown): GameState | null {
+  const candidate = state as Partial<GameState> | null;
+
+  if (!candidate || typeof candidate !== "object") {
+    return null;
+  }
+
+  if (
+    !Array.isArray(candidate.board) ||
+    candidate.board.length !== BOARD_SIZE ||
+    !candidate.board.every((cell) => isBoardCell(cell))
+  ) {
+    return null;
+  }
+
+  if (!Array.isArray(candidate.moves) || candidate.moves.length > BOARD_SIZE) {
+    return null;
+  }
+
+  const moves = candidate.moves;
+  if (
+    !moves.every(
+      (move, index) =>
+        move &&
+        typeof move === "object" &&
+        move.order === index + 1 &&
+        isPlayer(move.player) &&
+        isValidPosition(move.position)
+    )
+  ) {
+    return null;
+  }
+
+  if (!isPlayer(candidate.currentPlayer)) {
+    return null;
+  }
+
+  const status = candidate.status;
+  if (
+    !status ||
+    typeof status !== "object" ||
+    !isBoardCell(status.winner) ||
+    typeof status.isDraw !== "boolean" ||
+    typeof status.isOver !== "boolean"
+  ) {
+    return null;
+  }
+
+  const reconstructedGame = new Game();
+  for (const move of moves) {
+    if (!reconstructedGame.placeMove(move.position)) {
+      return null;
+    }
+  }
+
+  const reconstructedState = reconstructedGame.getState();
+  const boardMatches = reconstructedState.board.every(
+    (cell, index) => cell === candidate.board?.[index]
+  );
+  const movesMatch = reconstructedState.moves.every(
+    (move, index) =>
+      move.order === moves[index]?.order &&
+      move.player === moves[index]?.player &&
+      move.position === moves[index]?.position
+  );
+
+  if (
+    !boardMatches ||
+    !movesMatch ||
+    reconstructedState.currentPlayer !== candidate.currentPlayer ||
+    !areStatusesEqual(reconstructedState.status, status)
+  ) {
+    return null;
+  }
+
+  return cloneState(reconstructedState);
+}
+
 export class Game {
   private state: GameState;
 

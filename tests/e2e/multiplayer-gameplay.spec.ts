@@ -2,15 +2,11 @@ import { expect, test } from "./fixtures/test-fixture";
 import { MultiplayerBrowserSession } from "./support/MultiplayerBrowserSession";
 
 test.describe("Phase 5 Multiplayer Gameplay", () => {
-  const phase5DeferredReason =
-    "Phase 5 multiplayer gameplay coverage is deferred until host-browser multiplayer reachability is resolved and the multiplayer phases are re-enabled together.";
-
   test.beforeEach(async ({ testSupportApi }) => {
     test.skip(
       process.env.UI_AUTOMATION_MODE !== "full",
       "Phase 5 multiplayer gameplay coverage requires frontend-plus-backend runtime."
     );
-    test.skip(true, phase5DeferredReason);
 
     await testSupportApi.reset();
   });

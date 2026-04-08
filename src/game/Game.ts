@@ -6,4 +6,5 @@ export {
   type GameStatus,
   type Move,
   type Player,
+  validateGameState,
 } from "../shared/game";

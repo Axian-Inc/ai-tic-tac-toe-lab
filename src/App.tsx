@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { Game, type BoardCell, type GameState, type Player } from "./game/Game";
+import {
+  Game,
+  type BoardCell,
+  type GameState,
+  type Player,
+  validateGameState,
+} from "./game/Game";
 import { getDeterministicCpuMovePosition } from "./game/cpu";
 import {
   checkMultiplayerAbandonment,
@@ -31,6 +37,7 @@ type RoutePath = "/" | "/game";
 
 interface SinglePlayerGameView {
   kind: "singleplayer";
+  initialState: GameState | null;
 }
 
 interface MultiplayerGameView {
@@ -45,7 +52,10 @@ type MultiplayerModalView = "create" | "join" | "spectate";
 
 const SINGLE_PLAYER_GAME_VIEW: SinglePlayerGameView = {
   kind: "singleplayer",
+  initialState: null,
 };
+
+const SINGLE_PLAYER_STATE_QUERY_PARAM = "singlePlayerState";
 
 function resolveRoute(pathname: string): RoutePath {
   return pathname === "/game" ? "/game" : "/";
@@ -113,17 +123,48 @@ function readHistoryGameView(
     return state.gameView;
   }
 
+  if (state?.gameView?.kind === "singleplayer") {
+    return {
+      kind: "singleplayer",
+      initialState: validateGameState(state.gameView.initialState),
+    };
+  }
+
   const multiplayerSession = readSearchMultiplayerSession(search);
   if (multiplayerSession) {
     return createMultiplayerGameView(multiplayerSession, null);
   }
 
-  return SINGLE_PLAYER_GAME_VIEW;
+  const query = new URLSearchParams(search);
+  const rawSinglePlayerState = query.get(SINGLE_PLAYER_STATE_QUERY_PARAM);
+  if (!rawSinglePlayerState) {
+    return SINGLE_PLAYER_GAME_VIEW;
+  }
+
+  try {
+    return {
+      kind: "singleplayer",
+      initialState: validateGameState(JSON.parse(rawSinglePlayerState)),
+    };
+  } catch {
+    return SINGLE_PLAYER_GAME_VIEW;
+  }
 }
 
 function buildGameLocation(path: RoutePath, gameView?: GameView): string {
-  if (path !== "/game" || !gameView || gameView.kind !== "multiplayer") {
+  if (path !== "/game" || !gameView) {
     return path;
+  }
+
+  if (gameView.kind === "singleplayer") {
+    if (gameView.initialState === null) {
+      return path;
+    }
+
+    const query = new URLSearchParams({
+      [SINGLE_PLAYER_STATE_QUERY_PARAM]: JSON.stringify(gameView.initialState),
+    });
+    return `${path}?${query.toString()}`;
   }
 
   const query = new URLSearchParams({
@@ -372,9 +413,12 @@ function LandingPage({
   const [multiplayerError, setMultiplayerError] = useState<string>("");
   const createPlayerNameInputRef = useRef<HTMLInputElement | null>(null);
 
-  const loadWaitingGames = async () => {
+  const loadWaitingGames = async (options?: { resetError?: boolean }) => {
     setIsLoadingWaitingGames(true);
-    setMultiplayerError("");
+
+    if (options?.resetError !== false) {
+      setMultiplayerError("");
+    }
 
     try {
       const response = await listMultiplayerGames("waiting");
@@ -388,10 +432,13 @@ function LandingPage({
     }
   };
 
-  const loadDiscoveryGames = async () => {
+  const loadDiscoveryGames = async (options?: { resetError?: boolean }) => {
     setIsLoadingWaitingGames(true);
     setIsLoadingActiveGames(true);
-    setMultiplayerError("");
+
+    if (options?.resetError !== false) {
+      setMultiplayerError("");
+    }
 
     try {
       const [waitingResponse, activeResponse] = await Promise.all([
@@ -410,9 +457,12 @@ function LandingPage({
     }
   };
 
-  const loadActiveGames = async () => {
+  const loadActiveGames = async (options?: { resetError?: boolean }) => {
     setIsLoadingActiveGames(true);
-    setMultiplayerError("");
+
+    if (options?.resetError !== false) {
+      setMultiplayerError("");
+    }
 
     try {
       const response = await listMultiplayerGames("active");
@@ -467,10 +517,10 @@ function LandingPage({
         createMultiplayerGameView(response.session, response.game)
       );
     } catch (error) {
-      setMultiplayerError(
-        error instanceof Error ? error.message : "Unable to join that multiplayer game."
-      );
-      await loadWaitingGames();
+      const errorMessage =
+        error instanceof Error ? error.message : "Unable to join that multiplayer game.";
+      setMultiplayerError(errorMessage);
+      await loadWaitingGames({ resetError: false });
     } finally {
       setJoiningGameId(null);
     }
@@ -1021,9 +1071,12 @@ function GameplayPage({
   const websocketRef = useRef<WebSocket | null>(null);
   const shouldReconnectRef = useRef<boolean>(true);
   const previousGameOverRef = useRef<boolean>(false);
-  const [singlePlayerGameState, setSinglePlayerGameState] = useState<GameState>(() =>
-    gameRef.current.getState()
-  );
+  const [singlePlayerGameState, setSinglePlayerGameState] = useState<GameState>(() => {
+    const initialSinglePlayerState =
+      gameView.kind === "singleplayer" ? gameView.initialState : null;
+    gameRef.current = new Game(initialSinglePlayerState ?? undefined);
+    return gameRef.current.getState();
+  });
   const [isConfettiVisible, setIsConfettiVisible] = useState<boolean>(false);
   const [confettiBurstId, setConfettiBurstId] = useState<number>(0);
   const [isRefreshingMultiplayerGame, setIsRefreshingMultiplayerGame] =
@@ -1407,6 +1460,19 @@ function GameplayPage({
       }
     }
   };
+
+  useEffect(() => {
+    if (gameView.kind !== "singleplayer") {
+      return;
+    }
+
+    const nextGame = new Game(gameView.initialState ?? undefined);
+    gameRef.current = nextGame;
+    setSinglePlayerGameState(nextGame.getState());
+    previousGameOverRef.current = nextGame.getStatus().isOver;
+    clearConfettiTimer();
+    setIsConfettiVisible(false);
+  }, [gameView]);
 
   useEffect(() => {
     if (
