@@ -1,17 +1,10 @@
 import { expect, test } from "./fixtures/test-fixture";
 
 test.describe("Phase 6 Multiplayer Errors", () => {
-  const isRemoteCdp = process.env.UI_AUTOMATION_BROWSER_TARGET === "RemoteCDP";
-
   test.beforeEach(async ({ testSupportApi }) => {
     test.skip(
       process.env.UI_AUTOMATION_MODE !== "full",
       "Phase 6 multiplayer error coverage requires frontend-plus-backend runtime."
-    );
-
-    test.skip(
-      isRemoteCdp,
-      "Phase 6 remains skipped in RemoteCDP until host-browser multiplayer API reachability is resolved."
     );
 
     await testSupportApi.reset();

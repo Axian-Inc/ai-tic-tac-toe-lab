@@ -3,6 +3,8 @@ import { getUiAutomationRuntimeConfig } from "./tests/playwright/runtime";
 
 const runtime = getUiAutomationRuntimeConfig(process.argv);
 
+process.env.PLAYWRIGHT_JUNIT_SUITE_NAME ??= "tic-tac-toe";
+
 export default defineConfig({
   testDir: "./tests",
   fullyParallel: runtime.mode !== "full",
@@ -11,7 +13,10 @@ export default defineConfig({
   outputDir: "test-results/playwright/artifacts",
   reporter: [
     ["list"],
-    ["junit", { outputFile: "test-results/playwright/junit.xml" }],
+    [
+      "./tests/playwright/reporters/junit-with-steps.ts",
+      { outputFile: "test-results/playwright/junit.xml" },
+    ],
   ],
   use: {
     baseURL: runtime.baseURL,

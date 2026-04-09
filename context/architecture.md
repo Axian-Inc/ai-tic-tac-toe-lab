@@ -1,6 +1,6 @@
 # Architecture
 
-Last updated: 2026-04-08
+Last updated: 2026-04-10
 
 ## Phase 1
 
@@ -15,6 +15,7 @@ Last updated: 2026-04-08
   - `tests/e2e/support/TestSupportApi.ts` for backend reset, seed, capacity, and forced-failure automation hooks
   - `tests/playwright/runtime.ts` for frontend-only versus frontend-plus-backend startup selection
 - Playwright reporting now keeps console `list` output while also writing JUnit XML to `test-results/playwright/junit.xml`.
+- JUnit reporting now runs through `tests/playwright/reporters/junit-with-steps.ts`, a repo-local reporter layered over Playwright's stock JUnit shape so testcase XML can include ordered serialized `StepAsync` metadata in testcase properties without changing the existing suite/testcase structure consumed by CI.
 - Coordinated multiplayer automation startup uses an automation-only backend command (`npm run server:start:automation`) with `AUTOMATION_TEST_SUPPORT=1` so Playwright can run against the existing backend source plus guarded test-support endpoints.
 - Full-mode Playwright browser runs use one worker until isolated backend instances exist because multiplayer automation shares one in-memory backend process.
 - Automation-stable selectors are exposed through `data-testid` attributes on landing/gameplay controls, board container, status text, board cells, multiplayer modal/discovery surfaces, gameplay session metadata, replay controls, timeout controls, and resignation confirmation UI.

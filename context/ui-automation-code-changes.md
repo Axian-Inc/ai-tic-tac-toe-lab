@@ -1,6 +1,6 @@
 # UI Automation Support Code Changes
 
-Last updated: 2026-04-07
+Last updated: 2026-04-10
 
 ## Summary
 
@@ -225,3 +225,41 @@ Why:
 Implementation status note:
 - `tests/e2e/multiplayer-discovery.spec.ts` now executes `UI-011` end to end by creating a live match, entering spectator gameplay from the landing-page `Spectate` flow, and asserting that a subsequent host move appears in the spectator session without using `Refresh Match`.
 - Local full-mode and `RemoteCDP` full-mode validation both pass for `UI-011` with the same explicit host-browser override pair used for the restored multiplayer runtime coverage.
+
+## Phase 7 Cleanup Update
+
+- Manual-case automation coverage now exists for `UI-001` through `UI-020`.
+- The remaining automation work is not new functional coverage; it is cleanup and parity work.
+- Cleanup now completed in code for the two known suite-debt items:
+  - [x] removed redundant legacy `tests/e2e/spectate.spec.ts` proof coverage because the maintained discovery and spectator-flow suite already covers the same product area through shared fixtures, page objects, and `StepAsync`
+  - [x] removed the stale `RemoteCDP` skip from `tests/e2e/multiplayer-errors.spec.ts` so `UI-019` and `UI-020` can run in `RemoteCDP` full mode
+- Local verification update:
+  - [x] `npm run typecheck`
+  - [x] local `UI_AUTOMATION_MODE=full npx playwright test tests/e2e/multiplayer-errors.spec.ts --reporter=list`
+- Maintained e2e spec hygiene update:
+  - [x] no remaining raw `getBy...` or `locator(...)` calls exist in maintained `tests/e2e/*.spec.ts` files outside the shared page-object layer
+- Remaining follow-up is verification parity rather than framework cleanup:
+  - [ ] validate `UI-019` and `UI-020` in `RemoteCDP` full mode with the documented host-browser overrides
+
+## Phase 8 Progress: JUnit Step Metadata Foundation
+
+- Added custom JUnit reporter at [tests/playwright/reporters/junit-with-steps.ts](/workspaces/ai-tic-tac-toe-lab/tests/playwright/reporters/junit-with-steps.ts).
+- Updated [playwright.config.ts](/workspaces/ai-tic-tac-toe-lab/playwright.config.ts) to keep console `list` output while replacing the stock JUnit reporter with the custom reporter at the same output path: `test-results/playwright/junit.xml`.
+- The custom reporter records only Playwright `test.step` events, which in this repo are emitted by the shared `StepAsync` wrapper, and serializes them into one testcase property named `pw:step-metadata`.
+- Serialized step payloads are written in execution order and currently include:
+  - `index`
+  - `name`
+  - `status`
+  - `durationMs`
+  - optional `errorSummary`
+- Local verification completed:
+  - [x] `npm run typecheck`
+  - [x] `UI_AUTOMATION_MODE=frontend npx playwright test tests/e2e/single-player-core.spec.ts --project=chromium`
+  - [x] confirmed `pw:step-metadata` properties are present in `test-results/playwright/junit.xml`
+  - [x] confirmed failed `StepAsync` steps remain attached to the parent testcase, keep normal testcase-level failure output, and preserve screenshot/error-context attachments
+  - [x] confirmed duplicate step titles remain distinguishable through ordered `index` values in the serialized step payload
+  - [x] confirmed `errorSummary` is stored as concise ANSI-free first-line context rather than the full failure body
+  - [x] confirmed the enriched `test-results/playwright/junit.xml` parses as well-formed XML and preserves Playwright's standard `testsuite`/`testcase` structure while storing step metadata only under testcase properties
+- CI consumption note:
+  - the checked-in PR workflow in `.github/workflows/pr.yml` currently runs `npm test` and `npm run build` only; it does not upload or parse `test-results/playwright/junit.xml`
+  - because of that, current consumability verification is structural: preserving the stock JUnit shape and validating that the generated XML parses cleanly while ordinary JUnit readers can ignore the custom `pw:step-metadata` property

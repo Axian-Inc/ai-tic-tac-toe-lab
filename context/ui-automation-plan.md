@@ -1,6 +1,6 @@
 # UI Automation Plan
 
-Last updated: 2026-04-08
+Last updated: 2026-04-10
 
 ## Purpose
 
@@ -12,9 +12,9 @@ Define the plan to automate the manual UI cases in [ui-test-cases.md](/workspace
 - The current Playwright configuration is TypeScript-based in [playwright.config.ts](/workspaces/ai-tic-tac-toe-lab/playwright.config.ts).
 - Current reporting includes console `list` output plus JUnit XML.
 - Current browser coverage is one Chromium project only.
-- Current UI automation coverage includes the `UI-001` smoke test in [tests/e2e/gameplay.spec.ts](/workspaces/ai-tic-tac-toe-lab/tests/e2e/gameplay.spec.ts) plus targeted landing-page spectate and spectator-entry coverage aligned to the new dedicated spectate flow in [tests/e2e/spectate.spec.ts](/workspaces/ai-tic-tac-toe-lab/tests/e2e/spectate.spec.ts).
+- Current UI automation coverage includes manual cases `UI-001` through `UI-020` across the Phase 3 through Phase 6 Playwright specs.
 - The framework supports both frontend-only and coordinated frontend-plus-backend startup for UI tests.
-- The framework currently assumes a browser launched inside the automation environment; RemoteCDP host-browser execution has not yet been added.
+- The framework now supports both Playwright-launched local browser execution and host-browser execution through `RemoteCDP`, with `Local` remaining the default mode.
 - Shared browser fixtures already construct page objects for landing, gameplay, multiplayer modal, and replay surfaces from [tests/e2e/fixtures/test-fixture.ts](/workspaces/ai-tic-tac-toe-lab/tests/e2e/fixtures/test-fixture.ts).
 - Step-wrapped execution is already implemented through [tests/e2e/support/step-async.ts](/workspaces/ai-tic-tac-toe-lab/tests/e2e/support/step-async.ts), including failure screenshots with collision-safe attachment naming.
 - Guarded backend automation hooks already exist in [tests/e2e/support/TestSupportApi.ts](/workspaces/ai-tic-tac-toe-lab/tests/e2e/support/TestSupportApi.ts) and `server/index.ts` for reset, generic snapshot seeding, stale join, capacity seeding, and forced API failure setup.
@@ -220,7 +220,8 @@ Define the plan to automate the manual UI cases in [ui-test-cases.md](/workspace
 - [x] Reuse the same deterministic failure controls for both join-tab discovery and landing-page spectate discovery because both now depend on the same active-game listing path.
 - Phase 6 validation status:
   - local `UI_AUTOMATION_MODE=full` execution passed `UI-019` and `UI-020`
-  - Phase 6 is complete in local mode; `RemoteCDP` full-mode multiplayer coverage remains deferred with the broader multiplayer runtime work in Phase 7
+  - `tests/e2e/multiplayer-errors.spec.ts` is now enabled for `RemoteCDP` full-mode execution
+  - `RemoteCDP` full-mode verification of `UI-019` and `UI-020` remains pending until a host Chrome target is available with the documented browser-visible frontend and backend overrides
 
 ### Phase 7: Cleanup and Deferred Runtime Work
 
@@ -233,6 +234,15 @@ Define the plan to automate the manual UI cases in [ui-test-cases.md](/workspace
 - [x] Verify the restored Phase 5 gameplay specs in both local full-mode and `RemoteCDP` full-mode after multiplayer host-browser reachability is stable.
 - [x] Re-run the deferred `RemoteCDP` Phase 4 subset and confirm it matches the local-mode pass/skip posture.
 - [x] Consolidate the final runtime and skip documentation after deferred multiplayer tests are re-enabled.
+
+### Phase 7 Closeout Notes
+
+- Phase 3 through Phase 7 functional automation is complete.
+- Manual cases `UI-001` through `UI-020` now have automated Playwright coverage.
+- Carryover cleanup remains outside the core functional-case mapping:
+  - expand page-object helpers so remaining maintained e2e specs do not need raw locators for modal-state or gameplay-state assertions
+  - validate the re-enabled [tests/e2e/multiplayer-errors.spec.ts](/workspaces/ai-tic-tac-toe-lab/tests/e2e/multiplayer-errors.spec.ts) coverage in full-mode `RemoteCDP` using the documented explicit host-browser overrides
+  - reconcile plan status, manual-case automation markers, and remaining skips so documentation matches the repo state before Phase 8 reporting work expands the output contract
 
 ### Application Change Plan For Requested Support Work
 
@@ -257,6 +267,80 @@ Define the plan to automate the manual UI cases in [ui-test-cases.md](/workspace
 - Preserve current defaults for local and CI runs; the new API-origin override must remain scoped to `RemoteCDP` full mode or explicit environment overrides.
 - Re-run the deferred Phase 4 subset first (`UI-006` through `UI-009`, `UI-012`), then restore the deferred Phase 5 gameplay spec file once host-browser multiplayer paths are stable end to end.
   Status: implementation complete; the current local host environment requires `UI_AUTOMATION_BASE_URL=http://localhost:4173/` and `UI_AUTOMATION_MULTIPLAYER_API_BASE_URL=http://localhost:3001` in addition to a running Chrome `RemoteCDP` target.
+
+### Phase 8: Step-Level JUnit Enrichment
+
+Phase 8 readiness:
+- The suite already emits JUnit XML to `test-results/playwright/junit.xml`.
+- `StepAsync` is the canonical wrapper for manual-step-aligned execution, so step metadata should be captured from that layer instead of reconstructing steps later from reporter output.
+- Phase 3 through Phase 7 functional coverage is complete, so Phase 8 can focus on reporting enrichment without needing to add new manual-case automation first.
+- Pre-Phase-8 cleanup should keep the reporting surface predictable:
+  - keep maintained e2e specs on the shared fixture and `StepAsync` path
+  - clear stale skip and status documentation that would make enriched reporting look incomplete for reasons unrelated to the JUnit work itself
+
+- [x] Extend the Playwright JUnit output path so `StepAsync` execution writes per-step metadata into the final `test-results/playwright/junit.xml` file without changing the existing one-test-per-manual-case contract.
+- [x] Preserve step order exactly as executed within each owning test case.
+- [x] Capture and embed, for each step:
+  - [x] step name
+  - [x] step outcome
+  - [x] step duration
+  - [x] step error summary when the step fails
+- [x] Keep step failures attached to the parent test case that executed them instead of emitting child `<testcase>` elements.
+- [x] Store the additional step metadata under JUnit properties or similarly ignorable nested metadata so standard CI and other JUnit readers continue to interpret only the existing test-level result fields.
+- [x] Keep the existing test-level failure header and stack trace behavior unchanged while step-level failures include only concise error context summaries.
+- [x] Preserve current attachment behavior so failure screenshots remain associated with the same test and can later be surfaced by the HTML report helper.
+- [x] Define a stable embedded-data shape for step metadata so downstream tooling can read it without guessing.
+- [x] Record step metadata only after the step finishes so status and duration reflect the authoritative outcome of the wrapped callback.
+- [x] Ensure repeated step titles in one test can still be distinguished by preserving execution index in the serialized step payload.
+- [x] Verify enriched JUnit output remains well-formed XML and remains consumable by existing repo-local JUnit consumers without changing the standard `testsuite`/`testcase` structure or test-level failure fields.
+- Embedded data shape note:
+  - prefer one opaque serialized payload per test case, stored in a custom property name that ordinary JUnit readers ignore
+  - include at minimum `index`, `name`, `status`, `durationMs`, and optional `errorSummary`
+  - keep the serialization deterministic so local and CI output are comparable
+- Phase 8 verification note:
+  - the checked-in GitHub Actions PR workflow currently runs `npm test` and `npm run build`, but does not upload or parse `test-results/playwright/junit.xml`
+  - consumability verification for the enriched JUnit path is therefore based on preserving Playwright's standard JUnit suite/testcase structure, preserving the existing testcase-level failure and attachment fields, and confirming the generated XML parses successfully while the custom `pw:step-metadata` property remains ignorable metadata
+  - targeted verification covered both a deliberately failed `StepAsync` step and repeated identical step titles before removing the temporary probe specs used for those checks
+
+### Phase 9: HTML Report Helper From Final JUnit
+
+- [ ] Add a helper that reads the final enriched JUnit XML file and generates a standalone HTML report for UI automation results.
+- [ ] Read from the final Playwright JUnit output file rather than a second intermediate artifact.
+- [ ] Parse both the standard JUnit test data and the embedded step metadata produced in Phase 8.
+- [ ] Render a report header titled `Test Report - Tic Tac Toe`.
+- [ ] Include run-level summary fields near the top of the report:
+  - [ ] run identifier when available
+  - [ ] time run started
+  - [ ] branch name when it can be determined in local or CI execution
+  - [ ] total tests
+  - [ ] passed
+  - [ ] failed
+  - [ ] skipped
+- [ ] Add a graphical summary chart for passed, failed, and skipped totals.
+- [ ] Render one result row per test case that includes:
+  - [ ] test name
+  - [ ] fixture name
+  - [ ] status
+  - [ ] time of test execution
+  - [ ] artifacts
+- [ ] Make the artifacts cell expandable and render two expandable sections inside it:
+  - [ ] `File Artifacts`
+  - [ ] `Steps (# steps executed)`
+- [ ] For this phase, keep `File Artifacts` static and point users to the known screenshot/artifact location under the Playwright test-results output tree.
+- [ ] When `Steps (# steps executed)` is expanded, render a table with:
+  - [ ] step
+  - [ ] status
+  - [ ] time
+  - [ ] error
+- [ ] Populate the step table from the embedded JUnit step payload so failed-step error text matches the concise error summary captured in Phase 8.
+- [ ] Derive fixture name from available JUnit testcase metadata where possible; if Playwright does not emit a direct fixture field, infer it from classname or project metadata and document that inference in the implementation.
+- [ ] Determine branch name from CI environment variables first, then local git branch resolution as a fallback, and omit the field gracefully when neither source is available.
+- [ ] Prefer a simple repo-local helper entrypoint, implemented in TypeScript, that can be run after UI automation completes and can write the HTML file to a stable report artifact path.
+- [ ] Keep the generated HTML self-contained enough for artifact publishing, with no requirement for a live server to view the report.
+- Validation note:
+  - verify the helper against a JUnit file containing passed, failed, and skipped tests
+  - verify at least one failed-step case so the expanded steps table shows the embedded error summary
+  - verify the generated HTML still renders useful output when branch name or run identifier cannot be determined locally
 
 4. Verification and documentation sequence
 - Validate each application change locally before re-enabling the blocked automation: targeted typecheck and affected Playwright specs for the single-player seed path, `UI-010` in local full mode, and then the deferred `RemoteCDP` Phase 4 subset followed by Phase 5 gameplay coverage.
