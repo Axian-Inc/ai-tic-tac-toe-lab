@@ -1,6 +1,6 @@
 # UI Automation Plan
 
-Last updated: 2026-04-10
+Last updated: 2026-04-13
 
 ## Purpose
 
@@ -304,9 +304,27 @@ Phase 8 readiness:
 
 ### Phase 9: HTML Report Helper From Final JUnit
 
-- [ ] Add a helper that reads the final enriched JUnit XML file and generates a standalone HTML report for UI automation results.
-- [ ] Read from the final Playwright JUnit output file rather than a second intermediate artifact.
-- [ ] Parse both the standard JUnit test data and the embedded step metadata produced in Phase 8.
+- [x] Establish the repo-local helper foundation under `scripts/test/` and keep it runnable through `tsx` rather than expanding the compiled AWS-script TypeScript surface.
+- [x] Read from the final Playwright JUnit output file rather than a second intermediate artifact.
+- [x] Normalize standard JUnit testcase data plus embedded `pw:step-metadata` into a report model before HTML rendering begins.
+- [x] Reserve a stable paired HTML artifact path at `test-results/playwright/report.html` alongside the final `test-results/playwright/junit.xml` artifact.
+- [x] Add a stable repo command (`npm run test:ui:report`) so JUnit and HTML-report generation can remain paired artifacts for any UI automation run.
+
+Phase 9 progress note:
+- The groundwork items above are now implemented in code and covered by targeted unit tests.
+- The remaining standalone HTML-report requirements were moved to Phase 10 so Phase 9 remains the parser/helper groundwork milestone.
+
+### Phase 10: Standalone HTML Report Rendering
+
+Phase 10 purpose:
+- Complete the user-facing HTML artifact on top of the Phase 9 parser/model foundation without changing the existing JUnit contract.
+- Keep `junit.xml` as the standard machine-consumed artifact and generate `report.html` as the richer human-consumed companion artifact.
+
+Phase 10 scope note:
+- CI upload/publishing behavior remains out of scope for this phase.
+- The HTML artifact must still be generated locally as a stable file under `test-results/playwright/` whenever the helper is run against a JUnit result.
+
+- [ ] Extend the helper so it writes a standalone HTML report to `test-results/playwright/report.html` by default.
 - [ ] Render a report header titled `Test Report - Tic Tac Toe`.
 - [ ] Include run-level summary fields near the top of the report:
   - [ ] run identifier when available
@@ -326,21 +344,21 @@ Phase 8 readiness:
 - [ ] Make the artifacts cell expandable and render two expandable sections inside it:
   - [ ] `File Artifacts`
   - [ ] `Steps (# steps executed)`
-- [ ] For this phase, keep `File Artifacts` static and point users to the known screenshot/artifact location under the Playwright test-results output tree.
+- [ ] Keep `File Artifacts` static for the initial HTML implementation and point users to the known Playwright artifact tree under `test-results/playwright/artifacts`.
 - [ ] When `Steps (# steps executed)` is expanded, render a table with:
   - [ ] step
   - [ ] status
   - [ ] time
   - [ ] error
-- [ ] Populate the step table from the embedded JUnit step payload so failed-step error text matches the concise error summary captured in Phase 8.
-- [ ] Derive fixture name from available JUnit testcase metadata where possible; if Playwright does not emit a direct fixture field, infer it from classname or project metadata and document that inference in the implementation.
-- [ ] Determine branch name from CI environment variables first, then local git branch resolution as a fallback, and omit the field gracefully when neither source is available.
-- [ ] Prefer a simple repo-local helper entrypoint, implemented in TypeScript, that can be run after UI automation completes and can write the HTML file to a stable report artifact path.
-- [ ] Keep the generated HTML self-contained enough for artifact publishing, with no requirement for a live server to view the report.
-- Validation note:
-  - verify the helper against a JUnit file containing passed, failed, and skipped tests
-  - verify at least one failed-step case so the expanded steps table shows the embedded error summary
-  - verify the generated HTML still renders useful output when branch name or run identifier cannot be determined locally
+- [ ] Populate the step table from the embedded JUnit step payload so failed-step error text matches the concise `errorSummary` captured in Phase 8.
+- [ ] Derive fixture name from available JUnit testcase metadata where possible; when Playwright does not emit a direct fixture field, keep using classname-based inference and document that inference in the implementation.
+- [ ] Resolve branch name from CI environment variables first, then local git branch resolution as a fallback, and omit the field gracefully when neither source is available.
+- [ ] Surface run identifier when available and omit it gracefully when unavailable locally.
+- [ ] Keep the generated HTML self-contained enough for artifact publishing with no live server requirement.
+- [ ] Add targeted unit coverage for branch/run metadata resolution and HTML rendering behavior.
+- [ ] Validate the generated HTML against a JUnit file containing passed, failed, and skipped tests.
+- [ ] Validate at least one failed-step case so the rendered steps table shows the embedded concise error summary.
+- [ ] Validate that the generated HTML remains useful when branch name or run identifier cannot be determined locally.
 
 4. Verification and documentation sequence
 - Validate each application change locally before re-enabling the blocked automation: targeted typecheck and affected Playwright specs for the single-player seed path, `UI-010` in local full mode, and then the deferred `RemoteCDP` Phase 4 subset followed by Phase 5 gameplay coverage.

@@ -20,6 +20,7 @@
     "test": "node scripts/test/playwright-unit-coverage.mjs",
     "test:watch": "vitest",
     "test:ui": "UI_AUTOMATION_MODE=frontend playwright test tests/e2e",
+    "test:ui:report": "tsx scripts/test/playwright-html-report.ts",
     "test:ui:full": "UI_AUTOMATION_MODE=full playwright test tests/e2e",
     "test:unit": "playwright test tests/unit",
     "aws:urls": "npm run aws:build-scripts && node dist-scripts/scripts/aws/get-deployed-urls.js",

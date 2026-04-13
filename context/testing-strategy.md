@@ -1,6 +1,6 @@
 # Testing Strategy
 
-Last updated: 2026-04-10
+Last updated: 2026-04-13
 
 ## Purpose
 - Define the baseline test framework for fast unit-test coverage and browser-level UI automation.
@@ -26,6 +26,7 @@ Last updated: 2026-04-10
 - `npm test` runs Playwright unit specs with coverage.
 - `npm run test:watch` runs Vitest in watch mode for local development.
 - `npm run test:ui` runs Playwright headless for `tests/e2e/`.
+- `npm run test:ui:report` runs the repo-local Phase 9 helper against the final Playwright JUnit artifact and reserves the paired HTML artifact path under `test-results/playwright/`.
 - `npm run test:ui:full` runs Playwright headless for `tests/e2e/` with both frontend and backend startup.
 - `npm run test:unit` runs Playwright headless for `tests/unit/`.
 - `npm run test:ui:headed` runs Playwright headed for local debugging.
@@ -37,6 +38,7 @@ Last updated: 2026-04-10
 - The former spectate jsdom test has been replaced by Playwright browser coverage in `tests/e2e/spectate.spec.ts`.
 - The former legacy spectate proof spec has been retired; maintained spectator coverage now runs through the Phase 4 and Phase 5 Playwright suites (`tests/e2e/multiplayer-modal.spec.ts`, `tests/e2e/multiplayer-discovery.spec.ts`, and `tests/e2e/multiplayer-gameplay.spec.ts`) using the shared fixture and page-object layer.
 - Playwright now emits JUnit XML to `test-results/playwright/junit.xml` through a repo-local custom reporter that preserves the existing one-test-per-manual-case structure while adding per-test serialized `StepAsync` metadata under testcase properties.
+- Phase 9 groundwork keeps UI report artifacts paired under `test-results/playwright/`: Playwright writes `junit.xml`, and the repo-local helper targets `report.html` as the richer standalone artifact path without changing the JUnit contract consumed by standard tooling.
 - Playwright starts the local Vite dev server automatically through `playwright.config.ts`.
 - Playwright supports two browser automation runtime modes through `UI_AUTOMATION_MODE`:
   - `frontend` starts only the Vite app.

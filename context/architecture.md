@@ -1,6 +1,6 @@
 # Architecture
 
-Last updated: 2026-04-10
+Last updated: 2026-04-13
 
 ## Phase 1
 
@@ -16,6 +16,7 @@ Last updated: 2026-04-10
   - `tests/playwright/runtime.ts` for frontend-only versus frontend-plus-backend startup selection
 - Playwright reporting now keeps console `list` output while also writing JUnit XML to `test-results/playwright/junit.xml`.
 - JUnit reporting now runs through `tests/playwright/reporters/junit-with-steps.ts`, a repo-local reporter layered over Playwright's stock JUnit shape so testcase XML can include ordered serialized `StepAsync` metadata in testcase properties without changing the existing suite/testcase structure consumed by CI.
+- Phase 9 reporting groundwork now includes a repo-local helper under `scripts/test/` that reads the final Playwright JUnit artifact, normalizes suite/test/step metadata into a report model, and reserves a peer HTML artifact path at `test-results/playwright/report.html` for later standalone report generation.
 - Coordinated multiplayer automation startup uses an automation-only backend command (`npm run server:start:automation`) with `AUTOMATION_TEST_SUPPORT=1` so Playwright can run against the existing backend source plus guarded test-support endpoints.
 - Full-mode Playwright browser runs use one worker until isolated backend instances exist because multiplayer automation shares one in-memory backend process.
 - Automation-stable selectors are exposed through `data-testid` attributes on landing/gameplay controls, board container, status text, board cells, multiplayer modal/discovery surfaces, gameplay session metadata, replay controls, timeout controls, and resignation confirmation UI.

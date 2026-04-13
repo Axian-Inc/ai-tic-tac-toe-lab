@@ -1,6 +1,6 @@
 # UI Automation Support Code Changes
 
-Last updated: 2026-04-10
+Last updated: 2026-04-13
 
 ## Summary
 
@@ -258,8 +258,38 @@ Implementation status note:
   - [x] confirmed `pw:step-metadata` properties are present in `test-results/playwright/junit.xml`
   - [x] confirmed failed `StepAsync` steps remain attached to the parent testcase, keep normal testcase-level failure output, and preserve screenshot/error-context attachments
   - [x] confirmed duplicate step titles remain distinguishable through ordered `index` values in the serialized step payload
+
+## Phase 9 Progress: HTML Report Helper Groundwork
+
+- Added Phase 9 helper module at [playwright-html-report.ts](/workspaces/ai-tic-tac-toe-lab/scripts/test/playwright-html-report.ts).
+- Added shared artifact-path constants at [playwright-report-paths.ts](/workspaces/ai-tic-tac-toe-lab/scripts/test/playwright-report-paths.ts).
+- The helper currently:
+  - reads the final Playwright JUnit artifact from `test-results/playwright/junit.xml`
+  - parses standard JUnit suite/testcase data plus the embedded `pw:step-metadata` payload
+  - normalizes the parsed data into a report model that preserves summary totals, testcase status, fixture-name inference, durations, timestamps, and step-level error summaries
+  - reserves `test-results/playwright/report.html` as the stable paired HTML artifact path for later standalone rendering
+- Added repo command `npm run test:ui:report` so the helper is runnable as a stable post-automation entrypoint without expanding the compiled AWS script surface.
+- Parser implementation note:
+  - the helper reuses the existing repo `jsdom` dependency for XML parsing instead of adding a new parser package
+  - malformed XML now fails explicitly through parser-error detection instead of producing a partial report model
+- Added targeted unit coverage at [playwright-html-report.spec.ts](/workspaces/ai-tic-tac-toe-lab/tests/unit/playwright-html-report.spec.ts) for:
+  - passed, failed, and skipped testcase parsing
+  - failed-step `errorSummary` parsing from `pw:step-metadata`
+  - fixture-name inference from testcase metadata
+  - CLI option parsing for default and override artifact paths
+  - malformed XML and invalid step-payload rejection
+- Verification completed:
+  - [x] `npm run test:ui:report`
+  - [x] `npx playwright test tests/unit/playwright-html-report.spec.ts`
+  - [x] confirmed a real failing `StepAsync` run emits testcase `<failure>` plus failed-step `errorSummary`, and the helper consumes both correctly
+- Remaining Phase 9 work stays open:
+  - [ ] generate the standalone HTML file
+  - [ ] render the planned summary, chart, testcase rows, artifact sections, and step table
+  - [ ] add branch and run-identifier resolution for display
   - [x] confirmed `errorSummary` is stored as concise ANSI-free first-line context rather than the full failure body
   - [x] confirmed the enriched `test-results/playwright/junit.xml` parses as well-formed XML and preserves Playwright's standard `testsuite`/`testcase` structure while storing step metadata only under testcase properties
+- Planning note:
+  - the remaining user-facing HTML artifact work is now split into a dedicated Phase 10 plan section so Phase 9 remains the parser/helper groundwork milestone
 - CI consumption note:
   - the checked-in PR workflow in `.github/workflows/pr.yml` currently runs `npm test` and `npm run build` only; it does not upload or parse `test-results/playwright/junit.xml`
   - because of that, current consumability verification is structural: preserving the stock JUnit shape and validating that the generated XML parses cleanly while ordinary JUnit readers can ignore the custom `pw:step-metadata` property
