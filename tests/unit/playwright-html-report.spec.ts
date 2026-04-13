@@ -265,8 +265,17 @@ test.describe("renderPlaywrightHtmlReport", () => {
     expect(html).toContain("Artifacts");
     expect(html).toContain("File Artifacts");
     expect(html).toContain("Steps (2 steps executed)");
+    expect(html).not.toContain("<summary>Steps (2)</summary>");
+    expect(html).toContain("Failure Details");
+    expect(html).toContain("Error Summary");
+    expect(html).toContain("Stack Trace");
+    expect(html).toContain('class="failure-panel"');
+    expect(html).toContain('class="detail-panel details-panel"');
+    expect(html).toContain('class="steps-table-wrap"');
+    expect(html).toContain('class="steps-row"');
     expect(html).toContain("Expected false to be true");
     expect(html).toContain("test-results/playwright/artifacts");
+    expect(html).toContain("Full failure body");
   });
 
   test("renders not-available placeholders when optional run metadata is missing", () => {

@@ -299,8 +299,10 @@ Implementation status note:
   - `Test Report - Tic Tac Toe` header
   - run summary fields for run identifier, time run started, branch name, total tests, passed, failed, and skipped
   - a self-contained passed/failed/skipped summary chart
-  - one result row per testcase with test name, inferred fixture name, status, time of test execution, and expandable artifacts content
-  - nested `File Artifacts` and `Steps (# steps executed)` sections inside the artifacts cell
+  - one result row per testcase with test name, inferred fixture name, status, time of test execution, and compact artifacts content
+  - a compact `File Artifacts` section in the artifacts cell
+  - a dedicated full-width expandable step-details row beneath each owning testcase so the steps table has enough width for step names and summaries
+  - a dedicated full-width failure-details section for failed tests, showing an error summary and the full failure stack trace in addition to the step-level concise summaries
   - step tables populated from embedded `pw:step-metadata`, including concise failed-step `errorSummary` text
 - Metadata resolution now prefers CI environment variables for branch and run identifier display and falls back to local git branch resolution when CI branch metadata is unavailable.
 - The HTML output remains self-contained and requires no live server to view after generation.

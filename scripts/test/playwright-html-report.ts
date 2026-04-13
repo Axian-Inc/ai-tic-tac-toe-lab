@@ -164,6 +164,17 @@ function escapeHtml(value: string): string {
     .replaceAll("'", "&#39;");
 }
 
+function getFirstNonEmptyLine(value: string | undefined): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  return value
+    .split("\n")
+    .map((line) => line.trim())
+    .find((line) => line.length > 0);
+}
+
 function formatDateTime(value: string | undefined): string {
   if (!value) {
     return "Not available";
@@ -251,46 +262,84 @@ function renderSummaryChart(summary: ReportSummary): string {
 
 function renderArtifactsCell(testCase: TestCaseReport): string {
   return `
-    <details class="artifacts-details">
-      <summary>Artifacts</summary>
-      <details class="nested-details">
+    <div class="artifacts-cell">
+      <details class="artifacts-details">
         <summary>File Artifacts</summary>
         <p>See test-results/playwright/artifacts for Playwright attachments and screenshots.</p>
       </details>
-      <details class="nested-details">
-        <summary>Steps (${testCase.steps.length} steps executed)</summary>
-        ${
-          testCase.steps.length
-            ? `
-              <table class="steps-table">
-                <thead>
-                  <tr>
-                    <th>Step</th>
-                    <th>Status</th>
-                    <th>Time</th>
-                    <th>Error</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${testCase.steps
-                    .map(
-                      (step) => `
-                        <tr>
-                          <td>${escapeHtml(`${step.index}. ${step.name}`)}</td>
-                          <td><span class="status-pill status-${step.status}">${escapeHtml(step.status)}</span></td>
-                          <td>${escapeHtml(formatDurationMs(step.durationMs))}</td>
-                          <td>${escapeHtml(step.errorSummary ?? "")}</td>
-                        </tr>
-                      `
-                    )
-                    .join("")}
-                </tbody>
-              </table>
-            `
-            : "<p>No step metadata was recorded for this test.</p>"
-        }
-      </details>
-    </details>
+    </div>
+  `;
+}
+
+function renderFailureDetails(testCase: TestCaseReport): string {
+  if (testCase.status !== "failed" || !testCase.failureMessage) {
+    return "";
+  }
+
+  return `
+    <tr class="failure-row">
+      <td colspan="5">
+        <section class="failure-panel" aria-label="Failure details for ${escapeHtml(
+          testCase.testName
+        )}">
+          <h3>Failure Details</h3>
+          <div class="failure-summary">
+            <strong>Error Summary</strong>
+            <p>${escapeHtml(
+              getFirstNonEmptyLine(testCase.failureMessage) ?? "No failure summary available."
+            )}</p>
+          </div>
+          <div class="failure-stack">
+            <strong>Stack Trace</strong>
+            <pre>${escapeHtml(testCase.failureMessage)}</pre>
+          </div>
+        </section>
+      </td>
+    </tr>
+  `;
+}
+
+function renderStepDetails(testCase: TestCaseReport): string {
+  return `
+    <tr class="steps-row">
+      <td colspan="5">
+        <details class="detail-panel details-panel">
+          <summary>Steps (${testCase.steps.length} steps executed)</summary>
+          ${
+            testCase.steps.length
+              ? `
+                <div class="steps-table-wrap">
+                  <table class="steps-table">
+                    <thead>
+                      <tr>
+                        <th>Step</th>
+                        <th>Status</th>
+                        <th>Time</th>
+                        <th>Error</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${testCase.steps
+                        .map(
+                          (step) => `
+                            <tr>
+                              <td>${escapeHtml(`${step.index}. ${step.name}`)}</td>
+                              <td><span class="status-pill status-${step.status}">${escapeHtml(step.status)}</span></td>
+                              <td>${escapeHtml(formatDurationMs(step.durationMs))}</td>
+                              <td>${escapeHtml(step.errorSummary ?? "")}</td>
+                            </tr>
+                          `
+                        )
+                        .join("")}
+                    </tbody>
+                  </table>
+                </div>
+              `
+              : "<p>No step metadata was recorded for this test.</p>"
+          }
+        </details>
+      </td>
+    </tr>
   `;
 }
 
@@ -298,7 +347,7 @@ function renderTestRows(report: ParsedPlaywrightJUnitReport): string {
   return report.tests
     .map(
       (testCase) => `
-        <tr>
+        <tr class="result-row result-row-${testCase.status}">
           <td>${escapeHtml(testCase.testName)}</td>
           <td>${escapeHtml(testCase.fixtureName)}</td>
           <td><span class="status-pill status-${testCase.status}">${escapeHtml(
@@ -307,6 +356,8 @@ function renderTestRows(report: ParsedPlaywrightJUnitReport): string {
           <td>${escapeHtml(formatDateTime(testCase.startedAt))}</td>
           <td>${renderArtifactsCell(testCase)}</td>
         </tr>
+        ${renderStepDetails(testCase)}
+        ${renderFailureDetails(testCase)}
       `
     )
     .join("");
@@ -454,14 +505,46 @@ export function renderPlaywrightHtmlReport(
         border-collapse: collapse;
       }
 
+      .results-table {
+        table-layout: fixed;
+      }
+
       .results-table th,
       .results-table td,
       .steps-table th,
       .steps-table td {
         padding: 12px 10px;
         text-align: left;
-        border-top: 1px solid var(--border);
         vertical-align: top;
+      }
+
+      .results-table tbody tr.result-row td {
+        border-top: 1px solid var(--border);
+      }
+
+      .results-table tbody tr.steps-row td,
+      .results-table tbody tr.failure-row td {
+        border-top: 0;
+      }
+
+      .results-table td:nth-child(1) {
+        width: 26%;
+      }
+
+      .results-table td:nth-child(2) {
+        width: 14%;
+      }
+
+      .results-table td:nth-child(3) {
+        width: 10%;
+      }
+
+      .results-table td:nth-child(4) {
+        width: 18%;
+      }
+
+      .results-table td:nth-child(5) {
+        width: 32%;
       }
 
       .results-table thead th,
@@ -469,6 +552,15 @@ export function renderPlaywrightHtmlReport(
         border-top: 0;
         color: var(--muted);
         font-size: 0.9rem;
+      }
+
+      .steps-table tbody td {
+        border-top: 1px solid var(--border);
+      }
+
+      .results-table td,
+      .steps-table td {
+        overflow-wrap: anywhere;
       }
 
       .status-pill {
@@ -489,14 +581,84 @@ export function renderPlaywrightHtmlReport(
         font-weight: 700;
       }
 
-      .artifacts-details {
-        min-width: 280px;
+      .artifacts-cell {
+        width: 100%;
+        display: grid;
+        gap: 10px;
       }
 
-      .nested-details {
-        margin-top: 10px;
+      .artifacts-details > summary,
+      .detail-panel > summary {
+        list-style-position: outside;
+      }
+
+      .artifacts-details,
+      .detail-panel {
         padding: 10px 12px;
         background: var(--surface-strong);
+        width: 100%;
+        border-radius: 10px;
+      }
+
+      .artifacts-details p {
+        margin-top: 8px;
+      }
+
+      .steps-table-wrap {
+        max-width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+      }
+
+      .steps-row td,
+      .failure-row td {
+        padding-top: 0;
+      }
+
+      .detail-panel summary {
+        font-weight: 700;
+      }
+
+      .failure-panel {
+        border: 1px solid #d84f4f;
+        background: #fff1f1;
+        border-radius: 14px;
+        padding: 16px;
+        box-shadow: inset 0 0 0 1px rgba(166, 27, 27, 0.08);
+      }
+
+      .failure-panel h3 {
+        margin: 0 0 12px;
+        color: var(--failed);
+        font-size: 1rem;
+      }
+
+      .failure-summary,
+      .failure-stack {
+        margin-top: 12px;
+      }
+
+      .failure-summary {
+        background: #ffe0e0;
+        border-radius: 10px;
+        padding: 12px;
+      }
+
+      .failure-summary p {
+        margin-top: 8px;
+        color: #6f1d1b;
+      }
+
+      .failure-stack pre {
+        margin: 8px 0 0;
+        padding: 12px;
+        background: #7f1d1d;
+        color: #fff7f7;
+        border-radius: 10px;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 0.85rem;
       }
 
       @media (max-width: 820px) {

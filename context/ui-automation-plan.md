@@ -340,16 +340,16 @@ Phase 10 scope note:
   - [x] status
   - [x] time of test execution
   - [x] artifacts
-- [x] Make the artifacts cell expandable and render two expandable sections inside it:
-  - [x] `File Artifacts`
-  - [x] `Steps (# steps executed)`
+- [x] Keep `File Artifacts` in the artifacts cell as a compact expandable section.
+- [x] Render `Steps (# steps executed)` as its own expandable full-width detail row under the owning test row so step details are not constrained by the artifacts-column width.
 - [x] Keep `File Artifacts` static for the initial HTML implementation and point users to the known Playwright artifact tree under `test-results/playwright/artifacts`.
-- [x] When `Steps (# steps executed)` is expanded, render a table with:
+- [x] When the step detail row is expanded, render a table with:
   - [x] step
   - [x] status
   - [x] time
   - [x] error
 - [x] Populate the step table from the embedded JUnit step payload so failed-step error text matches the concise `errorSummary` captured in Phase 8.
+- [x] Render failed test cases with a dedicated full-width failure-details section that shows an error summary plus the full failure stack trace, while individual steps continue to show only the concise step-level summary.
 - [x] Derive fixture name from available JUnit testcase metadata where possible; when Playwright does not emit a direct fixture field, keep using classname-based inference and document that inference in the implementation.
 - [x] Resolve branch name from CI environment variables first, then local git branch resolution as a fallback, and omit the field gracefully when neither source is available.
 - [x] Surface run identifier when available and omit it gracefully when unavailable locally.
