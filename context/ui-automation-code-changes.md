@@ -283,13 +283,33 @@ Implementation status note:
   - [x] `npx playwright test tests/unit/playwright-html-report.spec.ts`
   - [x] confirmed a real failing `StepAsync` run emits testcase `<failure>` plus failed-step `errorSummary`, and the helper consumes both correctly
 - Remaining Phase 9 work stays open:
-  - [ ] generate the standalone HTML file
-  - [ ] render the planned summary, chart, testcase rows, artifact sections, and step table
-  - [ ] add branch and run-identifier resolution for display
   - [x] confirmed `errorSummary` is stored as concise ANSI-free first-line context rather than the full failure body
   - [x] confirmed the enriched `test-results/playwright/junit.xml` parses as well-formed XML and preserves Playwright's standard `testsuite`/`testcase` structure while storing step metadata only under testcase properties
 - Planning note:
-  - the remaining user-facing HTML artifact work is now split into a dedicated Phase 10 plan section so Phase 9 remains the parser/helper groundwork milestone
+  - the remaining user-facing HTML artifact work was split into a dedicated Phase 10 implementation pass so Phase 9 remained the parser/helper groundwork milestone
 - CI consumption note:
   - the checked-in PR workflow in `.github/workflows/pr.yml` currently runs `npm test` and `npm run build` only; it does not upload or parse `test-results/playwright/junit.xml`
   - because of that, current consumability verification is structural: preserving the stock JUnit shape and validating that the generated XML parses cleanly while ordinary JUnit readers can ignore the custom `pw:step-metadata` property
+
+## Phase 10 Progress: Standalone HTML Report Rendering
+
+- The repo-local helper in [playwright-html-report.ts](/workspaces/ai-tic-tac-toe-lab/scripts/test/playwright-html-report.ts) now renders and writes a standalone HTML report to `test-results/playwright/report.html` by default.
+- The generated HTML report currently includes:
+  - `Test Report - Tic Tac Toe` header
+  - run summary fields for run identifier, time run started, branch name, total tests, passed, failed, and skipped
+  - a self-contained passed/failed/skipped summary chart
+  - one result row per testcase with test name, inferred fixture name, status, time of test execution, and expandable artifacts content
+  - nested `File Artifacts` and `Steps (# steps executed)` sections inside the artifacts cell
+  - step tables populated from embedded `pw:step-metadata`, including concise failed-step `errorSummary` text
+- Metadata resolution now prefers CI environment variables for branch and run identifier display and falls back to local git branch resolution when CI branch metadata is unavailable.
+- The HTML output remains self-contained and requires no live server to view after generation.
+- Added targeted unit coverage at [playwright-html-report.spec.ts](/workspaces/ai-tic-tac-toe-lab/tests/unit/playwright-html-report.spec.ts) for:
+  - branch and run metadata resolution
+  - HTML rendering structure and escaping
+  - file-based JUnit read plus HTML write roundtrip coverage for passed, failed, and skipped cases
+  - failed-step `errorSummary` rendering in the generated steps table
+  - graceful missing-metadata behavior when branch name or run identifier cannot be determined
+- Verification completed:
+  - [x] `npm run typecheck`
+  - [x] `npx playwright test tests/unit/playwright-html-report.spec.ts --reporter=list`
+  - [x] repo-local helper execution against a representative JUnit input containing passed, failed, and skipped tests

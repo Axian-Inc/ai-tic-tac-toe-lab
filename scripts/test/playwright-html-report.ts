@@ -1,4 +1,6 @@
-import { readFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -9,6 +11,8 @@ import {
 } from "./playwright-report-paths.ts";
 
 type TestStatus = "passed" | "failed" | "skipped";
+
+const execFileAsync = promisify(execFile);
 
 export type StepReport = {
   index: number;
@@ -40,9 +44,15 @@ export type ReportSummary = {
   startedAt?: string;
 };
 
+export type RunMetadata = {
+  branchName?: string;
+  runId?: string;
+};
+
 export type ParsedPlaywrightJUnitReport = {
   sourcePath: string;
   htmlOutputPath: string;
+  runMetadata: RunMetadata;
   summary: ReportSummary;
   tests: TestCaseReport[];
 };
@@ -54,6 +64,513 @@ type ParsedStepMetadata = {
   durationMs: number;
   errorSummary?: string;
 };
+
+type ReportMetadataResolutionOptions = {
+  env?: NodeJS.ProcessEnv;
+  gitBranchResolver?: () => Promise<string | undefined>;
+};
+
+type SummaryChartSegment = {
+  label: string;
+  count: number;
+  className: string;
+};
+
+const BRANCH_NAME_ENV_KEYS = [
+  "GITHUB_HEAD_REF",
+  "GITHUB_REF_NAME",
+  "CI_COMMIT_REF_NAME",
+  "BUILDKITE_BRANCH",
+  "BITBUCKET_BRANCH",
+  "BRANCH_NAME",
+  "APPVEYOR_REPO_BRANCH",
+  "VERCEL_GIT_COMMIT_REF",
+];
+
+const RUN_ID_ENV_KEYS = [
+  "GITHUB_RUN_ID",
+  "CI_PIPELINE_ID",
+  "BUILDKITE_BUILD_ID",
+  "BITBUCKET_BUILD_NUMBER",
+  "APPVEYOR_BUILD_ID",
+  "BUILD_BUILDID",
+  "BUILD_ID",
+  "CIRCLE_WORKFLOW_ID",
+  "VERCEL_GIT_COMMIT_SHA",
+];
+
+function getFirstNonEmptyEnvValue(
+  env: NodeJS.ProcessEnv,
+  keys: readonly string[]
+): string | undefined {
+  for (const key of keys) {
+    const value = env[key]?.trim();
+    if (value) {
+      return value;
+    }
+  }
+
+  return undefined;
+}
+
+async function getCurrentGitBranch(): Promise<string | undefined> {
+  try {
+    const { stdout } = await execFileAsync("git", ["branch", "--show-current"], {
+      cwd: process.cwd(),
+    });
+    const branchName = stdout.trim();
+    return branchName || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export function resolveRunIdentifier(env: NodeJS.ProcessEnv = process.env): string | undefined {
+  return getFirstNonEmptyEnvValue(env, RUN_ID_ENV_KEYS);
+}
+
+export async function resolveBranchName(
+  env: NodeJS.ProcessEnv = process.env,
+  gitBranchResolver: () => Promise<string | undefined> = getCurrentGitBranch
+): Promise<string | undefined> {
+  const ciBranchName = getFirstNonEmptyEnvValue(env, BRANCH_NAME_ENV_KEYS);
+  if (ciBranchName) {
+    return ciBranchName;
+  }
+
+  return gitBranchResolver();
+}
+
+export async function resolveRunMetadata(
+  options: ReportMetadataResolutionOptions = {}
+): Promise<RunMetadata> {
+  const env = options.env ?? process.env;
+
+  return {
+    branchName: await resolveBranchName(
+      env,
+      options.gitBranchResolver ?? getCurrentGitBranch
+    ),
+    runId: resolveRunIdentifier(env),
+  };
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function formatDateTime(value: string | undefined): string {
+  if (!value) {
+    return "Not available";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return date.toISOString().replace(".000Z", "Z");
+}
+
+function formatDurationSeconds(value: number): string {
+  return `${value.toFixed(2)}s`;
+}
+
+function formatDurationMs(value: number): string {
+  return `${value}ms`;
+}
+
+function renderSummaryField(label: string, value: string | number | undefined): string {
+  const renderedValue =
+    value === undefined || value === "" ? "Not available" : String(value);
+
+  return `
+    <div class="summary-field">
+      <dt>${escapeHtml(label)}</dt>
+      <dd>${escapeHtml(renderedValue)}</dd>
+    </div>
+  `;
+}
+
+function renderSummaryChart(summary: ReportSummary): string {
+  const total = Math.max(summary.total, 1);
+  const segments: SummaryChartSegment[] = [
+    {
+      label: "Passed",
+      count: summary.passed,
+      className: "chart-segment-passed",
+    },
+    {
+      label: "Failed",
+      count: summary.failed,
+      className: "chart-segment-failed",
+    },
+    {
+      label: "Skipped",
+      count: summary.skipped,
+      className: "chart-segment-skipped",
+    },
+  ];
+
+  return `
+    <section class="report-card">
+      <h2>Summary Chart</h2>
+      <div class="summary-chart" aria-label="Passed, failed, and skipped test totals">
+        ${segments
+          .map(
+            (segment) => `
+              <div
+                class="chart-segment ${segment.className}"
+                style="width: ${(segment.count / total) * 100}%"
+                title="${escapeHtml(`${segment.label}: ${segment.count}`)}"
+              ></div>
+            `
+          )
+          .join("")}
+      </div>
+      <div class="summary-chart-legend">
+        ${segments
+          .map(
+            (segment) => `
+              <div class="legend-item">
+                <span class="legend-swatch ${segment.className}"></span>
+                <span>${escapeHtml(segment.label)}: ${segment.count}</span>
+              </div>
+            `
+          )
+          .join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderArtifactsCell(testCase: TestCaseReport): string {
+  return `
+    <details class="artifacts-details">
+      <summary>Artifacts</summary>
+      <details class="nested-details">
+        <summary>File Artifacts</summary>
+        <p>See test-results/playwright/artifacts for Playwright attachments and screenshots.</p>
+      </details>
+      <details class="nested-details">
+        <summary>Steps (${testCase.steps.length} steps executed)</summary>
+        ${
+          testCase.steps.length
+            ? `
+              <table class="steps-table">
+                <thead>
+                  <tr>
+                    <th>Step</th>
+                    <th>Status</th>
+                    <th>Time</th>
+                    <th>Error</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${testCase.steps
+                    .map(
+                      (step) => `
+                        <tr>
+                          <td>${escapeHtml(`${step.index}. ${step.name}`)}</td>
+                          <td><span class="status-pill status-${step.status}">${escapeHtml(step.status)}</span></td>
+                          <td>${escapeHtml(formatDurationMs(step.durationMs))}</td>
+                          <td>${escapeHtml(step.errorSummary ?? "")}</td>
+                        </tr>
+                      `
+                    )
+                    .join("")}
+                </tbody>
+              </table>
+            `
+            : "<p>No step metadata was recorded for this test.</p>"
+        }
+      </details>
+    </details>
+  `;
+}
+
+function renderTestRows(report: ParsedPlaywrightJUnitReport): string {
+  return report.tests
+    .map(
+      (testCase) => `
+        <tr>
+          <td>${escapeHtml(testCase.testName)}</td>
+          <td>${escapeHtml(testCase.fixtureName)}</td>
+          <td><span class="status-pill status-${testCase.status}">${escapeHtml(
+            testCase.status
+          )}</span></td>
+          <td>${escapeHtml(formatDateTime(testCase.startedAt))}</td>
+          <td>${renderArtifactsCell(testCase)}</td>
+        </tr>
+      `
+    )
+    .join("");
+}
+
+export function renderPlaywrightHtmlReport(
+  report: ParsedPlaywrightJUnitReport
+): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Test Report - Tic Tac Toe</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f4efe6;
+        --surface: #fffdf8;
+        --surface-strong: #f6f0e6;
+        --border: #d9cbb2;
+        --text: #1f2933;
+        --muted: #52606d;
+        --passed: #2d6a4f;
+        --failed: #a61b1b;
+        --skipped: #8a6d1f;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Georgia, "Times New Roman", serif;
+        background:
+          radial-gradient(circle at top left, rgba(205, 180, 140, 0.2), transparent 28%),
+          linear-gradient(180deg, #f8f4ec 0%, var(--bg) 100%);
+        color: var(--text);
+      }
+
+      main {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 32px 20px 48px;
+      }
+
+      h1, h2 {
+        margin: 0 0 16px;
+        font-weight: 700;
+      }
+
+      p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .report-header {
+        margin-bottom: 24px;
+      }
+
+      .report-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 10px 24px rgba(60, 47, 32, 0.08);
+        margin-bottom: 20px;
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+      }
+
+      .summary-field {
+        padding: 12px;
+        background: var(--surface-strong);
+        border-radius: 12px;
+      }
+
+      .summary-field dt {
+        margin: 0 0 6px;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--muted);
+      }
+
+      .summary-field dd {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 700;
+      }
+
+      .summary-chart {
+        display: flex;
+        min-height: 20px;
+        overflow: hidden;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: #efe4d0;
+      }
+
+      .chart-segment-passed,
+      .status-passed {
+        background: var(--passed);
+      }
+
+      .chart-segment-failed,
+      .status-failed {
+        background: var(--failed);
+      }
+
+      .chart-segment-skipped,
+      .status-skipped {
+        background: var(--skipped);
+      }
+
+      .summary-chart-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      .legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--muted);
+      }
+
+      .legend-swatch {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 999px;
+      }
+
+      .results-table,
+      .steps-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .results-table th,
+      .results-table td,
+      .steps-table th,
+      .steps-table td {
+        padding: 12px 10px;
+        text-align: left;
+        border-top: 1px solid var(--border);
+        vertical-align: top;
+      }
+
+      .results-table thead th,
+      .steps-table thead th {
+        border-top: 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .status-pill {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        color: white;
+        font-size: 0.85rem;
+        text-transform: capitalize;
+      }
+
+      details {
+        border-radius: 10px;
+      }
+
+      summary {
+        cursor: pointer;
+        font-weight: 700;
+      }
+
+      .artifacts-details {
+        min-width: 280px;
+      }
+
+      .nested-details {
+        margin-top: 10px;
+        padding: 10px 12px;
+        background: var(--surface-strong);
+      }
+
+      @media (max-width: 820px) {
+        .results-table,
+        .results-table thead,
+        .results-table tbody,
+        .results-table th,
+        .results-table td,
+        .results-table tr {
+          display: block;
+        }
+
+        .results-table thead {
+          display: none;
+        }
+
+        .results-table tr {
+          margin-bottom: 16px;
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          background: var(--surface-strong);
+          padding: 10px;
+        }
+
+        .results-table td {
+          border-top: 0;
+          padding: 8px 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header class="report-header">
+        <h1>Test Report - Tic Tac Toe</h1>
+        <p>Standalone Playwright UI automation report rendered from the final JUnit artifact.</p>
+      </header>
+
+      <section class="report-card">
+        <h2>Run Summary</h2>
+        <dl class="summary-grid">
+          ${renderSummaryField("Run Identifier", report.runMetadata.runId)}
+          ${renderSummaryField("Time Run Started", formatDateTime(report.summary.startedAt))}
+          ${renderSummaryField("Branch Name", report.runMetadata.branchName)}
+          ${renderSummaryField("Total Tests", report.summary.total)}
+          ${renderSummaryField("Passed", report.summary.passed)}
+          ${renderSummaryField("Failed", report.summary.failed)}
+          ${renderSummaryField("Skipped", report.summary.skipped)}
+        </dl>
+      </section>
+
+      ${renderSummaryChart(report.summary)}
+
+      <section class="report-card">
+        <h2>Results</h2>
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th>Test Name</th>
+              <th>Fixture Name</th>
+              <th>Status</th>
+              <th>Time of Test Execution</th>
+              <th>Artifacts</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${renderTestRows(report)}
+          </tbody>
+        </table>
+      </section>
+    </main>
+  </body>
+</html>`;
+}
 
 function parseDuration(value: string | null): number {
   if (!value) {
@@ -230,6 +747,7 @@ export function parsePlaywrightJUnitXml(
   return {
     sourcePath,
     htmlOutputPath,
+    runMetadata: {},
     summary,
     tests,
   };
@@ -237,10 +755,27 @@ export function parsePlaywrightJUnitXml(
 
 export async function readPlaywrightJUnitReport(
   junitPath = DEFAULT_JUNIT_PATH,
-  htmlOutputPath = DEFAULT_HTML_REPORT_PATH
+  htmlOutputPath = DEFAULT_HTML_REPORT_PATH,
+  metadataOptions: ReportMetadataResolutionOptions = {}
 ): Promise<ParsedPlaywrightJUnitReport> {
   const xml = await readFile(junitPath, "utf8");
-  return parsePlaywrightJUnitXml(xml, junitPath, htmlOutputPath);
+  const report = parsePlaywrightJUnitXml(xml, junitPath, htmlOutputPath);
+
+  return {
+    ...report,
+    runMetadata: await resolveRunMetadata(metadataOptions),
+  };
+}
+
+export async function writePlaywrightHtmlReport(
+  report: ParsedPlaywrightJUnitReport
+): Promise<string> {
+  const html = renderPlaywrightHtmlReport(report);
+  await mkdir(path.dirname(report.htmlOutputPath), {
+    recursive: true,
+  });
+  await writeFile(report.htmlOutputPath, html, "utf8");
+  return report.htmlOutputPath;
 }
 
 export type CliOptions = {
@@ -297,12 +832,14 @@ async function main(): Promise<void> {
     options.junitPath,
     options.htmlOutputPath
   );
+  await writePlaywrightHtmlReport(report);
 
   console.log(
     JSON.stringify(
       {
         sourcePath: report.sourcePath,
         htmlOutputPath: report.htmlOutputPath,
+        runMetadata: report.runMetadata,
         summary: report.summary,
       },
       null,

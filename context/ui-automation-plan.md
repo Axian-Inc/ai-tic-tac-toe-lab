@@ -324,41 +324,41 @@ Phase 10 scope note:
 - CI upload/publishing behavior remains out of scope for this phase.
 - The HTML artifact must still be generated locally as a stable file under `test-results/playwright/` whenever the helper is run against a JUnit result.
 
-- [ ] Extend the helper so it writes a standalone HTML report to `test-results/playwright/report.html` by default.
-- [ ] Render a report header titled `Test Report - Tic Tac Toe`.
+- [x] Extend the helper so it writes a standalone HTML report to `test-results/playwright/report.html` by default.
+- [x] Render a report header titled `Test Report - Tic Tac Toe`.
 - [ ] Include run-level summary fields near the top of the report:
-  - [ ] run identifier when available
-  - [ ] time run started
-  - [ ] branch name when it can be determined in local or CI execution
-  - [ ] total tests
-  - [ ] passed
-  - [ ] failed
-  - [ ] skipped
-- [ ] Add a graphical summary chart for passed, failed, and skipped totals.
-- [ ] Render one result row per test case that includes:
-  - [ ] test name
-  - [ ] fixture name
-  - [ ] status
-  - [ ] time of test execution
-  - [ ] artifacts
-- [ ] Make the artifacts cell expandable and render two expandable sections inside it:
-  - [ ] `File Artifacts`
-  - [ ] `Steps (# steps executed)`
-- [ ] Keep `File Artifacts` static for the initial HTML implementation and point users to the known Playwright artifact tree under `test-results/playwright/artifacts`.
-- [ ] When `Steps (# steps executed)` is expanded, render a table with:
-  - [ ] step
-  - [ ] status
-  - [ ] time
-  - [ ] error
-- [ ] Populate the step table from the embedded JUnit step payload so failed-step error text matches the concise `errorSummary` captured in Phase 8.
-- [ ] Derive fixture name from available JUnit testcase metadata where possible; when Playwright does not emit a direct fixture field, keep using classname-based inference and document that inference in the implementation.
-- [ ] Resolve branch name from CI environment variables first, then local git branch resolution as a fallback, and omit the field gracefully when neither source is available.
-- [ ] Surface run identifier when available and omit it gracefully when unavailable locally.
-- [ ] Keep the generated HTML self-contained enough for artifact publishing with no live server requirement.
-- [ ] Add targeted unit coverage for branch/run metadata resolution and HTML rendering behavior.
-- [ ] Validate the generated HTML against a JUnit file containing passed, failed, and skipped tests.
-- [ ] Validate at least one failed-step case so the rendered steps table shows the embedded concise error summary.
-- [ ] Validate that the generated HTML remains useful when branch name or run identifier cannot be determined locally.
+  - [x] run identifier when available
+  - [x] time run started
+  - [x] branch name when it can be determined in local or CI execution
+  - [x] total tests
+  - [x] passed
+  - [x] failed
+  - [x] skipped
+- [x] Add a graphical summary chart for passed, failed, and skipped totals.
+- [x] Render one result row per test case that includes:
+  - [x] test name
+  - [x] fixture name
+  - [x] status
+  - [x] time of test execution
+  - [x] artifacts
+- [x] Make the artifacts cell expandable and render two expandable sections inside it:
+  - [x] `File Artifacts`
+  - [x] `Steps (# steps executed)`
+- [x] Keep `File Artifacts` static for the initial HTML implementation and point users to the known Playwright artifact tree under `test-results/playwright/artifacts`.
+- [x] When `Steps (# steps executed)` is expanded, render a table with:
+  - [x] step
+  - [x] status
+  - [x] time
+  - [x] error
+- [x] Populate the step table from the embedded JUnit step payload so failed-step error text matches the concise `errorSummary` captured in Phase 8.
+- [x] Derive fixture name from available JUnit testcase metadata where possible; when Playwright does not emit a direct fixture field, keep using classname-based inference and document that inference in the implementation.
+- [x] Resolve branch name from CI environment variables first, then local git branch resolution as a fallback, and omit the field gracefully when neither source is available.
+- [x] Surface run identifier when available and omit it gracefully when unavailable locally.
+- [x] Keep the generated HTML self-contained enough for artifact publishing with no live server requirement.
+- [x] Add targeted unit coverage for branch/run metadata resolution and HTML rendering behavior.
+- [x] Validate the generated HTML against a JUnit file containing passed, failed, and skipped tests.
+- [x] Validate at least one failed-step case so the rendered steps table shows the embedded concise error summary.
+- [x] Validate that the generated HTML remains useful when branch name or run identifier cannot be determined locally.
 
 4. Verification and documentation sequence
 - Validate each application change locally before re-enabling the blocked automation: targeted typecheck and affected Playwright specs for the single-player seed path, `UI-010` in local full mode, and then the deferred `RemoteCDP` Phase 4 subset followed by Phase 5 gameplay coverage.
