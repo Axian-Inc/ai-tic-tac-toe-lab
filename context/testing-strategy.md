@@ -47,6 +47,7 @@ Last updated: 2026-04-13
 - `RemoteCDP` host-browser runs may also require explicit browser-visible origin overrides in local dev-container environments:
   - `UI_AUTOMATION_BASE_URL=http://localhost:4173/`
   - `UI_AUTOMATION_MULTIPLAYER_API_BASE_URL=http://localhost:3001`
+- Before running the Phase 6 multiplayer error suite in `RemoteCDP` full mode, verify in the dedicated host Chrome window that `http://localhost:4173/` loads fully and `http://localhost:3001/health` returns successfully; otherwise the suite may fail at initial navigation rather than at the intended forced-error assertions.
 - Playwright test discovery now spans `tests/`, including `tests/e2e/` and `tests/unit/`.
 - Browser automation fixtures now expose a `TestSupportApi` helper for backend reset, snapshot seeding, capacity seeding, and deterministic forced-failure setup during multiplayer UI tests.
 - Pull request CI validation uses the same repo-root commands documented for local use: `npm test` for automated unit coverage and `npm run build` for build validation.

@@ -221,7 +221,7 @@ Define the plan to automate the manual UI cases in [ui-test-cases.md](/workspace
 - Phase 6 validation status:
   - local `UI_AUTOMATION_MODE=full` execution passed `UI-019` and `UI-020`
   - `tests/e2e/multiplayer-errors.spec.ts` is now enabled for `RemoteCDP` full-mode execution
-  - `RemoteCDP` full-mode verification of `UI-019` and `UI-020` remains pending until a host Chrome target is available with the documented browser-visible frontend and backend overrides
+  - `RemoteCDP` full-mode execution now passes `UI-019` and `UI-020` when the documented localhost browser-visible overrides are supplied and the host Chrome session can already load `http://localhost:4173/` plus `http://localhost:3001/health` before the run begins
 
 ### Phase 7: Cleanup and Deferred Runtime Work
 
@@ -241,7 +241,6 @@ Define the plan to automate the manual UI cases in [ui-test-cases.md](/workspace
 - Manual cases `UI-001` through `UI-020` now have automated Playwright coverage.
 - Carryover cleanup remains outside the core functional-case mapping:
   - expand page-object helpers so remaining maintained e2e specs do not need raw locators for modal-state or gameplay-state assertions
-  - validate the re-enabled [tests/e2e/multiplayer-errors.spec.ts](/workspaces/ai-tic-tac-toe-lab/tests/e2e/multiplayer-errors.spec.ts) coverage in full-mode `RemoteCDP` using the documented explicit host-browser overrides
   - reconcile plan status, manual-case automation markers, and remaining skips so documentation matches the repo state before Phase 8 reporting work expands the output contract
 
 ### Application Change Plan For Requested Support Work

@@ -239,7 +239,8 @@ Implementation status note:
 - Maintained e2e spec hygiene update:
   - [x] no remaining raw `getBy...` or `locator(...)` calls exist in maintained `tests/e2e/*.spec.ts` files outside the shared page-object layer
 - Remaining follow-up is verification parity rather than framework cleanup:
-  - [ ] validate `UI-019` and `UI-020` in `RemoteCDP` full mode with the documented host-browser overrides
+  - [x] validate `UI-019` and `UI-020` in `RemoteCDP` full mode with the documented host-browser overrides
+  - setup note: before running the Phase 6 error suite in `RemoteCDP` full mode, confirm the dedicated host Chrome session can already load `http://localhost:4173/` and `http://localhost:3001/health`; when the host browser cannot reach those forwarded localhost ports yet, the suite can fail at initial navigation before the intended error-state assertions run
 
 ## Phase 8 Progress: JUnit Step Metadata Foundation
 
