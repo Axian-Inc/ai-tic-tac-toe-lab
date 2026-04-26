@@ -1,13 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { GameMode } from "./game";
-import {
-  getCurrentController,
-  getHumanMark,
-  getMatchupLabel,
-  getStatus,
-  getTerminalBanner,
-  isCellDisabled,
-} from "./game";
+import { isCellDisabled } from "./game";
+import { GameScreen } from "./components/GameScreen";
+import { LandingScreen } from "./components/LandingScreen";
 import { useGameSessionStore } from "./store/gameSession";
 
 const MAX_PLAYER_NAME_LENGTH = 24;
@@ -275,259 +270,35 @@ function App() {
   };
 
   if (game === null) {
-    const characterCount = playerNameInput.trim().length;
-
     return (
-      <main className="app-shell landing-shell">
-        <section className="hero-panel landing-hero">
-          <p className="eyebrow">Welcome</p>
-          <h1>Tic-Tac-Toe Lab</h1>
-          <p className="hero-copy" data-testid="landing-copy">
-            Enter your name, pick a match style, and launch a fresh game.
-          </p>
-        </section>
-
-        <section className="landing-card">
-          <div className="landing-copy-block">
-            <p className="status-label">Player setup</p>
-            <h2 data-testid="landing-heading">Start a new game</h2>
-            <p>
-              Choose player vs player for a local match, or player vs CPU for a
-              solo round against the game.
-            </p>
-          </div>
-
-          <label className="name-field">
-            <span>Your name</span>
-            <input
-              type="text"
-              value={playerNameInput}
-              onChange={(event) => {
-                setPlayerNameInput(event.target.value);
-                if (nameError !== null) {
-                  setNameError(null);
-                }
-              }}
-              maxLength={MAX_PLAYER_NAME_LENGTH}
-              inputMode="text"
-              autoComplete="nickname"
-              aria-describedby="name-guidance name-counter"
-              data-testid="name-input"
-            />
-          </label>
-          <p id="name-guidance" className="field-note">
-            Letters and numbers only. Maximum {MAX_PLAYER_NAME_LENGTH} characters.
-          </p>
-          <p id="name-counter" className="field-note" data-testid="name-counter">
-            {characterCount}/{MAX_PLAYER_NAME_LENGTH}
-          </p>
-          {nameError ? (
-            <p className="field-error" data-testid="name-error">
-              {nameError}
-            </p>
-          ) : null}
-
-          <fieldset className="mode-fieldset">
-            <legend>Game mode</legend>
-            <label className="mode-option">
-              <input
-                type="radio"
-                name="landing-mode"
-                value="player-vs-player"
-                checked={landingSelectedMode === "player-vs-player"}
-                onChange={() => handleLandingModeChange("player-vs-player")}
-              />
-              <span>Player vs Player</span>
-            </label>
-            <label className="mode-option">
-              <input
-                type="radio"
-                name="landing-mode"
-                value="player-vs-cpu"
-                checked={landingSelectedMode === "player-vs-cpu"}
-                onChange={() => handleLandingModeChange("player-vs-cpu")}
-              />
-              <span>Player vs CPU</span>
-            </label>
-          </fieldset>
-
-          <button
-            type="button"
-            className="primary-button landing-button"
-            onClick={handleStartGame}
-            data-testid="start-game"
-          >
-            Start game
-          </button>
-        </section>
-      </main>
+      <LandingScreen
+        maxPlayerNameLength={MAX_PLAYER_NAME_LENGTH}
+        nameError={nameError}
+        playerNameInput={playerNameInput}
+        selectedMode={landingSelectedMode}
+        onModeChange={handleLandingModeChange}
+        onNameChange={(value) => {
+          setPlayerNameInput(value);
+          if (nameError !== null) {
+            setNameError(null);
+          }
+        }}
+        onStartGame={handleStartGame}
+      />
     );
   }
 
-  const currentController = getCurrentController(game);
-  const status = getStatus(game);
-  const terminalBanner = getTerminalBanner(game);
-  const humanMark = game.mode === "player-vs-cpu" ? getHumanMark(game) : null;
-  const matchupLabel = getMatchupLabel(playerName, game.mode);
-  const canRematch = game.mode === "player-vs-cpu" && (game.state === "won" || game.state === "draw");
-  const showTryAgain =
-    game.mode === "player-vs-cpu" &&
-    game.state === "won" &&
-    game.winner !== null &&
-    game.controllers[game.winner] === "cpu";
-
   return (
-    <main className="app-shell">
-      {showConfetti ? (
-        <div className="confetti-burst" data-testid="confetti">
-          {Array.from({ length: 18 }, (_, index) => (
-            <span key={index} className="confetti-piece" />
-          ))}
-        </div>
-      ) : null}
-      <section className="hero-panel">
-        <p className="eyebrow">Rules-driven scaffold</p>
-        <h1>Tic-Tac-Toe Lab</h1>
-        <p className="matchup-copy" data-testid="matchup-label">
-          {matchupLabel}
-        </p>
-        <p className="hero-copy">
-          Welcome, <strong data-testid="player-name">{playerName}</strong>. The
-          board is ready for a fresh round with explicit game states, move
-          history, and Playwright coverage.
-        </p>
-      </section>
-
-      <section className="game-layout">
-        <div className="status-card" aria-live="polite">
-          <p className="status-label">Game state</p>
-          <h2 data-testid="status-heading">{status.heading}</h2>
-          <p data-testid="status-body">{status.body}</p>
-          {game.mode === "player-vs-cpu" ? (
-            <p className="mode-copy" data-testid="player-role">
-              You are playing as <strong>{humanMark}</strong>. The CPU is{" "}
-              <strong>{humanMark === "X" ? "O" : "X"}</strong>.
-            </p>
-          ) : (
-            <p className="mode-copy" data-testid="player-role">
-              Two local players share the board.
-            </p>
-          )}
-          <dl className="status-grid">
-            <div>
-              <dt>State</dt>
-              <dd data-testid="game-state">{game.state}</dd>
-            </div>
-            <div>
-              <dt>Mode</dt>
-              <dd data-testid="game-mode">{game.mode}</dd>
-            </div>
-            <div>
-              <dt>Current player</dt>
-              <dd data-testid="current-player">{game.currentPlayer}</dd>
-            </div>
-            <div>
-              <dt>Controller</dt>
-              <dd data-testid="current-controller">{currentController}</dd>
-            </div>
-            <div>
-              <dt>Winner</dt>
-              <dd data-testid="winner">{game.winner ?? "None"}</dd>
-            </div>
-            <div>
-              <dt>Moves</dt>
-              <dd data-testid="move-count">{game.moveHistory.length}</dd>
-            </div>
-          </dl>
-
-          <div className="controls">
-            <label className="mode-picker">
-              <span>Mode</span>
-              <select
-                value={selectedMode}
-                onChange={(event) => handleModeChange(event.target.value as GameMode)}
-                data-testid="mode-select"
-              >
-                <option value="player-vs-player">Play vs Player</option>
-                <option value="player-vs-cpu">Play vs CPU</option>
-              </select>
-            </label>
-            <button type="button" className="primary-button" onClick={handleNewGame}>
-              New game
-            </button>
-            <button type="button" className="secondary-button" onClick={handleQuit}>
-              Quit game
-            </button>
-          </div>
-        </div>
-
-        <div className="board-card">
-          {terminalBanner ? (
-            <div className="result-banner" data-testid="result-banner">
-              {terminalBanner}
-            </div>
-          ) : null}
-          {showTryAgain ? (
-            <p className="loss-feedback" data-testid="loss-feedback">
-              Try again. The CPU took this round.
-            </p>
-          ) : null}
-          {canRematch ? (
-            <button
-              type="button"
-              className="primary-button rematch-button"
-              onClick={handleNewGame}
-              data-testid="rematch-button"
-            >
-              Rematch
-            </button>
-          ) : null}
-          <div className="board" role="grid" aria-label="Tic-tac-toe board">
-            {game.board.map((cell, index) => (
-              <button
-                key={index}
-                type="button"
-                role="gridcell"
-                className="cell"
-                aria-label={`Cell ${index + 1}`}
-                aria-disabled={isCellDisabled(game, index)}
-                data-testid={`cell-${index}`}
-                data-mark={cell ?? "empty"}
-                data-cell-state={
-                  cell !== null ? "occupied" : isCellDisabled(game, index) ? "locked" : "playable"
-                }
-                onClick={() => handleCellClick(index)}
-                tabIndex={isCellDisabled(game, index) ? -1 : 0}
-              >
-                {cell ?? ""}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <aside className="history-card">
-          <div className="history-header">
-            <h2>Move history</h2>
-            <p>Tracked for the current in-memory game only.</p>
-          </div>
-          {game.moveHistory.length === 0 ? (
-            <p className="empty-history" data-testid="empty-history">
-              No moves recorded yet.
-            </p>
-          ) : (
-            <ol className="history-list" data-testid="move-history">
-              {game.moveHistory.map((move) => (
-                <li key={move.moveNumber}>
-                  <span>#{move.moveNumber}</span>
-                  <span>{move.playerMark}</span>
-                  <span>Cell {move.cellIndex + 1}</span>
-                </li>
-              ))}
-            </ol>
-          )}
-        </aside>
-      </section>
-    </main>
+    <GameScreen
+      game={game}
+      playerName={playerName}
+      selectedMode={selectedMode}
+      showConfetti={showConfetti}
+      onCellClick={handleCellClick}
+      onModeChange={handleModeChange}
+      onNewGame={handleNewGame}
+      onQuit={handleQuit}
+    />
   );
 }
 
