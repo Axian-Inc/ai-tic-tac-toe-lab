@@ -1,5 +1,11 @@
 # ai-tic-tac-toe-lab
 
+## Deployed Application
+
+The application is available at:
+
+http://ai-tic-tac-toe-lab-jhart-tic-tac-toe-590316689173.s3-website-us-west-2.amazonaws.com
+
 ## Dev Container Setup Instructions
 
 ### Pre-Requisites:
