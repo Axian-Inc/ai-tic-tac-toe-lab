@@ -217,9 +217,33 @@ test("rejects an empty or invalid player name on the landing page", async ({ pag
   await page.getByTestId("start-game").click();
   await expect(page.getByTestId("name-error")).toHaveText("Enter your name to start a game.");
 
-  await page.getByTestId("name-input").fill("Alex-99");
+  await page.getByTestId("name-input").fill("Alex 99");
   await page.getByTestId("start-game").click();
-  await expect(page.getByTestId("name-error")).toHaveText("Use letters and numbers only.");
+  await expect(page.getByTestId("name-error")).toHaveText(
+    "Use letters, numbers, underscores, or hyphens only.",
+  );
+  await expect(page.getByTestId("landing-heading")).toHaveText("Start a new game");
+});
+
+test("accepts underscores and hyphens in player names", async ({ page }) => {
+  await page.goto("/");
+
+  await page.getByTestId("name-input").fill("Alex-99_ok");
+  await page.getByTestId("start-game").click();
+
+  await expect(page.getByTestId("player-name")).toHaveText("Alex-99_ok");
+});
+
+test("shows a visible configuration error when online API env vars are missing", async ({ page }) => {
+  await page.goto("/");
+
+  await page.getByRole("radio", { name: "Online Multiplayer" }).check();
+  await page.getByTestId("name-input").fill("OnlineUser");
+  await page.getByTestId("start-game").click();
+
+  await expect(page.getByTestId("online-error")).toContainText(
+    "Online multiplayer is not configured.",
+  );
   await expect(page.getByTestId("landing-heading")).toHaveText("Start a new game");
 });
 

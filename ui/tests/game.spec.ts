@@ -319,10 +319,15 @@ test.describe("game engine", () => {
     });
   });
 
-  test("reports draw and abandonment states without a winner banner regression", () => {
+  test("reports draw, resignation, and abandonment states without a winner banner regression", () => {
     const drawGame = createActiveGame({
       state: "draw",
       board: ["X", "O", "X", "X", "O", "O", "O", "X", "X"],
+    });
+    const resignedGame = createActiveGame({
+      state: "resigned",
+      winner: "O",
+      board: ["X", "X", null, "O", "O", null, null, null, null],
     });
     const abandonedGame = createActiveGame({
       state: "abandoned",
@@ -333,6 +338,11 @@ test.describe("game engine", () => {
     expect(getStatus(drawGame)).toEqual({
       heading: "Draw",
       body: "All 9 cells are occupied and no winning line exists.",
+    });
+    expect(getTerminalBanner(resignedGame)).toBe("O wins");
+    expect(getStatus(resignedGame)).toEqual({
+      heading: "Player resigned",
+      body: "Player O wins by resignation.",
     });
     expect(getTerminalBanner(abandonedGame)).toBeNull();
     expect(getStatus(abandonedGame)).toEqual({

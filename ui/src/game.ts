@@ -1,13 +1,33 @@
 export type PlayerMark = "X" | "O";
 export type CellValue = PlayerMark | null;
-export type GameState = "initializing" | "active" | "won" | "draw" | "abandoned";
-export type GameMode = "player-vs-player" | "player-vs-cpu";
+export type GameState =
+  | "initializing"
+  | "waiting_for_players"
+  | "active"
+  | "won"
+  | "draw"
+  | "resigned"
+  | "abandoned";
+export type GameMode = "player-vs-player" | "player-vs-cpu" | "online-multiplayer";
 export type ActorType = "human" | "cpu";
 
 export type MoveRecord = {
   moveNumber: number;
   playerMark: PlayerMark;
   cellIndex: number;
+};
+
+export type OnlinePlayerSeat = {
+  mark: PlayerMark;
+  displayName: string;
+  joinedAt: string;
+};
+
+export type OnlineGameMetadata = {
+  id: string;
+  currentTurn: PlayerMark | null;
+  latestSequence: number;
+  players: Partial<Record<PlayerMark, OnlinePlayerSeat>>;
 };
 
 export type Game = {
@@ -18,6 +38,7 @@ export type Game = {
   moveHistory: MoveRecord[];
   mode: GameMode;
   controllers: Record<PlayerMark, ActorType>;
+  online?: OnlineGameMetadata;
 };
 
 export type MoveResult = {
@@ -30,8 +51,17 @@ export type GameStatus = {
   body: string;
 };
 
-export const getMatchupLabel = (playerName: string, mode: GameMode): string =>
-  mode === "player-vs-cpu" ? `${playerName} vs CPU` : `${playerName} vs ${playerName}`;
+export const getMatchupLabel = (playerName: string, mode: GameMode): string => {
+  if (mode === "player-vs-cpu") {
+    return `${playerName} vs CPU`;
+  }
+
+  if (mode === "online-multiplayer") {
+    return `${playerName} online`;
+  }
+
+  return `${playerName} vs ${playerName}`;
+};
 
 const WINNING_LINES: number[][] = [
   [0, 1, 2],
@@ -52,7 +82,7 @@ export const getRandomStartingPlayer = (): PlayerMark =>
   Math.random() < 0.5 ? "X" : "O";
 
 const createControllers = (mode: GameMode): Record<PlayerMark, ActorType> => {
-  if (mode === "player-vs-player") {
+  if (mode !== "player-vs-cpu") {
     return { X: "human", O: "human" };
   }
 
@@ -224,6 +254,11 @@ export const playTurn = (game: Game, cellIndex: number): Game => {
 
 export const getStatus = (game: Game): GameStatus => {
   switch (game.state) {
+    case "waiting_for_players":
+      return {
+        heading: "Waiting for opponent",
+        body: "Share the game id with another player to start the online match.",
+      };
     case "won":
       if (game.mode === "player-vs-cpu" && game.winner !== null) {
         return {
@@ -244,10 +279,21 @@ export const getStatus = (game: Game): GameStatus => {
         heading: "Draw",
         body: "All 9 cells are occupied and no winning line exists.",
       };
+    case "resigned":
+      return {
+        heading: "Player resigned",
+        body:
+          game.winner === null
+            ? "The online game ended by resignation."
+            : `Player ${game.winner} wins by resignation.`,
+      };
     case "abandoned":
       return {
         heading: "Game abandoned",
-        body: "This match was ended explicitly before a win or draw.",
+        body:
+          game.winner === null
+            ? "This match was ended explicitly before a win or draw."
+            : `Player ${game.winner} wins after the opponent timed out.`,
       };
     case "initializing":
       return {
@@ -255,6 +301,13 @@ export const getStatus = (game: Game): GameStatus => {
         body: "Creating a fresh board.",
       };
     case "active":
+      if (game.mode === "online-multiplayer") {
+        return {
+          heading: `Current turn: ${game.online?.currentTurn ?? game.currentPlayer}`,
+          body: "The online board updates from the server after each accepted move.",
+        };
+      }
+
       return {
         heading: `Current turn: ${game.currentPlayer} (${getCurrentController(game)})`,
         body: `Choose an empty cell to place ${game.currentPlayer}.`,
@@ -265,6 +318,10 @@ export const getStatus = (game: Game): GameStatus => {
 export const getTerminalBanner = (game: Game): string | null => {
   if (game.state === "draw") {
     return "Draw";
+  }
+
+  if ((game.state === "resigned" || game.state === "abandoned") && game.winner !== null) {
+    return `${game.winner} wins`;
   }
 
   if (game.state !== "won" || game.winner === null) {

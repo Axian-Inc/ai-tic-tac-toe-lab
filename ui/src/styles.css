@@ -109,7 +109,8 @@ button {
 }
 
 .name-field,
-.mode-fieldset {
+.mode-fieldset,
+.online-setup {
   display: grid;
   gap: 0.45rem;
 }
@@ -171,6 +172,32 @@ button {
 
 .mode-option input {
   margin: 0;
+}
+
+.online-setup {
+  gap: 0.75rem;
+}
+
+.online-action-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tab-button {
+  min-height: 2.6rem;
+  padding: 0.7rem 1rem;
+  border-radius: 999rem;
+  border: 0.0625rem solid rgba(159, 204, 245, 0.3);
+  background: rgba(15, 29, 46, 0.9);
+  color: #d2e7f8;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.tab-button[aria-pressed="true"] {
+  background: #8ce0ff;
+  color: #03111d;
 }
 
 .landing-button {
@@ -270,6 +297,11 @@ button {
   border: 0.0625rem solid rgba(159, 204, 245, 0.3);
 }
 
+.danger-button {
+  color: #ffb3b3;
+  border-color: rgba(255, 157, 157, 0.45);
+}
+
 .mode-copy {
   margin-top: 1rem;
 }
@@ -297,15 +329,26 @@ button {
   color: #f3f7fb;
 }
 
+.online-metadata {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.online-status-grid {
+  margin-top: 0.25rem;
+}
+
 .primary-button:hover,
 .secondary-button:hover,
-.cell:hover {
+.cell:hover,
+.tab-button:hover {
   transform: translateY(-0.0625rem);
 }
 
 .primary-button:disabled,
 .secondary-button:disabled,
-.cell:disabled {
+.cell:disabled,
+.tab-button:disabled {
   cursor: not-allowed;
   opacity: 0.55;
   transform: none;

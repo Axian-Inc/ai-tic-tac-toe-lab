@@ -5,30 +5,38 @@ import {
   getMatchupLabel,
   getStatus,
   getTerminalBanner,
-  isCellDisabled,
 } from "../game";
+import type { OnlineSessionState } from "../store/gameSession";
 
 type GameScreenProps = {
   game: Game;
+  isCellDisabled: (cellIndex: number) => boolean;
+  onlineSession: OnlineSessionState;
   playerName: string;
   selectedMode: GameMode;
   showConfetti: boolean;
   onCellClick: (cellIndex: number) => void;
+  onCreateOnlineGame: () => void;
   onModeChange: (mode: GameMode) => void;
   onNewGame: () => void;
   onQuit: () => void;
+  onResign: () => void;
 };
 
 type StatusCardProps = {
   game: Game;
+  onlineSession: OnlineSessionState;
   selectedMode: GameMode;
+  onCreateOnlineGame: () => void;
   onModeChange: (mode: GameMode) => void;
   onNewGame: () => void;
   onQuit: () => void;
+  onResign: () => void;
 };
 
 type BoardCardProps = {
   game: Game;
+  isCellDisabled: (cellIndex: number) => boolean;
   onCellClick: (cellIndex: number) => void;
   onNewGame: () => void;
 };
@@ -59,17 +67,89 @@ function GameHero({ playerName, matchupLabel }: { playerName: string; matchupLab
   );
 }
 
-function StatusCard({ game, selectedMode, onModeChange, onNewGame, onQuit }: StatusCardProps) {
-  const currentController = getCurrentController(game);
+const otherMark = (mark: "X" | "O"): "X" | "O" => (mark === "X" ? "O" : "X");
+
+function OnlineMetadata({
+  game,
+  onlineSession,
+}: {
+  game: Game;
+  onlineSession: OnlineSessionState;
+}) {
+  const seats = game.online?.players ?? {};
+  const playerMark = onlineSession.playerMark;
+  const opponent =
+    playerMark === null
+      ? `${seats.X?.displayName ?? "Open X"} vs ${seats.O?.displayName ?? "Open O"}`
+      : seats[otherMark(playerMark)]?.displayName ?? "Waiting for opponent";
+  const roleCopy =
+    onlineSession.role === "spectator"
+      ? "Spectator"
+      : playerMark === null
+        ? "Player"
+        : `Player ${playerMark}`;
+
+  return (
+    <div className="online-metadata">
+      <p className="mode-copy" data-testid="player-role">
+        {roleCopy}
+      </p>
+      <dl className="status-grid online-status-grid">
+        <div>
+          <dt>Game id</dt>
+          <dd data-testid="online-game-id">{game.online?.id ?? onlineSession.gameId ?? "None"}</dd>
+        </div>
+        <div>
+          <dt>Connection</dt>
+          <dd data-testid="online-connection-status">{onlineSession.connectionStatus}</dd>
+        </div>
+        <div>
+          <dt>Role</dt>
+          <dd data-testid="online-role">{roleCopy}</dd>
+        </div>
+        <div>
+          <dt>Opponent</dt>
+          <dd data-testid="online-opponent">{opponent}</dd>
+        </div>
+      </dl>
+      {onlineSession.error ? (
+        <p className="field-error" data-testid="online-session-error">
+          {onlineSession.error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function StatusCard({
+  game,
+  onlineSession,
+  selectedMode,
+  onCreateOnlineGame,
+  onModeChange,
+  onNewGame,
+  onQuit,
+  onResign,
+}: StatusCardProps) {
+  const isOnline = game.mode === "online-multiplayer";
+  const currentController = game.state === "active" ? getCurrentController(game) : null;
+  const currentPlayer = game.online?.currentTurn ?? (game.state === "active" ? game.currentPlayer : null);
   const status = getStatus(game);
   const humanMark = game.mode === "player-vs-cpu" ? getHumanMark(game) : null;
+  const canResign =
+    isOnline &&
+    game.state === "active" &&
+    onlineSession.role === "player" &&
+    onlineSession.playerToken !== null;
 
   return (
     <div className="status-card" aria-live="polite">
       <p className="status-label">Game state</p>
       <h2 data-testid="status-heading">{status.heading}</h2>
       <p data-testid="status-body">{status.body}</p>
-      {game.mode === "player-vs-cpu" ? (
+      {isOnline ? (
+        <OnlineMetadata game={game} onlineSession={onlineSession} />
+      ) : game.mode === "player-vs-cpu" ? (
         <p className="mode-copy" data-testid="player-role">
           You are playing as <strong>{humanMark}</strong>. The CPU is{" "}
           <strong>{humanMark === "X" ? "O" : "X"}</strong>.
@@ -90,11 +170,11 @@ function StatusCard({ game, selectedMode, onModeChange, onNewGame, onQuit }: Sta
         </div>
         <div>
           <dt>Current player</dt>
-          <dd data-testid="current-player">{game.currentPlayer}</dd>
+          <dd data-testid="current-player">{currentPlayer ?? "None"}</dd>
         </div>
         <div>
           <dt>Controller</dt>
-          <dd data-testid="current-controller">{currentController}</dd>
+          <dd data-testid="current-controller">{currentController ?? "None"}</dd>
         </div>
         <div>
           <dt>Winner</dt>
@@ -107,20 +187,45 @@ function StatusCard({ game, selectedMode, onModeChange, onNewGame, onQuit }: Sta
       </dl>
 
       <div className="controls">
-        <label className="mode-picker">
-          <span>Mode</span>
-          <select
-            value={selectedMode}
-            onChange={(event) => onModeChange(event.target.value as GameMode)}
-            data-testid="mode-select"
-          >
-            <option value="player-vs-player">Play vs Player</option>
-            <option value="player-vs-cpu">Play vs CPU</option>
-          </select>
-        </label>
-        <button type="button" className="primary-button" onClick={onNewGame}>
-          New game
-        </button>
+        {isOnline ? (
+          <>
+            <button
+              type="button"
+              className="primary-button"
+              onClick={onCreateOnlineGame}
+              data-testid="create-new-online-game"
+            >
+              Create new online game
+            </button>
+            {canResign ? (
+              <button
+                type="button"
+                className="secondary-button danger-button"
+                onClick={onResign}
+                data-testid="resign-game"
+              >
+                Resign
+              </button>
+            ) : null}
+          </>
+        ) : (
+          <>
+            <label className="mode-picker">
+              <span>Mode</span>
+              <select
+                value={selectedMode}
+                onChange={(event) => onModeChange(event.target.value as GameMode)}
+                data-testid="mode-select"
+              >
+                <option value="player-vs-player">Play vs Player</option>
+                <option value="player-vs-cpu">Play vs CPU</option>
+              </select>
+            </label>
+            <button type="button" className="primary-button" onClick={onNewGame}>
+              New game
+            </button>
+          </>
+        )}
         <button type="button" className="secondary-button" onClick={onQuit}>
           Quit game
         </button>
@@ -129,7 +234,7 @@ function StatusCard({ game, selectedMode, onModeChange, onNewGame, onQuit }: Sta
   );
 }
 
-function BoardCard({ game, onCellClick, onNewGame }: BoardCardProps) {
+function BoardCard({ game, isCellDisabled, onCellClick, onNewGame }: BoardCardProps) {
   const terminalBanner = getTerminalBanner(game);
   const canRematch = game.mode === "player-vs-cpu" && (game.state === "won" || game.state === "draw");
   const showTryAgain =
@@ -162,7 +267,7 @@ function BoardCard({ game, onCellClick, onNewGame }: BoardCardProps) {
       ) : null}
       <div className="board" role="grid" aria-label="Tic-tac-toe board">
         {game.board.map((cell, index) => {
-          const disabled = isCellDisabled(game, index);
+          const disabled = isCellDisabled(index);
           const cellState = cell !== null ? "occupied" : disabled ? "locked" : "playable";
 
           return (
@@ -193,7 +298,11 @@ function MoveHistory({ game }: { game: Game }) {
     <aside className="history-card">
       <div className="history-header">
         <h2>Move history</h2>
-        <p>Tracked for the current in-memory game only.</p>
+        <p>
+          {game.mode === "online-multiplayer"
+            ? "Synced from the online game state."
+            : "Tracked for the current in-memory game only."}
+        </p>
       </div>
       {game.moveHistory.length === 0 ? (
         <p className="empty-history" data-testid="empty-history">
@@ -216,13 +325,17 @@ function MoveHistory({ game }: { game: Game }) {
 
 export function GameScreen({
   game,
+  isCellDisabled,
+  onlineSession,
   playerName,
   selectedMode,
   showConfetti,
   onCellClick,
+  onCreateOnlineGame,
   onModeChange,
   onNewGame,
   onQuit,
+  onResign,
 }: GameScreenProps) {
   const matchupLabel = getMatchupLabel(playerName, game.mode);
 
@@ -234,12 +347,20 @@ export function GameScreen({
       <section className="game-layout">
         <StatusCard
           game={game}
+          onlineSession={onlineSession}
           selectedMode={selectedMode}
+          onCreateOnlineGame={onCreateOnlineGame}
           onModeChange={onModeChange}
           onNewGame={onNewGame}
           onQuit={onQuit}
+          onResign={onResign}
         />
-        <BoardCard game={game} onCellClick={onCellClick} onNewGame={onNewGame} />
+        <BoardCard
+          game={game}
+          isCellDisabled={isCellDisabled}
+          onCellClick={onCellClick}
+          onNewGame={onNewGame}
+        />
         <MoveHistory game={game} />
       </section>
     </main>
