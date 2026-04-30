@@ -1,87 +1,225 @@
 # Developer Guide
 
 ## Overview
-This project is a front-end tic-tac-toe application built with React, TypeScript, Vite, Zustand, ESLint, and Playwright.
+This is now a full-stack tic-tac-toe application with three runtime surfaces:
 
-The codebase is organized around two main responsibilities:
+- `ui/`: React, TypeScript, Vite, Zustand, and Playwright front end.
+- `api/`: TypeScript Node.js backend for online multiplayer, built for AWS Lambda.
+- `terraform/`: AWS infrastructure for the static site, HTTP API, WebSocket API, Lambda functions, DynamoDB tables, IAM, and logs.
 
-- `ui/src/game.ts`: pure game rules and derived game helpers
-- `ui/src/store/gameSession.ts`: Zustand session state for the active game
+The UI still supports local `Player vs Player` and `Player vs CPU` games. Online multiplayer is different: the API is the source of truth, and the UI renders server state after creating, joining, spectating, moving, resigning, or receiving real-time events.
 
-`ui/src/App.tsx` is the main UI entry point. It owns landing-page form state locally and reads active game session state from the store.
+Check both requirements documents before changing behavior:
 
-## Core Architecture
-### Domain module
-`ui/src/game.ts` is the source of truth for game behavior.
+- `docs/requirements.md`: local gameplay and UI expectations.
+- `docs/api-requirements.md`: backend multiplayer API requirements.
 
-It defines:
+## Repository Map
+- `ui/src/game.ts`: pure local game rules and shared UI game helpers.
+- `ui/src/store/gameSession.ts`: Zustand session state for local and online games.
+- `ui/src/api/`: browser API client, online types, WebSocket client, and API URL configuration.
+- `ui/src/components/`: landing and game screens.
+- `api/src/domain.ts`: authoritative online game rules.
+- `api/src/handlers/http.ts`: HTTP API Lambda handler.
+- `api/src/handlers/ws-connect.ts`: WebSocket connection registration.
+- `api/src/handlers/ws-default.ts`: WebSocket subscribe message handling.
+- `api/src/handlers/ws-disconnect.ts`: WebSocket cleanup.
+- `api/src/store.ts`: DynamoDB persistence and transactional writes.
+- `api/src/realtime.ts`: API Gateway WebSocket callback broadcasts.
+- `terraform/`: AWS resources and outputs.
 
-- domain types such as `Game`, `GameMode`, `GameState`, and `MoveRecord`
-- move validation through `playMove`
-- CPU orchestration helpers such as `chooseCpuMove`, `runCpuTurns`, and `playTurn`
-- derived UI helpers such as `getStatus`, `getTerminalBanner`, `getMatchupLabel`, and `isCellDisabled`
+## Runtime Architecture
+### UI
+The UI has local and online paths.
 
-Keep this file pure. It should not depend on React, Zustand, or browser APIs.
+Local games use `ui/src/game.ts` as the source of truth. Keep this file pure: no React, Zustand, browser APIs, network calls, or storage access.
 
-### Session store
-`ui/src/store/gameSession.ts` manages the active session with Zustand.
+Online games use the backend. `ui/src/api/types.ts` normalizes backend `PublicGame` records into the UI `Game` shape, and `ui/src/store/gameSession.ts` coordinates API calls, WebSocket subscriptions, and session recovery.
 
-It stores:
+Online configuration is read from:
 
-- `game`
-- `playerName`
-- `selectedMode`
+- `VITE_API_HTTP_URL`
+- `VITE_API_WS_URL`
+- `globalThis.__TICTACTOE_API_HTTP_URL__`
+- `globalThis.__TICTACTOE_API_WS_URL__`
 
-It exposes actions:
+The Vite variables are the normal local and deployed build path. The runtime globals exist for tests or hosting approaches that inject configuration outside the Vite build.
 
-- `startGame`
-- `playCell`
-- `newGame`
-- `changeMode`
-- `abandon`
-- `resetSession`
+Player tokens are intentionally not persisted in browser storage. The UI keeps enough recovery data in `sessionStorage` to redisplay an online game, but a refreshed player session cannot make player moves without creating or joining again.
 
-The store should orchestrate the session by calling into `game.ts`. Do not duplicate rule logic in the store.
+### API
+The API is authoritative for online multiplayer. Clients suggest actions; the API validates and persists the result.
 
-### UI layer
-`ui/src/App.tsx` renders:
+Core backend rules:
 
-- the landing/setup screen
-- the gameplay screen
-- gameplay feedback such as confetti, sounds, and result messaging
+- Display names must be 1-24 characters and use letters, numbers, underscores, or hyphens.
+- A game starts as `waiting_for_players` with one randomly assigned player mark.
+- Joining adds the second player, starts the game, and randomly selects the current turn.
+- Player tokens authorize player-only actions and are stored only as hashes.
+- Moves require an active game, the correct player token, the correct turn, a valid cell index, and an empty cell.
+- Terminal states are `won`, `draw`, `resigned`, and `abandoned`.
+- Turn timeout is 3 minutes; abandonment checks make the current player lose and the other player win.
+- At most 25 games may be in progress across `waiting_for_players` and `active`.
+- Every state change creates an ordered event.
 
-The UI should consume store state and domain helpers rather than reimplementing game rules.
+The Lambda bundle is generated by `api/esbuild.mjs`. It builds the HTTP and WebSocket handlers into `api/dist` as CommonJS files for the `nodejs22.x` Lambda runtime.
 
-## Current Gameplay Behavior
-- Supports `player-vs-player` and `player-vs-cpu`
-- Randomizes starting player
-- Randomizes CPU/human controller assignment in CPU mode
-- Uses a deterministic CPU move order: `4, 0, 2, 6, 8, 1, 3, 5, 7`
-- Tracks in-memory move history for the current game only
-- Supports `active`, `won`, `draw`, and `abandoned` outcomes
-- Allows `Quit game` to return to the landing screen
-- Offers `Rematch` after finished CPU games
+### Infrastructure
+Terraform provisions:
 
-## Working Rules
-- Check `docs/requirements.md` before changing gameplay behavior.
-- Do not silently change documented game rules.
-- Preserve the separation between pure rules, session orchestration, and rendering.
-- If behavior changes, update tests and any affected docs in the same task.
+- S3 static website bucket for `ui/dist`.
+- DynamoDB `games` table with `state-updatedAt-index`.
+- DynamoDB `game_events` table keyed by `gameId` and `sequence`.
+- DynamoDB `connections` table with `gameId-index` and TTL on `expiresAt`.
+- DynamoDB `counters` table for the concurrent game limit.
+- Four Lambda functions from the same API bundle: HTTP, WebSocket connect, WebSocket disconnect, and WebSocket default.
+- HTTP API Gateway with `/api` routes and permissive CORS for browser access.
+- WebSocket API Gateway with `$connect`, `$disconnect`, and `$default`.
+- IAM permissions for DynamoDB, Lambda logs, and WebSocket connection callbacks.
+- Terraform outputs for the website URL, HTTP API endpoint, and WebSocket endpoint.
 
-## Common Commands
-From `ui/`:
+Resource names include the project name, Terraform workspace, and AWS account where appropriate.
+
+## API Contract
+All HTTP routes are mounted under `/api`.
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/health` | Health check. Returns `{ "status": "ok" }`. |
+| `POST` | `/api/games` | Create an online game from `{ "displayName": "Alice" }`. |
+| `GET` | `/api/games` | List public summaries for waiting and active games. |
+| `GET` | `/api/games/{gameId}` | Fetch full public game state and event history. |
+| `GET` | `/api/games/{gameId}/events?afterSequence=n` | Fetch ordered events after a known sequence. |
+| `POST` | `/api/games/{gameId}/join` | Join a waiting game from `{ "displayName": "Bob" }`. |
+| `POST` | `/api/games/{gameId}/moves` | Submit `{ "playerToken": "...", "cellIndex": 0 }`. |
+| `POST` | `/api/games/{gameId}/resign` | Resign with `{ "playerToken": "..." }`. |
+| `POST` | `/api/games/{gameId}/abandonment-check` | Check whether the current turn timed out. |
+
+Successful create and join responses include a private `player.playerToken`. Public game and summary records must never expose token hashes.
+
+Errors use this shape:
+
+```json
+{
+  "error": {
+    "code": "INVALID_DISPLAY_NAME",
+    "message": "Display name must be 1-24 characters and use letters, numbers, underscores, or hyphens."
+  }
+}
+```
+
+Common status codes:
+
+- `400`: malformed request or invalid display name/cell index.
+- `401`: missing or invalid player token.
+- `403`: valid player token, but not that player's turn.
+- `404`: game not found or route not found.
+- `409`: game state conflict, full game, occupied cell, inactive game, or concurrent mutation.
+- `429`: concurrent game limit reached.
+
+## WebSocket Contract
+Clients connect to the Terraform `api_websocket_endpoint` output and send one subscribe message.
+
+Player subscription:
+
+```json
+{
+  "type": "subscribe",
+  "gameId": "game_abc",
+  "role": "player",
+  "playerToken": "issued-token"
+}
+```
+
+Spectator subscription:
+
+```json
+{
+  "type": "subscribe",
+  "gameId": "game_abc",
+  "role": "spectator",
+  "displayName": "Viewer1"
+}
+```
+
+The server confirms with `subscription.confirmed`, then sends persisted game events such as `game.joined`, `move.accepted`, `game.won`, `game.draw`, `game.resigned`, and `game.abandoned`. On reconnect, the UI fetches missed events and refreshes full game state.
+
+## Local Development
+Use Node.js 22 for both packages.
+
+API commands:
 
 ```bash
-npm install
-npm run dev
-npm run lint
+cd api
+npm ci
 npm run typecheck
 npm test
+npm run coverage
 npm run build
 ```
 
-## Implementation Notes
-- UI audio feedback currently uses the Web Audio API. There are no bundled sound asset files.
-- Confetti is implemented in CSS and rendered from the React UI.
-- Invalid moves are prevented in the UI and rejected by the game rules.
-- The landing-page name field accepts letters and numbers only, up to 24 characters.
+UI commands:
+
+```bash
+cd ui
+npm ci
+npm run dev
+npm run typecheck
+npm run lint
+npm test
+npm run coverage
+npm run build
+```
+
+To run the UI against a deployed API:
+
+```bash
+cd ui
+VITE_API_HTTP_URL="https://example.execute-api.us-west-2.amazonaws.com" \
+VITE_API_WS_URL="wss://example.execute-api.us-west-2.amazonaws.com/prod" \
+npm run dev
+```
+
+If those variables are missing, local and CPU games still work, but online multiplayer shows a configuration error when used.
+
+## Deployment
+Build the API before Terraform planning or applying. The `archive_file` data source packages `api/dist`, so Terraform needs that directory to exist.
+
+```bash
+npm --prefix api ci
+npm --prefix api run build
+
+terraform -chdir=terraform init
+terraform -chdir=terraform workspace select <workspace> || terraform -chdir=terraform workspace new <workspace>
+terraform -chdir=terraform plan
+terraform -chdir=terraform apply
+
+API_HTTP_URL="$(terraform -chdir=terraform output -raw api_http_endpoint)"
+API_WS_URL="$(terraform -chdir=terraform output -raw api_websocket_endpoint)"
+
+npm --prefix ui ci
+VITE_API_HTTP_URL="$API_HTTP_URL" \
+VITE_API_WS_URL="$API_WS_URL" \
+npm --prefix ui run build
+
+aws s3 sync ui/dist "s3://$(terraform -chdir=terraform output -raw bucket_name)" --delete
+terraform -chdir=terraform output website_url
+```
+
+Rebuild and resync the UI whenever API endpoints change, because Vite environment values are baked into the static build.
+
+## Development Rules
+- Keep local game rules in `ui/src/game.ts`.
+- Keep online game rules in `api/src/domain.ts`.
+- Keep UI API types aligned with `api/src/contracts.ts`.
+- Do not duplicate backend authority in the client. The online UI should render accepted server state.
+- Do not expose `playerTokenHash` or store player tokens in public game data.
+- Add or update tests with behavior changes.
+- Update user, tester, and developer docs when changing visible behavior, API contracts, deployment steps, or infrastructure.
+
+## Troubleshooting
+- `Online multiplayer is not configured`: set `VITE_API_HTTP_URL` and `VITE_API_WS_URL` before using online mode.
+- Terraform cannot archive the API: run `npm --prefix api run build` first.
+- WebSocket broadcasts do not arrive: confirm `WEBSOCKET_CALLBACK_ENDPOINT` is set on Lambda and that connections are subscribed to the game.
+- `409 GAME_NOT_ACTIVE` during moves: the game may have ended, changed concurrently, or the client has stale state.
+- Missing in-progress games in the lobby: only `waiting_for_players` and `active` games are listed.
