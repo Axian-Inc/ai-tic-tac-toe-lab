@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { GameMode } from "./game";
 import { isCellDisabled as isLocalCellDisabled } from "./game";
+import { listGames as listOnlineGames } from "./api/client";
+import type { PublicGameSummary } from "./api/types";
 import { GameScreen } from "./components/GameScreen";
 import { LandingScreen, type OnlineStartAction } from "./components/LandingScreen";
 import { useGameSessionStore } from "./store/gameSession";
@@ -10,11 +12,17 @@ import {
   MAX_PLAYER_NAME_LENGTH,
 } from "./validation";
 
+const onlineErrorMessage = (error: unknown): string =>
+  error instanceof Error ? error.message : "Online multiplayer request failed.";
+
 function App() {
   const [landingSelectedMode, setLandingSelectedMode] = useState<GameMode>("player-vs-player");
   const [onlineAction, setOnlineAction] = useState<OnlineStartAction>("create");
   const [gameIdInput, setGameIdInput] = useState("");
   const [gameIdError, setGameIdError] = useState<string | null>(null);
+  const [onlineGames, setOnlineGames] = useState<PublicGameSummary[]>([]);
+  const [onlineGamesError, setOnlineGamesError] = useState<string | null>(null);
+  const [onlineGamesLoading, setOnlineGamesLoading] = useState(false);
   const [playerNameInput, setPlayerNameInput] = useState("");
   const [nameError, setNameError] = useState<string | null>(null);
   const [isStartingOnline, setIsStartingOnline] = useState(false);
@@ -42,6 +50,37 @@ function App() {
   useEffect(() => {
     void recoverOnlineSession();
   }, [recoverOnlineSession]);
+
+  const refreshOnlineGames = useCallback(async (options?: { silent?: boolean }) => {
+    if (!options?.silent) {
+      setOnlineGamesLoading(true);
+    }
+
+    try {
+      const response = await listOnlineGames();
+      setOnlineGames(response.games);
+      setOnlineGamesError(null);
+    } catch (error) {
+      setOnlineGamesError(onlineErrorMessage(error));
+    } finally {
+      if (!options?.silent) {
+        setOnlineGamesLoading(false);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (landingSelectedMode !== "online-multiplayer" || game !== null) {
+      return undefined;
+    }
+
+    void refreshOnlineGames();
+    const intervalId = window.setInterval(() => {
+      void refreshOnlineGames({ silent: true });
+    }, 5_000);
+
+    return () => window.clearInterval(intervalId);
+  }, [game, landingSelectedMode, refreshOnlineGames]);
 
   const primeAudio = useCallback(() => {
     if (typeof window === "undefined") {
@@ -235,10 +274,16 @@ function App() {
 
     if (landingSelectedMode === "online-multiplayer") {
       const trimmedGameId = gameIdInput.trim();
+      const selectedGame = onlineGames.find((candidate) => candidate.id === trimmedGameId);
       const nextGameIdError = onlineAction === "create" ? null : getGameIdError(trimmedGameId);
 
       if (nextGameIdError !== null) {
         setGameIdError(nextGameIdError);
+        return;
+      }
+
+      if (onlineAction === "join" && selectedGame?.state === "active") {
+        setGameIdError("Active games can only be spectated.");
         return;
       }
 
@@ -271,6 +316,11 @@ function App() {
     setLandingSelectedMode(mode);
     setGameIdError(null);
     setNameError(null);
+  };
+
+  const handleOnlineGameSelect = (gameId: string) => {
+    setGameIdInput(gameId);
+    setGameIdError(null);
   };
 
   const isOnlineCellDisabled = (cellIndex: number): boolean =>
@@ -322,6 +372,7 @@ function App() {
     setOnlineAction("create");
     setGameIdInput("");
     setGameIdError(null);
+    setOnlineGamesError(null);
     setPlayerNameInput("");
     setNameError(null);
     setShowConfetti(false);
@@ -352,6 +403,12 @@ function App() {
   };
 
   if (game === null) {
+    const selectedOnlineGame = onlineGames.find((candidate) => candidate.id === gameIdInput.trim());
+    const onlineSelectionBlocked =
+      landingSelectedMode === "online-multiplayer" &&
+      onlineAction === "join" &&
+      selectedOnlineGame?.state === "active";
+
     return (
       <LandingScreen
         gameIdError={gameIdError}
@@ -361,6 +418,10 @@ function App() {
         nameError={nameError}
         onlineAction={onlineAction}
         onlineError={onlineSession.error}
+        onlineGames={onlineGames}
+        onlineGamesError={onlineGamesError}
+        onlineGamesLoading={onlineGamesLoading}
+        onlineSelectionBlocked={onlineSelectionBlocked}
         playerNameInput={playerNameInput}
         selectedMode={landingSelectedMode}
         onGameIdChange={(value) => {
@@ -379,6 +440,10 @@ function App() {
         onOnlineActionChange={(action) => {
           setOnlineAction(action);
           setGameIdError(null);
+        }}
+        onOnlineGameSelect={handleOnlineGameSelect}
+        onOnlineGamesRefresh={() => {
+          void refreshOnlineGames();
         }}
         onStartGame={handleStartGame}
       />

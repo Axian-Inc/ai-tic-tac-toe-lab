@@ -22,6 +22,23 @@ resource "aws_dynamodb_table" "games" {
     type = "S"
   }
 
+  attribute {
+    name = "state"
+    type = "S"
+  }
+
+  attribute {
+    name = "updatedAt"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "state-updatedAt-index"
+    hash_key        = "state"
+    range_key       = "updatedAt"
+    projection_type = "ALL"
+  }
+
   tags = merge(local.common_tags, {
     Name = "${local.api_name}-games"
   })
@@ -137,6 +154,7 @@ data "aws_iam_policy_document" "api_lambda_data_access" {
 
     resources = [
       aws_dynamodb_table.games.arn,
+      "${aws_dynamodb_table.games.arn}/index/*",
       aws_dynamodb_table.game_events.arn,
       aws_dynamodb_table.connections.arn,
       "${aws_dynamodb_table.connections.arn}/index/*",
@@ -175,6 +193,7 @@ resource "aws_lambda_function" "api" {
   environment {
     variables = {
       GAMES_TABLE_NAME            = aws_dynamodb_table.games.name
+      GAMES_STATE_INDEX_NAME      = "state-updatedAt-index"
       EVENTS_TABLE_NAME           = aws_dynamodb_table.game_events.name
       CONNECTIONS_TABLE_NAME      = aws_dynamodb_table.connections.name
       COUNTERS_TABLE_NAME         = aws_dynamodb_table.counters.name
@@ -221,6 +240,7 @@ locals {
   http_routes = toset([
     "GET /api/health",
     "POST /api/games",
+    "GET /api/games",
     "GET /api/games/{gameId}",
     "GET /api/games/{gameId}/events",
     "POST /api/games/{gameId}/join",

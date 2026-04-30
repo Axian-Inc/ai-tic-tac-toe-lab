@@ -1,4 +1,5 @@
 import type { GameMode } from "../game";
+import type { PublicGameSummary, PublicPlayerSeat } from "../api/types";
 
 export type OnlineStartAction = "create" | "join" | "spectate";
 
@@ -10,14 +11,38 @@ type LandingScreenProps = {
   nameError: string | null;
   onlineAction: OnlineStartAction;
   onlineError: string | null;
+  onlineGames: PublicGameSummary[];
+  onlineGamesError: string | null;
+  onlineGamesLoading: boolean;
+  onlineSelectionBlocked: boolean;
   playerNameInput: string;
   selectedMode: GameMode;
   onGameIdChange: (value: string) => void;
   onModeChange: (mode: GameMode) => void;
   onNameChange: (value: string) => void;
   onOnlineActionChange: (action: OnlineStartAction) => void;
+  onOnlineGameSelect: (gameId: string) => void;
+  onOnlineGamesRefresh: () => void;
   onStartGame: () => void;
 };
+
+const formatPlayerList = (game: PublicGameSummary): string => {
+  const players = Object.values(game.players).filter(
+    (seat): seat is PublicPlayerSeat => seat !== undefined,
+  );
+
+  if (players.length === 0) {
+    return "No players";
+  }
+
+  return players.map((player) => `${player.mark}: ${player.displayName}`).join(" vs ");
+};
+
+const formatUpdatedTime = (updatedAt: string): string =>
+  new Intl.DateTimeFormat(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(updatedAt));
 
 export function LandingScreen({
   gameIdError,
@@ -27,16 +52,25 @@ export function LandingScreen({
   nameError,
   onlineAction,
   onlineError,
+  onlineGames,
+  onlineGamesError,
+  onlineGamesLoading,
+  onlineSelectionBlocked,
   playerNameInput,
   selectedMode,
   onGameIdChange,
   onModeChange,
   onNameChange,
   onOnlineActionChange,
+  onOnlineGameSelect,
+  onOnlineGamesRefresh,
   onStartGame,
 }: LandingScreenProps) {
   const characterCount = playerNameInput.trim().length;
   const requiresGameId = onlineAction !== "create";
+  const selectedGameId = gameIdInput.trim();
+  const selectedGame = onlineGames.find((game) => game.id === selectedGameId);
+  const hasStaleSelection = requiresGameId && selectedGameId.length > 0 && selectedGame === undefined;
   const startButtonLabel =
     selectedMode === "online-multiplayer"
       ? onlineAction === "create"
@@ -157,6 +191,78 @@ export function LandingScreen({
             </div>
 
             {requiresGameId ? (
+              <div className="online-game-list" data-testid="online-game-list">
+                <div className="online-list-header">
+                  <div>
+                    <p className="status-label">In-progress games</p>
+                    <p className="field-note">
+                      Select a waiting game to join, or any listed game to spectate.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="secondary-button compact-button"
+                    onClick={onOnlineGamesRefresh}
+                    disabled={onlineGamesLoading}
+                    data-testid="refresh-online-games"
+                  >
+                    {onlineGamesLoading ? "Refreshing..." : "Refresh"}
+                  </button>
+                </div>
+
+                {onlineGamesError ? (
+                  <p className="field-error" data-testid="online-games-error">
+                    {onlineGamesError}
+                  </p>
+                ) : null}
+
+                {onlineGames.length === 0 && !onlineGamesLoading ? (
+                  <p className="empty-online-games" data-testid="empty-online-games">
+                    No in-progress games are available.
+                  </p>
+                ) : null}
+
+                {onlineGames.length > 0 ? (
+                  <div className="online-games-grid">
+                    {onlineGames.map((game) => {
+                      const isSelected = game.id === selectedGameId;
+                      const joinBlocked = onlineAction === "join" && game.state === "active";
+                      const buttonLabel = joinBlocked
+                        ? "Playing"
+                        : isSelected
+                          ? "Selected"
+                          : "Select";
+
+                      return (
+                        <button
+                          type="button"
+                          key={game.id}
+                          className="online-game-option"
+                          aria-pressed={isSelected}
+                          disabled={joinBlocked}
+                          onClick={() => onOnlineGameSelect(game.id)}
+                          data-testid={`online-game-option-${game.id}`}
+                        >
+                          <span>
+                            <strong>{game.id}</strong>
+                            <small>{formatPlayerList(game)}</small>
+                          </span>
+                          <span>
+                            <strong>{game.state === "waiting_for_players" ? "Waiting" : "Active"}</strong>
+                            <small>
+                              {game.moveCount} moves · updated {formatUpdatedTime(game.updatedAt)}
+                            </small>
+                          </span>
+                          <span className="online-game-select-copy">{buttonLabel}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
+            {requiresGameId ? (
               <label className="name-field">
                 <span>Game id</span>
                 <input
@@ -172,7 +278,17 @@ export function LandingScreen({
             ) : null}
             {requiresGameId ? (
               <p id="game-id-guidance" className="field-note">
-                Paste the game id from the online room.
+                Select a game above or paste a game id from an online room.
+              </p>
+            ) : null}
+            {hasStaleSelection ? (
+              <p className="field-note" data-testid="stale-game-selection">
+                This game is not in the current list; the server will verify it when you start.
+              </p>
+            ) : null}
+            {onlineSelectionBlocked ? (
+              <p className="field-error" data-testid="online-selection-blocked">
+                Active games can only be spectated.
               </p>
             ) : null}
             {gameIdError ? (
@@ -192,7 +308,7 @@ export function LandingScreen({
           type="button"
           className="primary-button landing-button"
           onClick={onStartGame}
-          disabled={isOnlineBusy}
+          disabled={isOnlineBusy || onlineSelectionBlocked}
           data-testid="start-game"
         >
           {isOnlineBusy ? "Connecting..." : startButtonLabel}

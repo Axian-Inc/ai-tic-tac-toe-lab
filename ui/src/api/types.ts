@@ -57,6 +57,18 @@ export type PublicGame = {
   eventHistory: GameEvent[];
 };
 
+export type PublicGameSummary = {
+  id: string;
+  state: BackendGameState;
+  currentTurn: PlayerMark | null;
+  players: Partial<Record<PlayerMark, PublicPlayerSeat>>;
+  moveCount: number;
+  createdAt: string;
+  updatedAt: string;
+  startedAt: string | null;
+  latestSequence: number;
+};
+
 export type IssuedPlayer = {
   mark: PlayerMark;
   displayName: string;
@@ -96,6 +108,10 @@ export type JoinGameResponse = CreateGameResponse;
 
 export type GetGameResponse = {
   game: PublicGame;
+};
+
+export type ListGamesResponse = {
+  games: PublicGameSummary[];
 };
 
 export type GetEventsResponse = {

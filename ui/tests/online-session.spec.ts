@@ -1,5 +1,11 @@
-import { expect, test } from "@playwright/test";
-import { normalizePublicGame, type GameEvent, type PublicGame } from "../src/api/types";
+import { expect, test } from "./coverage";
+import { listGames } from "../src/api/client";
+import {
+  normalizePublicGame,
+  type GameEvent,
+  type PublicGame,
+  type PublicGameSummary,
+} from "../src/api/types";
 import { useGameSessionStore } from "../src/store/gameSession";
 import { getPlayerNameError } from "../src/validation";
 
@@ -85,6 +91,27 @@ const makePublicGame = (overrides: Partial<PublicGame> = {}): PublicGame => ({
   ...overrides,
 });
 
+const makePublicGameSummary = (
+  overrides: Partial<PublicGameSummary> = {},
+): PublicGameSummary => ({
+  id: "game_1",
+  state: "waiting_for_players",
+  currentTurn: null,
+  players: {
+    X: {
+      mark: "X",
+      displayName: "Alice",
+      joinedAt: iso,
+    },
+  },
+  moveCount: 0,
+  createdAt: iso,
+  updatedAt: iso,
+  startedAt: null,
+  latestSequence: 1,
+  ...overrides,
+});
+
 const makeEvent = (type: GameEvent["type"], sequence: number): GameEvent => ({
   gameId: "game_1",
   sequence,
@@ -114,6 +141,22 @@ const installOnlineMocks = (getCurrentGame: () => PublicGame, calls: FetchCall[]
       return jsonResponse({
         game: getCurrentGame(),
         player: { mark: "X", displayName: "Alice", playerToken: "token_x" },
+      });
+    }
+
+    if (url === "http://api.test/api/games" && method === "GET") {
+      return jsonResponse({
+        games: [
+          makePublicGameSummary(),
+          makePublicGameSummary({
+            id: "game_2",
+            state: "active",
+            currentTurn: "O",
+            moveCount: 3,
+            startedAt: iso,
+            latestSequence: 5,
+          }),
+        ],
       });
     }
 
@@ -186,6 +229,30 @@ test("normalizes backend online state into the UI game shape", () => {
   expect(game.currentPlayer).toBe("O");
   expect(game.online?.currentTurn).toBeNull();
   expect(game.online?.latestSequence).toBe(7);
+});
+
+test("lists public in-progress online game summaries", async () => {
+  const calls: FetchCall[] = [];
+  installOnlineMocks(() => makePublicGame(), calls);
+
+  const response = await listGames();
+
+  expect(response.games).toEqual([
+    expect.objectContaining({
+      id: "game_1",
+      state: "waiting_for_players",
+      moveCount: 0,
+      latestSequence: 1,
+    }),
+    expect.objectContaining({
+      id: "game_2",
+      state: "active",
+      currentTurn: "O",
+      moveCount: 3,
+      latestSequence: 5,
+    }),
+  ]);
+  expect(calls.some((call) => call.url === "http://api.test/api/games")).toBeTruthy();
 });
 
 test("refreshes a created online game when a join event arrives", async () => {

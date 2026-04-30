@@ -1,0 +1,177 @@
+name: Pull Request Build
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-coverage:
+    name: Build and coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Check out project
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            api/package-lock.json
+            ui/package-lock.json
+
+      - name: Print Node environment
+        run: |
+          node --version
+          npm --version
+
+      - name: Install Playwright globally
+        run: npm install -g playwright
+
+      - name: Set up API project
+        working-directory: api
+        run: npm ci
+
+      - name: Build API project
+        id: api_build
+        working-directory: api
+        continue-on-error: true
+        run: npm run build
+
+      - name: Test API project and generate coverage
+        id: api_coverage
+        working-directory: api
+        continue-on-error: true
+        run: npm run coverage
+
+      - name: Set up UI project
+        working-directory: ui
+        run: npm ci
+
+      - name: Install UI browser dependencies
+        working-directory: ui
+        run: npx playwright install --with-deps chromium
+
+      - name: Build UI project
+        id: ui_build
+        working-directory: ui
+        continue-on-error: true
+        run: npm run build
+
+      - name: Test UI project and generate coverage
+        id: ui_coverage
+        working-directory: ui
+        continue-on-error: true
+        run: npm run coverage
+
+      - name: Upload API build artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-dist
+          path: api/dist
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload API coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-coverage
+          path: api/coverage
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload UI build artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-dist
+          path: ui/dist
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload UI coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-coverage
+          path: ui/coverage
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Print build, test, and coverage results
+        if: always()
+        env:
+          API_BUILD: ${{ steps.api_build.outcome }}
+          API_COVERAGE: ${{ steps.api_coverage.outcome }}
+          UI_BUILD: ${{ steps.ui_build.outcome }}
+          UI_COVERAGE: ${{ steps.ui_coverage.outcome }}
+        run: |
+          {
+            echo "## Pull Request Build Results"
+            echo
+            echo "| Check | Outcome |"
+            echo "| --- | --- |"
+            echo "| API build | ${API_BUILD:-skipped} |"
+            echo "| API tests and coverage | ${API_COVERAGE:-skipped} |"
+            echo "| UI build | ${UI_BUILD:-skipped} |"
+            echo "| UI tests and coverage | ${UI_COVERAGE:-skipped} |"
+            echo
+            echo "### Artifacts"
+            echo "- api-dist: api/dist"
+            echo "- api-coverage: api/coverage"
+            echo "- ui-dist: ui/dist"
+            echo "- ui-coverage: ui/coverage"
+            echo
+            echo "Coverage summaries are printed in the API and UI coverage step logs."
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Verify required checks
+        if: always()
+        env:
+          API_BUILD: ${{ steps.api_build.outcome }}
+          API_COVERAGE: ${{ steps.api_coverage.outcome }}
+          UI_BUILD: ${{ steps.ui_build.outcome }}
+          UI_COVERAGE: ${{ steps.ui_coverage.outcome }}
+        run: |
+          failed=0
+
+          check_outcome() {
+            local name="$1"
+            local outcome="$2"
+
+            if [[ "$outcome" != "success" ]]; then
+              echo "::error::${name} did not succeed. Outcome: ${outcome:-skipped}"
+              failed=1
+            fi
+          }
+
+          check_outcome "API build" "$API_BUILD"
+          check_outcome "API tests and coverage" "$API_COVERAGE"
+          check_outcome "UI build" "$UI_BUILD"
+          check_outcome "UI tests and coverage" "$UI_COVERAGE"
+
+          exit "$failed"
+
+      - name: Clean up generated files
+        if: always()
+        run: |
+          rm -rf \
+            api/node_modules \
+            api/dist \
+            api/coverage \
+            ui/node_modules \
+            ui/dist \
+            ui/coverage \
+            ui/playwright-report \
+            ui/test-results

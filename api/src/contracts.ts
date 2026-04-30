@@ -65,6 +65,18 @@ export type PublicGame = Omit<StoredGame, "players"> & {
   eventHistory: GameEvent[];
 };
 
+export type PublicGameSummary = {
+  id: string;
+  state: GameState;
+  currentTurn: PlayerMark | null;
+  players: Partial<Record<PlayerMark, PublicPlayerSeat>>;
+  moveCount: number;
+  createdAt: string;
+  updatedAt: string;
+  startedAt: string | null;
+  latestSequence: number;
+};
+
 export type IssuedPlayer = {
   mark: PlayerMark;
   displayName: string;

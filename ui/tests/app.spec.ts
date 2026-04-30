@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./coverage";
 
 const mockRandomSequenceOnLoad = async (
   page: import("@playwright/test").Page,
@@ -54,6 +54,164 @@ const startGame = async (
   }
 
   await page.getByTestId("start-game").click();
+};
+
+const onlineIso = "2026-04-27T00:00:00.000Z";
+
+const makeOnlineSummary = (
+  id: string,
+  state: "waiting_for_players" | "active",
+  overrides?: Record<string, unknown>,
+) => ({
+  id,
+  state,
+  currentTurn: state === "active" ? "X" : null,
+  players: {
+    X: { mark: "X", displayName: "Alice", joinedAt: onlineIso },
+    ...(state === "active" ? { O: { mark: "O", displayName: "Bob", joinedAt: onlineIso } } : {}),
+  },
+  moveCount: state === "active" ? 2 : 0,
+  createdAt: onlineIso,
+  updatedAt: onlineIso,
+  startedAt: state === "active" ? onlineIso : null,
+  latestSequence: state === "active" ? 4 : 1,
+  ...overrides,
+});
+
+const makeOnlineGame = (
+  id: string,
+  state: "waiting_for_players" | "active",
+  overrides?: Record<string, unknown>,
+) => ({
+  ...makeOnlineSummary(id, state),
+  board: Array(9).fill(null),
+  winner: null,
+  moveHistory: [],
+  endedAt: null,
+  lastMoveAt: null,
+  abandonmentDeadlineAt: state === "active" ? "2026-04-27T00:03:00.000Z" : null,
+  eventHistory: [],
+  ...overrides,
+});
+
+const installOnlineLobbyMocks = async (page: import("@playwright/test").Page) => {
+  const joinedWaitingGame = makeOnlineGame("game_waiting", "active", {
+    currentTurn: "O",
+    players: {
+      X: { mark: "X", displayName: "Alice", joinedAt: onlineIso },
+      O: { mark: "O", displayName: "Bob", joinedAt: onlineIso },
+    },
+    startedAt: onlineIso,
+    latestSequence: 2,
+  });
+  const activeGame = makeOnlineGame("game_active", "active");
+
+  await page.addInitScript(() => {
+    const runtimeWindow = window as typeof window & {
+      __TICTACTOE_API_HTTP_URL__?: string;
+      __TICTACTOE_API_WS_URL__?: string;
+    };
+    runtimeWindow.__TICTACTOE_API_HTTP_URL__ = "http://api.test";
+    runtimeWindow.__TICTACTOE_API_WS_URL__ = "ws://api.test/ws";
+
+    class FakeWebSocket {
+      listeners = new Map<string, Array<(event: { data?: string }) => void>>();
+
+      constructor() {
+        window.setTimeout(() => this.emit("open", {}), 0);
+      }
+
+      addEventListener(type: string, listener: (event: { data?: string }) => void) {
+        this.listeners.set(type, [...(this.listeners.get(type) ?? []), listener]);
+      }
+
+      send(data: string) {
+        const subscription = JSON.parse(data) as {
+          gameId: string;
+          role: "player" | "spectator";
+        };
+        window.setTimeout(() => {
+          this.emit("message", {
+            data: JSON.stringify({
+              type: "subscription.confirmed",
+              gameId: subscription.gameId,
+              role: subscription.role,
+              playerMark: subscription.role === "player" ? "O" : undefined,
+              latestSequence: 2,
+            }),
+          });
+        }, 0);
+      }
+
+      close() {
+        this.emit("close", {});
+      }
+
+      emit(type: string, event: { data?: string }) {
+        for (const listener of this.listeners.get(type) ?? []) {
+          listener(event);
+        }
+      }
+    }
+
+    window.WebSocket = FakeWebSocket as unknown as typeof WebSocket;
+  });
+
+  await page.route("http://api.test/api/**", async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+    const method = request.method();
+
+    if (url.pathname === "/api/games" && method === "GET") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          games: [
+            makeOnlineSummary("game_waiting", "waiting_for_players"),
+            makeOnlineSummary("game_active", "active"),
+          ],
+        }),
+      });
+      return;
+    }
+
+    if (url.pathname === "/api/games/game_waiting/join" && method === "POST") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          game: joinedWaitingGame,
+          player: { mark: "O", displayName: "Bob", playerToken: "token_o" },
+        }),
+      });
+      return;
+    }
+
+    if (url.pathname === "/api/games/game_waiting" && method === "GET") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ game: joinedWaitingGame }),
+      });
+      return;
+    }
+
+    if (url.pathname === "/api/games/game_active" && method === "GET") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ game: activeGame }),
+      });
+      return;
+    }
+
+    await route.fulfill({
+      status: 404,
+      contentType: "application/json",
+      body: JSON.stringify({ error: { code: "NOT_FOUND", message: "Not found." } }),
+    });
+  });
 };
 
 test("renders the landing page and starts a game after valid setup", async ({ page }) => {
@@ -245,6 +403,42 @@ test("shows a visible configuration error when online API env vars are missing",
     "Online multiplayer is not configured.",
   );
   await expect(page.getByTestId("landing-heading")).toHaveText("Start a new game");
+});
+
+test("joins a selected waiting online game from the in-progress list", async ({ page }) => {
+  await installOnlineLobbyMocks(page);
+  await page.goto("/");
+
+  await page.getByRole("radio", { name: "Online Multiplayer" }).check();
+  await page.getByTestId("online-action-join").click();
+
+  await expect(page.getByTestId("online-game-option-game_waiting")).toContainText("Waiting");
+  await expect(page.getByTestId("online-game-option-game_active")).toBeDisabled();
+
+  await page.getByTestId("online-game-option-game_waiting").click();
+  await expect(page.getByTestId("game-id-input")).toHaveValue("game_waiting");
+
+  await page.getByTestId("name-input").fill("Bob");
+  await page.getByTestId("start-game").click();
+
+  await expect(page.getByTestId("online-game-id")).toHaveText("game_waiting");
+  await expect(page.getByTestId("online-role")).toHaveText("Player O");
+});
+
+test("spectates a selected active online game from the in-progress list", async ({ page }) => {
+  await installOnlineLobbyMocks(page);
+  await page.goto("/");
+
+  await page.getByRole("radio", { name: "Online Multiplayer" }).check();
+  await page.getByTestId("online-action-spectate").click();
+  await page.getByTestId("online-game-option-game_active").click();
+  await expect(page.getByTestId("game-id-input")).toHaveValue("game_active");
+
+  await page.getByTestId("name-input").fill("Spec_1");
+  await page.getByTestId("start-game").click();
+
+  await expect(page.getByTestId("online-game-id")).toHaveText("game_active");
+  await expect(page.getByTestId("online-role")).toHaveText("Spectator");
 });
 
 test("prevents illegal moves in the UI after a cell is occupied", async ({ page }) => {
