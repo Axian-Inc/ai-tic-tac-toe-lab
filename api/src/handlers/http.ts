@@ -7,6 +7,7 @@ import {
   joinGame,
   resignGame,
   toPublicGame,
+  toPublicGameSummary,
   validateCellIndex,
   validateDisplayName,
 } from "../domain.js";
@@ -25,6 +26,7 @@ import {
   getEvents,
   getGame,
   getGameAndEvents,
+  listInProgressGames,
   saveGameMutation,
 } from "../store.js";
 
@@ -69,6 +71,14 @@ const handleCreateGame = async (event: APIGatewayProxyEventV2) => {
   return jsonResponse(201, {
     game: toPublicGame(game, [createdEvent]),
     player,
+  });
+};
+
+const handleListGames = async () => {
+  const games = await listInProgressGames();
+
+  return jsonResponse(200, {
+    games: games.map(toPublicGameSummary),
   });
 };
 
@@ -172,6 +182,10 @@ export const handler = async (
 
     if (method === "POST" && path === "/api/games") {
       return await handleCreateGame(event);
+    }
+
+    if (method === "GET" && path === "/api/games") {
+      return await handleListGames();
     }
 
     const gameRoute = matchGameRoute(path);

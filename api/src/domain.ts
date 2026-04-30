@@ -8,6 +8,7 @@ import type {
   PlayerMark,
   PlayerSeat,
   PublicGame,
+  PublicGameSummary,
   StoredGame,
 } from "./contracts.js";
 import { ApiError, badRequest } from "./errors.js";
@@ -96,12 +97,11 @@ export const detectWinner = (board: CellValue[]): PlayerMark | null => {
 export const isDraw = (board: CellValue[]): boolean =>
   board.every((cell) => cell !== null) && detectWinner(board) === null;
 
-export const toPublicGame = (
-  game: StoredGame,
-  eventHistory: GameEvent[] = [],
-): PublicGame => ({
-  ...game,
-  players: Object.fromEntries(
+export const isConcurrentGameState = (state: StoredGame["state"]): boolean =>
+  state === "waiting_for_players" || state === "active";
+
+const toPublicPlayers = (game: StoredGame): PublicGame["players"] =>
+  Object.fromEntries(
     Object.entries(game.players).map(([mark, seat]) => [
       mark,
       seat === undefined
@@ -112,8 +112,27 @@ export const toPublicGame = (
             joinedAt: seat.joinedAt,
           },
     ]),
-  ) as PublicGame["players"],
+  ) as PublicGame["players"];
+
+export const toPublicGame = (
+  game: StoredGame,
+  eventHistory: GameEvent[] = [],
+): PublicGame => ({
+  ...game,
+  players: toPublicPlayers(game),
   eventHistory,
+});
+
+export const toPublicGameSummary = (game: StoredGame): PublicGameSummary => ({
+  id: game.id,
+  state: game.state,
+  currentTurn: game.currentTurn,
+  players: toPublicPlayers(game),
+  moveCount: game.moveHistory.length,
+  createdAt: game.createdAt,
+  updatedAt: game.updatedAt,
+  startedAt: game.startedAt,
+  latestSequence: game.latestSequence,
 });
 
 export const makeEvent = (

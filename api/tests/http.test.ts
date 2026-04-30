@@ -6,6 +6,7 @@ const storeMocks = vi.hoisted(() => ({
   getEvents: vi.fn(),
   getGame: vi.fn(),
   getGameAndEvents: vi.fn(),
+  listInProgressGames: vi.fn(),
   saveGameMutation: vi.fn(),
 }));
 
@@ -36,6 +37,40 @@ const makeEvent = (
   }) as APIGatewayProxyEventV2;
 
 const parseBody = (response: { body?: string }) => JSON.parse(response.body ?? "{}");
+
+const iso = "2026-04-27T00:00:00.000Z";
+
+const makeStoredGame = (id: string, state: "waiting_for_players" | "active") => ({
+  id,
+  state,
+  board: Array(9).fill(null),
+  currentTurn: state === "active" ? "X" : null,
+  winner: null,
+  players: {
+    X: {
+      mark: "X",
+      displayName: "alice",
+      playerTokenHash: "secret-token-hash",
+      joinedAt: iso,
+    },
+  },
+  moveHistory: [
+    {
+      moveNumber: 1,
+      playerMark: "X",
+      displayName: "alice",
+      cellIndex: 0,
+      createdAt: iso,
+    },
+  ],
+  createdAt: iso,
+  updatedAt: iso,
+  startedAt: state === "active" ? iso : null,
+  endedAt: null,
+  lastMoveAt: state === "active" ? iso : null,
+  abandonmentDeadlineAt: state === "active" ? "2026-04-27T00:03:00.000Z" : null,
+  latestSequence: state === "active" ? 3 : 1,
+});
 
 describe("http handler", () => {
   beforeEach(() => {
@@ -69,6 +104,43 @@ describe("http handler", () => {
     expect(body.player.displayName).toBe("bob_123");
     expect(body.player.playerToken).toEqual(expect.any(String));
     expect(storeMocks.createGameRecord).toHaveBeenCalledOnce();
+  });
+
+  it("returns public summaries for in-progress games", async () => {
+    storeMocks.listInProgressGames.mockResolvedValue([
+      makeStoredGame("game_waiting", "waiting_for_players"),
+      makeStoredGame("game_active", "active"),
+    ]);
+
+    const response = await handler(makeEvent("GET", "/api/games"));
+    const body = parseBody(response);
+
+    expect(response.statusCode).toBe(200);
+    expect(body.games).toEqual([
+      expect.objectContaining({
+        id: "game_waiting",
+        state: "waiting_for_players",
+        currentTurn: null,
+        moveCount: 1,
+        latestSequence: 1,
+      }),
+      expect.objectContaining({
+        id: "game_active",
+        state: "active",
+        currentTurn: "X",
+        moveCount: 1,
+        latestSequence: 3,
+      }),
+    ]);
+    expect(body.games[0].players.X).toEqual({
+      mark: "X",
+      displayName: "alice",
+      joinedAt: iso,
+    });
+    expect(body.games[0]).not.toHaveProperty("board");
+    expect(body.games[0]).not.toHaveProperty("moveHistory");
+    expect(body.games[0]).not.toHaveProperty("eventHistory");
+    expect(body.games[0].players.X).not.toHaveProperty("playerTokenHash");
   });
 
   it("validates afterSequence when fetching events", async () => {

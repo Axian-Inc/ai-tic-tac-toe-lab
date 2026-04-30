@@ -7,6 +7,7 @@ import type {
   GetEventsResponse,
   GetGameResponse,
   JoinGameResponse,
+  ListGamesResponse,
   MakeMoveResponse,
   ResignResponse,
 } from "./types";
@@ -68,6 +69,9 @@ export const createGame = (displayName: string): Promise<CreateGameResponse> =>
     method: "POST",
     body: JSON.stringify({ displayName }),
   });
+
+export const listGames = (): Promise<ListGamesResponse> =>
+  requestJson<ListGamesResponse>("/api/games");
 
 export const joinGame = (gameId: string, displayName: string): Promise<JoinGameResponse> =>
   requestJson<JoinGameResponse>(`/api/games/${encodePathSegment(gameId)}/join`, {

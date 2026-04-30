@@ -7,8 +7,10 @@ import {
   createGame,
   getSeatForToken,
   hashPlayerToken,
+  isConcurrentGameState,
   joinGame,
   resignGame,
+  toPublicGameSummary,
   validateDisplayName,
 } from "../src/domain.js";
 import { ApiError } from "../src/errors.js";
@@ -104,6 +106,35 @@ describe("game lifecycle", () => {
     const { game } = createGame("alice", createdAt, "game_1", tokenX);
 
     expectApiError(() => joinGame(game, "alice", later, tokenO), "DISPLAY_NAME_ALREADY_USED");
+  });
+
+  it("summarizes public in-progress game list records without private state", () => {
+    const game = makeActiveGame();
+    const summary = toPublicGameSummary(game);
+
+    expect(summary).toEqual({
+      id: game.id,
+      state: "active",
+      currentTurn: "X",
+      players: {
+        X: { mark: "X", displayName: "alice", joinedAt: createdAt },
+        O: { mark: "O", displayName: "bob", joinedAt: createdAt },
+      },
+      moveCount: 0,
+      createdAt,
+      updatedAt: createdAt,
+      startedAt: createdAt,
+      latestSequence: 2,
+    });
+    expect(summary.players.X).not.toHaveProperty("playerTokenHash");
+  });
+
+  it("treats waiting and active games as in-progress", () => {
+    expect(isConcurrentGameState("waiting_for_players")).toBe(true);
+    expect(isConcurrentGameState("active")).toBe(true);
+    for (const state of ["won", "draw", "resigned", "abandoned"] as const) {
+      expect(isConcurrentGameState(state)).toBe(false);
+    }
   });
 });
 

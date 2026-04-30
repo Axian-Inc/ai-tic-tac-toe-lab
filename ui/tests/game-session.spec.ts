@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./coverage";
 import { useGameSessionStore } from "../src/store/gameSession";
 
 const withMockedRandom = <T,>(values: number[], callback: () => T): T => {
