@@ -8,6 +8,7 @@
   "workspaces": [
     "packages/*",
     "apps/web",
+    "tests/unit",
     "tests/e2e",
     "infra/cdk"
   ],
