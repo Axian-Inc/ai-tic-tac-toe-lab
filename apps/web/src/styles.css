@@ -1,9 +1,13 @@
 :root {
-  color: #1d2433;
-  background: #f4f6fb;
-  font-family: Inter, system-ui, sans-serif;
+  color: #172033;
+  background: #eef3ff;
+  font-family: Inter, ui-rounded, "Segoe UI", system-ui, sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
@@ -12,12 +16,47 @@ body {
   min-height: 100vh;
 }
 
-main {
+button {
+  font: inherit;
+}
+
+.app-shell {
+  position: relative;
   display: grid;
   min-height: 100vh;
-  place-content: center;
-  gap: 0.75rem;
+  place-items: center;
+  overflow: hidden;
+  padding: 1.25rem;
+  background:
+    radial-gradient(circle at 15% 15%, #c7d7ff 0 12%, transparent 36%),
+    radial-gradient(circle at 85% 85%, #ffd9a8 0 10%, transparent 34%),
+    #eef3ff;
+}
+
+.card {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 38rem);
+  padding: clamp(1.25rem, 4vw, 2.5rem);
+  border: 1px solid rgb(255 255 255 / 80%);
+  border-radius: 1.5rem;
+  background: rgb(255 255 255 / 90%);
+  box-shadow: 0 1.5rem 4rem rgb(52 68 114 / 18%);
+  backdrop-filter: blur(12px);
+}
+
+.hero {
+  display: grid;
+  gap: 1rem;
   text-align: center;
+}
+
+.eyebrow {
+  color: #4d5f89;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 h1,
@@ -25,3 +64,201 @@ p {
   margin: 0;
 }
 
+h1 {
+  color: #141b31;
+  font-size: clamp(2rem, 8vw, 3.25rem);
+  line-height: 1;
+}
+
+.primary-action,
+.secondary-action,
+.sound-toggle {
+  min-height: 2.75rem;
+  border-radius: 999px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.primary-action {
+  border: 0;
+  padding: 0.75rem 1.5rem;
+  color: white;
+  background: #3158d5;
+  box-shadow: 0 0.6rem 1.2rem rgb(49 88 213 / 24%);
+}
+
+.secondary-action,
+.sound-toggle {
+  border: 1px solid #b6c2e1;
+  padding: 0.65rem 1rem;
+  color: #26355b;
+  background: white;
+}
+
+.primary-action:hover,
+.primary-action:focus-visible {
+  background: #2447b9;
+}
+
+.game-card {
+  display: grid;
+  gap: 1rem;
+}
+
+.game-header,
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.game-header h1 {
+  font-size: clamp(1.9rem, 6vw, 2.75rem);
+}
+
+.game-status {
+  min-height: 2.8rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.8rem;
+  color: #17346f;
+  background: #e8efff;
+  font-size: 1.05rem;
+  font-weight: 750;
+  text-align: center;
+}
+
+.board-help,
+.feedback {
+  color: #52617f;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.board {
+  display: grid;
+  width: min(100%, 25rem);
+  margin: auto;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(0.45rem, 2vw, 0.75rem);
+}
+
+.cell {
+  display: grid;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 2px solid #c5cee5;
+  border-radius: clamp(0.7rem, 3vw, 1.1rem);
+  color: #243b78;
+  background: #f8faff;
+  font-size: clamp(2.25rem, 13vw, 4.6rem);
+  font-weight: 900;
+  line-height: 1;
+  transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+}
+
+.cell--valid {
+  cursor: pointer;
+}
+
+.cell--valid:hover,
+.cell--valid:focus-visible {
+  border-color: #2d9b70;
+  outline: 0;
+  box-shadow: 0 0 0 4px rgb(45 155 112 / 20%);
+  transform: translateY(-2px);
+}
+
+.cell--invalid {
+  cursor: not-allowed;
+  background: #edf0f7;
+}
+
+.cell--invalid:hover,
+.cell--invalid:focus-visible {
+  border-color: #c64d5f;
+  outline: 0;
+  box-shadow: 0 0 0 4px rgb(198 77 95 / 18%);
+}
+
+.feedback {
+  min-height: 1.35rem;
+}
+
+.actions {
+  justify-content: center;
+}
+
+.move-history {
+  color: #52617f;
+  font-size: 0.85rem;
+}
+
+.move-history summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.confetti {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.confetti i {
+  --hue: calc(var(--piece) * 37deg);
+  position: absolute;
+  top: -8%;
+  left: calc((var(--piece) + 1) * 5.2%);
+  width: 0.7rem;
+  height: 1.2rem;
+  border-radius: 0.15rem;
+  background: hsl(var(--hue) 80% 55%);
+  animation: confetti-fall 2.2s calc(var(--piece) * -90ms) linear infinite;
+}
+
+@keyframes confetti-fall {
+  to {
+    transform: translate3d(calc((var(--piece) - 9) * 0.8rem), 115vh, 0) rotate(720deg);
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 34rem) {
+  .game-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .sound-toggle {
+    min-height: 2.4rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  .confetti {
+    display: none;
+  }
+}
