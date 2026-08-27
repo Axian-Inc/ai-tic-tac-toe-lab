@@ -16,7 +16,8 @@ export default defineConfig({
     video: 'retain-on-failure',
   },
   webServer: {
-    command: 'npm run dev --workspace @tic-tac-toe/web -- --host 127.0.0.1 --port 4173',
+    command:
+      'npm run build --workspace @tic-tac-toe/game-core && npm run dev --workspace @tic-tac-toe/web -- --host 127.0.0.1 --port 4173',
     url: 'http://127.0.0.1:4173',
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
