@@ -5,7 +5,7 @@ These instructions apply to product code below `apps/`. The repository root
 
 ## Responsibilities
 
-- Build the Vite/React/TypeScript client and .NET 8 C# backend.
+- Build the Vite/React/TypeScript client and .NET 10 C# backend.
 - Keep domain behavior deterministic and independently testable.
 - Own root dependency changes and lockfile integration.
 - Maintain the public contracts in `contracts/` after coordinator approval.
@@ -46,4 +46,3 @@ These instructions apply to product code below `apps/`. The repository root
 Before handoff, run the relevant root verification commands, update the ticket,
 and identify all contract changes. Feature code without tests requested from QA
 and without documentation notes is incomplete.
-

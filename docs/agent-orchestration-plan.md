@@ -9,12 +9,14 @@ starter, so environment and interface foundations precede feature work.
 
 ## Agents and Branches
 
-All branches start at `origin/00-devcontainer-starter` and use
-`{agent-name}/{branch-name}`.
+Bootstrap the shared `zebanaya-kepler` branch once from
+`origin/00-devcontainer-starter`. All agent branches then start from the latest
+`zebanaya-kepler`, use `{agent-name}/{branch-name}`, and merge back into
+`zebanaya-kepler` after coordinator acceptance.
 
 | Agent | Initial branch | Ownership |
 | --- | --- | --- |
-| Coordinator | `coordinator/integration` | Contracts, sequencing, review, phase gates |
+| Coordinator | `coordinator/contracts` | Contracts, sequencing, review, phase gates |
 | Application | `application/product` | React client, game core, C# server |
 | Quality | `quality/acceptance` | Unit, integration, Playwright, coverage |
 | Documentation/Delivery | `docs-delivery/documentation` | Docs, tickets, devcontainer, CI/CD, AWS IaC |
@@ -22,13 +24,19 @@ All branches start at `origin/00-devcontainer-starter` and use
 Each concurrently active agent uses a separate Git worktree. An agent creates
 short-lived work only beneath its own prefix, such as
 `application/phase-1-game-core`. Work is handed to the coordinator and merged
-into `coordinator/integration`; agents do not merge their own submissions.
+into `zebanaya-kepler`; agents do not merge their own submissions. Before final
+handoff, each agent synchronizes with the latest integration branch and resolves
+conflicts on its own branch.
+
+Pull requests targeting `zebanaya-kepler` run pre-merge validation. Every
+accepted merge produces a push to `zebanaya-kepler`, which triggers the
+post-merge CI/CD workflow against the actual integrated commit.
 
 ## Architecture
 
 ```text
 apps/web                 Vite + React + TypeScript
-apps/api                 .NET 8 C# Lambda/application services
+apps/api                 .NET 10 C# Lambda/application services
 packages/game-core       Pure local game state and deterministic CPU
 contracts                HTTP, WebSocket, and shared game-rule vectors
 tests                    Integration and Playwright acceptance tests
@@ -37,21 +45,23 @@ docs                     Requirements, ADRs, tickets, and operations
 ```
 
 Phase 1 uses S3 and CloudFront. Multiplayer adds API Gateway HTTP/WebSocket,
-.NET 8 Lambda, and DynamoDB. Games use ordered events so state can be replayed
+.NET 10 Lambda, and DynamoDB. Games use ordered events so state can be replayed
 and reconnecting players or spectators can catch up. Shared golden rule vectors
 protect TypeScript/C# behavior from divergence.
 
 ## Wave 0: Foundation
 
-1. Coordinator establishes game terminology, board coordinates, command names,
+1. Coordinator bootstraps `zebanaya-kepler` from
+   `origin/00-devcontainer-starter`, then establishes game terminology, board
+   coordinates, command names,
    HTTP schemas, WebSocket envelopes, error semantics, and the root command
    contract.
 2. Documentation/Delivery imports phase requirements, creates ticket files and
-   ADR templates, and updates the container with .NET 8 and Playwright needs.
+   ADR templates, and updates the container with .NET 10 and Playwright needs.
 3. Application creates the workspace, web scaffold, game package, .NET
    solution, contract locations, and root scripts.
 4. Coordinator merges the scaffold early; other agents synchronize from
-   integration before dependent work.
+   `zebanaya-kepler` before dependent work.
 
 Foundation gate: clean dependency install, client build, server build, and IaC
 synth entry points.
@@ -93,6 +103,10 @@ Application adds active-game discovery and read-only spectator catch-up/live
 updates. Quality adds a third browser context and terminal coverage reporting.
 Documentation/Delivery completes the PR workflow, coverage artifacts,
 deployment workflow, rollback, and spectator operations documentation.
+
+The workflow validates pull requests into `zebanaya-kepler` and runs the full
+CI/CD path again on every push to `zebanaya-kepler`, including every merge.
+Delivery begins only after the merged commit passes verification.
 
 Phase 3 closes when a spectator can join an active game, obtain ordered current
 state, receive later moves, and cannot issue player commands; CI must compile,

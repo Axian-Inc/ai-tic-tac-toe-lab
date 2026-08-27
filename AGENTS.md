@@ -8,11 +8,15 @@ infrastructure as required product deliverables.
 
 ## Starting Point and Branches
 
-- Create every agent branch from `origin/00-devcontainer-starter`.
+- `zebanaya-kepler` is the shared integration branch and the only routine
+  merge target for agent work.
+- Bootstrap `zebanaya-kepler` once from `origin/00-devcontainer-starter`. After
+  that bootstrap, create every agent branch from the latest
+  `zebanaya-kepler`, not directly from the starter branch.
 - Name every branch `{agent-name}/{branch-name}`. Use lowercase kebab-case for
   both segments.
 - Reserved long-lived branches are:
-  - `coordinator/integration`
+  - `coordinator/contracts`
   - `application/product`
   - `quality/acceptance`
   - `docs-delivery/documentation`
@@ -23,7 +27,12 @@ infrastructure as required product deliverables.
 - Use a separate Git worktree for each concurrently active agent. Never switch
   another agent's worktree to a different branch.
 - Do not merge directly to `main`. Open handoffs toward
-  `coordinator/integration`; only the coordinator merges accepted work.
+  `zebanaya-kepler`; only the coordinator merges accepted work.
+- Synchronize an agent branch with the latest `zebanaya-kepler` before final
+  handoff and resolve conflicts on the agent branch.
+- Every push produced by merging an agent branch into `zebanaya-kepler` must
+  trigger the CI/CD workflow. Pull requests targeting `zebanaya-kepler` must
+  also run the non-deployment verification checks before merge.
 - Use Conventional Commits, such as `feat(game): reject occupied cells`,
   `test(api): cover active-game capacity`, or `docs(aws): explain rollback`.
 
@@ -37,7 +46,8 @@ work merely to bypass a failed handoff.
 
 The coordinator must:
 
-1. Create `coordinator/integration` from `origin/00-devcontainer-starter`.
+1. Bootstrap `zebanaya-kepler` from `origin/00-devcontainer-starter`, protect
+   it as the shared integration branch, and keep direct feature commits off it.
 2. Freeze the game vocabulary, board coordinates, root commands, HTTP
    schemas, WebSocket event envelopes, and error semantics before dependent
    work starts.
@@ -86,7 +96,7 @@ credentials/account scope.
 
 - `apps/web`: Vite, React, and TypeScript client.
 - `packages/game-core`: pure Phase 1 game state and deterministic CPU logic.
-- `apps/api`: .NET 8 C# backend/application services.
+- `apps/api`: .NET 10 C# backend/application services.
 - `contracts/game-rule-vectors.json`: shared rule examples run by TypeScript
   and C# tests to detect behavioral drift.
 - `contracts/openapi.yaml`: HTTP contract.
@@ -133,6 +143,8 @@ documentation, and deployment artifacts are all present.
   commands.
 - Coverage can be generated from the terminal.
 - PR CI compiles/packages, runs tests and coverage, and synthesizes IaC.
+- A push to `zebanaya-kepler`, including every accepted merge, triggers the
+  post-merge CI/CD workflow.
 
 ## Stable Command Contract
 
@@ -171,4 +183,3 @@ Every handoff must contain:
 
 Agents do not approve their own handoffs. The coordinator validates the ticket
 criteria and records integration results before merging.
-
