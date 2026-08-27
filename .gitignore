@@ -17,6 +17,9 @@ obj/
 .env.*
 !.env.example
 cdk.out/
+.deployment/
+.test-dist/
+.cdk-dist/
 *.user
 *.suo
 .DS_Store

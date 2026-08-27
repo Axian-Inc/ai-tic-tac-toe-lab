@@ -1,0 +1,7 @@
+{
+  "app": "node .cdk-dist/bin/app.js",
+  "output": "cdk.out",
+  "context": {
+    "@aws-cdk/aws-cloudfront:defaultSecurityPolicyTLSv1.2_2021": true
+  }
+}

@@ -113,6 +113,7 @@ The root command contract is:
 | `npm run coverage` | Generate and enforce coverage reports |
 | `npm run build` | Build/package client and server |
 | `npm run infra:synth` | Synthesize CDK without changing AWS |
+| `npm run infra:deploy` | Guarded, approved deployment to the configured AWS target |
 | `npm run verify` | Complete non-deployment CI gate |
 
 ## Gameplay roadmap
@@ -159,10 +160,14 @@ aws sts get-caller-identity
 aws configure get region
 ```
 
+Phase 1 deployment and recovery procedures are in the
+[static-hosting runbook](docs/operations/phase-1-aws-static-hosting.md).
 Primary cost drivers are CloudFront requests/transfer, S3 storage, API Gateway
 HTTP/WebSocket use, Lambda invocations/duration, DynamoDB requests/storage, and
 CloudWatch logs/alarms. Detailed deployment, rollback, teardown, and estimates
-are delivered with phase infrastructure tickets.
+are delivered with phase infrastructure tickets. Static hosting defaults to
+retaining its versioned bucket on deletion; destructive cleanup is opt-in and
+requires approval.
 
 ## Troubleshooting
 

@@ -1,0 +1,26 @@
+{
+  "name": "@tic-tac-toe/infra",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "test:unit": "tsc --noEmit false --outDir .test-dist && node .test-dist/test/static-web-stack.test.js",
+    "compile": "tsc --noEmit false --outDir .cdk-dist",
+    "synth": "npm run compile && node .cdk-dist/bin/app.js",
+    "deploy": "npm run compile && node scripts/deploy.mjs"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "2.266.0",
+    "constructs": "10.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "20.19.24",
+    "aws-cdk": "2.1139.0",
+    "typescript": "5.9.2"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  }
+}

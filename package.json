@@ -19,7 +19,8 @@
     "test:e2e": "npm run test:e2e --workspaces --if-present",
     "coverage": "npm run coverage --workspaces --if-present",
     "build": "npm run build --workspaces --if-present && dotnet build apps/api/TicTacToe.Api.sln --configuration Release",
-    "infra:synth": "npm run synth --workspaces --if-present",
+    "infra:synth": "npm run synth --workspace @tic-tac-toe/infra",
+    "infra:deploy": "npm run deploy --workspace @tic-tac-toe/infra",
     "verify": "npm run lint && npm run test:unit && npm run test:server && npm run test:e2e && npm run coverage && npm run build && npm run infra:synth"
   }
 }

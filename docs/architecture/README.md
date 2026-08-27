@@ -6,6 +6,7 @@
 - [ADR-004: Deterministic CPU and generated feedback assets (proposed)](ADR-004-cpu-and-feedback-assets.md)
 - [ADR-005: Atomic active-game capacity (proposed)](ADR-005-atomic-game-capacity.md)
 - [ADR-006: AWS delivery security and cost posture](ADR-006-aws-delivery-posture.md)
+- [ADR-007: Phase 1 static hosting retention and routing](ADR-007-phase-1-static-hosting.md)
 - [ADR template](adr-template.md)
 
 Only the coordinator freezes public contracts. An ADR marked `proposed` is
