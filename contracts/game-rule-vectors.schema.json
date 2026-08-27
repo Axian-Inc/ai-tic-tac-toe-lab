@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "game-rule-vectors.schema.json",
+  "title": "Game rule vectors",
+  "type": "object",
+  "required": ["version", "vectors"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "const": 1 },
+    "vectors": { "type": "array" }
+  },
+  "additionalProperties": false
+}

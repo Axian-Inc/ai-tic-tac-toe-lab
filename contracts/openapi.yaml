@@ -1,0 +1,7 @@
+openapi: 3.1.0
+info:
+  title: AI Tic-Tac-Toe API
+  version: 0.0.0
+  description: Placeholder contract; multiplayer operations require coordinator approval.
+paths: {}
+
