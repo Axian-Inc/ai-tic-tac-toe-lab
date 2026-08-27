@@ -1,6 +1,8 @@
 node_modules/
+.npm-cache/
 *.tsbuildinfo
 dist/
+dist-direct-check/
 coverage/
 TestResults/
 playwright-report/
