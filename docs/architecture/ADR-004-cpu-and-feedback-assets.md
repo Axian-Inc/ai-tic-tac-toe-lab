@@ -1,6 +1,6 @@
 # ADR-004: Deterministic CPU and generated feedback assets
 
-- Status: proposed
+- Status: accepted
 - Date: 2026-08-26
 - Owners: coordinator and application
 - Related tickets: PH1-001, PH1-002
@@ -12,13 +12,15 @@ Playwright journey in which the player wins, and distinct move/win/loss sounds.
 Randomness or an unbeatable strategy would make acceptance brittle or
 impossible. Imported media introduces licensing and attribution work.
 
-## Proposed decision
+## Decision
 
-Use a documented priority-based CPU with a stable tie-break order and enough
-imperfection to permit a known player win. Implement simple sound feedback with
-the Web Audio API and visual celebration in code, avoiding committed third-party
-media where practical. Provide reduced-motion and muted/unsupported-audio
-fallbacks. Exact CPU priorities and UX language await coordinator approval.
+Use the policy frozen in `contracts/game-domain.md`: take the lowest-numbered
+immediate winning cell, otherwise take the lowest-numbered legal cell. The CPU
+does not block threats, which permits a stable human win. Implement simple
+sound feedback with the Web Audio API and visual celebration in code, avoiding
+committed third-party media where practical. Provide reduced-motion and
+muted/unsupported-audio fallbacks. A CPU win must include visible `Try again`
+text; audio is supplementary rather than the only feedback.
 
 ## Alternatives considered
 

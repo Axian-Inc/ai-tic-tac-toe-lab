@@ -3,11 +3,78 @@
   "$id": "game-rule-vectors.schema.json",
   "title": "Game rule vectors",
   "type": "object",
-  "required": ["version", "vectors"],
+  "required": ["version", "gameCases", "cpuCases"],
   "properties": {
     "$schema": { "type": "string" },
     "version": { "const": 1 },
-    "vectors": { "type": "array" }
+    "gameCases": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/gameCase" }
+    },
+    "cpuCases": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/cpuCase" }
+    }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "$defs": {
+    "mark": { "enum": ["X", "O"] },
+    "cell": { "type": "integer", "minimum": 0, "maximum": 8 },
+    "move": {
+      "type": "object",
+      "required": ["player", "cell"],
+      "properties": {
+        "player": { "$ref": "#/$defs/mark" },
+        "cell": { "$ref": "#/$defs/cell" }
+      },
+      "additionalProperties": false
+    },
+    "expectedState": {
+      "type": "object",
+      "required": ["status", "currentTurn", "winner", "board", "moveCount"],
+      "properties": {
+        "status": { "enum": ["playing", "won", "draw", "quit"] },
+        "currentTurn": { "oneOf": [{ "$ref": "#/$defs/mark" }, { "type": "null" }] },
+        "winner": { "oneOf": [{ "$ref": "#/$defs/mark" }, { "type": "null" }] },
+        "board": {
+          "type": "array",
+          "minItems": 9,
+          "maxItems": 9,
+          "items": { "oneOf": [{ "$ref": "#/$defs/mark" }, { "type": "null" }] }
+        },
+        "moveCount": { "type": "integer", "minimum": 0, "maximum": 9 }
+      },
+      "additionalProperties": false
+    },
+    "expectedRejection": {
+      "type": "object",
+      "required": ["atMove", "reason"],
+      "properties": {
+        "atMove": { "type": "integer", "minimum": 1 },
+        "reason": { "enum": ["out_of_range", "occupied", "wrong_turn", "game_over"] }
+      },
+      "additionalProperties": false
+    },
+    "gameCase": {
+      "type": "object",
+      "required": ["name", "moves", "expected"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "moves": { "type": "array", "items": { "$ref": "#/$defs/move" } },
+        "expected": { "$ref": "#/$defs/expectedState" },
+        "rejection": { "$ref": "#/$defs/expectedRejection" }
+      },
+      "additionalProperties": false
+    },
+    "cpuCase": {
+      "type": "object",
+      "required": ["name", "moves", "expectedMove"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "moves": { "type": "array", "items": { "$ref": "#/$defs/move" } },
+        "expectedMove": { "$ref": "#/$defs/cell" }
+      },
+      "additionalProperties": false
+    }
+  }
 }
