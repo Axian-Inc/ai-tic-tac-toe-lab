@@ -8,6 +8,14 @@ successful verification of that same SHA.
 
 Pull requests never deploy. Delivery is deliberately skipped until enabled.
 
+## Current Phase 1 state
+
+The push workflow for merged commit `1185521` completed `Full verification`
+successfully on 2026-08-28, including .NET 10, unit/component/CDK tests,
+Playwright, coverage, build, and synthesis. `Deploy approved integration build`
+was skipped because `ENABLE_AWS_DEPLOYMENT` was not true for that run. No
+deployment URL or AWS resource evidence has been recorded.
+
 ## Repository configuration
 
 An administrator should:
@@ -29,9 +37,9 @@ for these workflows.
 
 ## Validation contract
 
-The application scaffold owns `package-lock.json` and must implement
-`npm run verify`. That command includes lint/documentation checks, client and
-server tests, integration/Playwright tests, coverage enforcement, production
+The root workspace owns `package-lock.json` and implements `npm run verify`.
+That command includes lint/type checks, client and
+server tests, integration/Playwright tests, coverage generation, production
 build/package, and CDK synthesis. CI installs Chromium and .NET 10 first.
 
 Coverage is retained for 14 days. Failed Playwright diagnostics are retained
