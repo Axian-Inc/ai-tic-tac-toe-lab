@@ -36,7 +36,29 @@ and cost guidance, and Codex getting-started evidence expectations.
 
 ## Commit or PR
 
-Pending.
+PR #26.
+
+## Retrospective: integration lockfile conflict
+
+After PRs #24 and #25 merged, PR #26 was updated by merging
+`zebanaya-kepler`. Both sides had changed the root workspace list and
+`package-lock.json`. The manifest conflict was resolved correctly, but the
+lockfile was combined as text. That left inconsistent npm workspace-link
+records even though the file remained valid JSON. On the next pull-request
+run, npm Arborist failed while loading the virtual dependency tree with
+`Cannot read properties of undefined (reading 'extraneous')`; `npm ci` then
+reported the misleading generic message that no usable lockfile existed.
+No build, deployment, or AWS mutation ran.
+
+The repair was to regenerate `package-lock.json` from the combined manifests
+and prove it with a clean `npm ci`. For future dependent agent PRs:
+
+1. Refresh the branch after prerequisite PRs merge.
+2. Resolve `package.json` and workspace membership intentionally.
+3. Never hand-merge conflicting generated lockfile sections; regenerate the
+   lockfile from the resolved manifests.
+4. Run a clean install and the full non-deployment verification gate before
+   pushing the refreshed branch.
 
 ## Risks/follow-ups
 
