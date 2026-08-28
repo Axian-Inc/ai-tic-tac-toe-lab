@@ -1,6 +1,6 @@
 # PH1-001: Build deterministic single-player game
 
-- Status: planned
+- Status: done
 - Owner: application
 - Branch: `application/phase-1-single-player`
 - Dependencies: FND-001, FND-003
@@ -8,10 +8,10 @@
 
 ## Acceptance criteria
 
-- [ ] Game core tracks ordered moves, turn, wins, draw, and terminal state.
-- [ ] Deterministic, beatable CPU returns the same move for the same board.
-- [ ] Landing/game views support legal feedback, quit, rematch, confetti, and distinct sounds.
-- [ ] Domain and UI reject illegal moves.
+- [x] Game core tracks ordered moves, turn, wins, draw, and terminal state.
+- [x] Deterministic, beatable CPU returns the same move for the same board.
+- [x] Landing/game views support legal feedback, quit, rematch, confetti, and distinct sounds.
+- [x] Domain and UI reject illegal moves.
 
 ## Implementation notes
 
@@ -20,7 +20,10 @@ in an ADR.
 
 ## Automated/manual evidence
 
-- Pending: unit/component tests and manual accessibility review.
+- Twenty-five game-core tests and seven React component tests pass in CI.
+- Three browser acceptance scenarios cover win/rematch, loss/retry, illegal
+  placement, and quit. Written feedback remains observable when audio or
+  animation is unavailable.
 
 ## Documentation impact
 
@@ -28,8 +31,9 @@ Gameplay, CPU policy, sound behavior, accessibility, and troubleshooting.
 
 ## Commit or PR
 
-Pending.
+PR #24, merged into `zebanaya-kepler`.
 
 ## Risks/follow-ups
 
-- An unbeatable CPU conflicts with the required player-win Playwright path.
+- Manual speaker output and broad assistive-technology/browser coverage are not
+  asserted by automation; audio remains supplementary to written state.

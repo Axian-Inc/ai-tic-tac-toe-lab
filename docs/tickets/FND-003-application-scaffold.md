@@ -1,6 +1,6 @@
 # FND-003: Scaffold application workspace
 
-- Status: in-progress
+- Status: done
 - Owner: application
 - Branch: `application/product`
 - Dependencies: FND-001
@@ -8,10 +8,10 @@
 
 ## Acceptance criteria
 
-- [ ] Scaffold Vite React client, game-core package, .NET 10 solution, and contract locations.
-- [ ] Provide every stable root command, including non-deployment `npm run verify`.
-- [ ] Commit a reproducible root lockfile.
-- [ ] Build the client and server from a clean checkout.
+- [x] Scaffold Vite React client, game-core package, .NET 10 solution, and contract locations.
+- [x] Provide every stable root command, including non-deployment `npm run verify`.
+- [x] Commit a reproducible root lockfile.
+- [x] Build the client and server from a clean checkout.
 
 ## Implementation notes
 
@@ -20,7 +20,8 @@ FND-001.
 
 ## Automated/manual evidence
 
-- Pending: `npm ci`, `npm run build`, and .NET build output.
+- The merged Phase 1 push run completed clean `npm ci`, the Vite/TypeScript
+  builds, and the .NET 10 Release build successfully.
 
 ## Documentation impact
 
@@ -28,8 +29,10 @@ Provide real paths, prerequisites, and command semantics for README updates.
 
 ## Commit or PR
 
-Pending.
+PR #20 established the scaffold; PR #23 repaired the initial integrated
+lockfile. Both are merged into `zebanaya-kepler`.
 
 ## Risks/follow-ups
 
-- CI scaffolding cannot execute until root scripts exist.
+- Future workspace additions must regenerate, rather than text-merge, the root
+  lockfile and prove it with `npm ci` on the CI platform.

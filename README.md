@@ -1,17 +1,17 @@
 # AI Tic-Tac-Toe Lab
 
 A three-phase Tic-Tac-Toe application built through coordinated application,
-quality, documentation/delivery, and integration agents. Phase 1 is a local
-Vite/React single-player game. Phases 2 and 3 add an authoritative .NET 10
+quality, documentation/delivery, and integration agents. The Phase 1
+Vite/React single-player game, automated acceptance suites, and static AWS CDK
+implementation are integrated on `zebanaya-kepler`. The merged non-deployment
+CI gate passes; deployment to the Axian L&D account is still pending explicit
+enablement and approval. Phases 2 and 3 add an authoritative .NET 10
 multiplayer backend, WebSocket updates, replay/catch-up, and spectating.
-
-The repository is currently in foundation work. Commands below are the stable
-interface the application scaffold must provide; they become executable when
-the scaffold and root lockfile are merged.
 
 ## Start here
 
 - [Versioned requirements](docs/requirements/README.md)
+- [Current Phase 1 status](docs/phase-1-status.md)
 - [Agent orchestration plan](docs/agent-orchestration-plan.md)
 - [Delivery backlog](docs/tickets/README.md)
 - [Architecture decisions](docs/architecture/README.md)
@@ -94,12 +94,19 @@ container; never commit an edited path or credentials.
 
 ## Local commands
 
-After the application scaffold lands:
+From a clean checkout:
 
 ```bash
 npm ci
 npx playwright install chromium
 npm run verify
+```
+
+Start the Phase 1 client locally with:
+
+```bash
+npm run build --workspace @tic-tac-toe/game-core
+npm run dev --workspace @tic-tac-toe/web
 ```
 
 The root command contract is:
@@ -110,13 +117,29 @@ The root command contract is:
 | `npm run test:unit` | Client and shared-domain unit tests |
 | `npm run test:server` | .NET server tests |
 | `npm run test:e2e` | Playwright acceptance journeys |
-| `npm run coverage` | Generate and enforce coverage reports |
+| `npm run coverage` | Generate coverage reports |
 | `npm run build` | Build/package client and server |
 | `npm run infra:synth` | Synthesize CDK without changing AWS |
 | `npm run infra:deploy` | Guarded, approved deployment to the configured AWS target |
 | `npm run verify` | Complete non-deployment CI gate |
 
-## Gameplay roadmap
+## Phase 1 gameplay
+
+Choose **Play vs. CPU** from the landing page. The human is `X`, moves first,
+and can place a mark only in an open square. The UI distinguishes available
+and unavailable squares and preserves the ordered move history. **Quit game**
+returns to the landing page; after a completed game, **Rematch** starts a clean
+board with the human moving first again.
+
+The CPU is intentionally deterministic and beatable: it takes the
+lowest-numbered immediate winning square, otherwise the lowest-numbered legal
+square. Accepted moves request a generated thud cue. Wins add confetti and a
+winning cue; losses provide a distinct cue and visible “Try again” feedback.
+Audio can be muted and is supplementary, so blocked audio never prevents play.
+Reduced-motion preferences suppress confetti animation while retaining the
+written result.
+
+## Roadmap
 
 - Phase 1: deterministic, beatable CPU; legal-move feedback; quit/rematch;
   win/loss/move feedback; complete winning Playwright journey.
@@ -148,6 +171,12 @@ these are true:
 PR workflows never deploy. An AWS deploy or teardown also requires explicit
 human authorization and confirmed account/region scope.
 
+The integrated Phase 1 commit `1185521` passed the complete push verification
+gate on 2026-08-28. Its deployment job was skipped because deployment was not
+enabled, so this is build/test/synth evidence, not evidence of an AWS
+deployment. See the
+[Phase 1 status](docs/phase-1-status.md) for the remaining phase gate items.
+
 ## AWS and cost posture
 
 Local builds and `npm run infra:synth` need no AWS credentials and must not
@@ -171,8 +200,9 @@ requires approval.
 
 ## Troubleshooting
 
-- `npm ci` fails before scaffold integration: the root lockfile is not present
-  yet; synchronize with current `zebanaya-kepler`.
+- `npm ci` fails after resolving a workspace conflict: do not text-merge
+  generated lockfile sections. Resolve the manifests, regenerate
+  `package-lock.json`, and prove it with a clean `npm ci`.
 - Playwright reports a missing browser: run `npx playwright install chromium`
   after `npm ci`.
 - Codex prompts to authenticate: verify host `auth.json` exists or authenticate

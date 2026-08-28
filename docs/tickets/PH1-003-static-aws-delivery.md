@@ -1,6 +1,6 @@
 # PH1-003: Deliver Phase 1 static application
 
-- Status: review
+- Status: ready
 - Owner: docs-delivery
 - Branch: `docs-delivery/phase-1-aws`
 - Dependencies: FND-002, FND-003, PH1-001, PH1-002
@@ -26,6 +26,10 @@ is retained by default; destructive L&D cleanup is explicit and guarded.
 - Fixture-backed `npm run infra:synth`: produced
   `TicTacToe-lnd-Web.template.json` with one S3 bucket/policy, OAC,
   distribution, and deployment resource plus six documented outputs.
+- Merged commit `1185521` passed the complete
+  [push verification workflow](https://github.com/Axian-Inc/ai-tic-tac-toe-lab/actions/runs/33203947438)
+  on 2026-08-28, including the real application build and CDK synthesis.
+- The protected deployment job was skipped; no AWS mutation occurred.
 - Pending: approved deployment workflow, URL, deployed Playwright result, and
   named account/region evidence.
 
@@ -36,7 +40,7 @@ and cost guidance, and Codex getting-started evidence expectations.
 
 ## Commit or PR
 
-PR #26.
+PR #26, merged into `zebanaya-kepler`.
 
 ## Retrospective: integration lockfile conflict
 

@@ -1,6 +1,6 @@
 # FND-002: Establish documentation and delivery foundation
 
-- Status: review
+- Status: done
 - Owner: docs-delivery
 - Branch: `docs-delivery/documentation`
 - Dependencies: none
@@ -24,6 +24,8 @@ Public API and event details remain proposed/pending. Delivery requires the
 
 - JSON parse, YAML parse where available, Markdown checks, `git diff --check`,
   and Dockerfile inspection recorded in agent handoff.
+- The merged Phase 1 push workflow proved the workflow scaffolding against the
+  integrated repository.
 
 ## Documentation impact
 
@@ -31,10 +33,8 @@ Creates the initial repository documentation system.
 
 ## Commit or PR
 
-Pending coordinator review.
+PR #21, merged into `zebanaya-kepler`.
 
 ## Risks/follow-ups
 
-- Workflows become executable after the application agent supplies root scripts
-  and a lockfile.
 - Repository administrators must configure protection and GitHub environments.

@@ -21,7 +21,9 @@ only the coordinator freezes public contracts.
 
 ## Automated/manual evidence
 
-- JSON parse and schema-reference checks pending coordinator verification.
+- Phase 1 rule-vector schema/reference checks and all contract-vector tests
+  passed in the merged Phase 1 verification run.
+- Phase 2 HTTP and WebSocket schemas remain intentionally proposed.
 
 ## Documentation impact
 
@@ -29,7 +31,7 @@ Update contract references and relevant ADR statuses.
 
 ## Commit or PR
 
-Pending.
+PR #22, merged into `zebanaya-kepler`.
 
 ## Risks/follow-ups
 
