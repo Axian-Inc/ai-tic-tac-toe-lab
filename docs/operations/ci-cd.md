@@ -18,8 +18,9 @@ An administrator should:
    reviewers.
 3. Add environment or repository variable `ENABLE_AWS_DEPLOYMENT=true` only
    when automatic post-merge delivery is authorized.
-4. Add `AWS_DEPLOY_ROLE_ARN` and optional `AWS_REGION` variables. The default
-   region is `us-west-2`.
+4. Add `AWS_DEPLOY_ROLE_ARN`, `AWS_ACCOUNT_ID`, and optional `AWS_REGION` and
+   `RETAIN_DATA` variables. The region defaults to `us-west-2`; retention
+   defaults to `true`.
 5. Configure the named AWS role to trust GitHub OIDC only for this repository,
    integration branch, and environment; give it only stack-required actions.
 
@@ -38,7 +39,8 @@ for 7 days. Neither output belongs in Git.
 
 ## Delivery contract
 
-`npm run infra:deploy` must deploy the already-built application and CDK stacks
+`npm run infra:deploy` verifies the current AWS account, then deploys the
+already-built application and CDK stacks
 for `DEPLOY_ENVIRONMENT=lnd`, surface stack names and URLs, and fail rather than
 partially reporting success. Infrastructure implementation must document its
 own bootstrap, diff, rollback, recovery, and teardown procedures before

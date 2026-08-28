@@ -10,6 +10,8 @@ test-results/
 *.trx
 *.binlog
 bin/
+!infra/cdk/bin/
+!infra/cdk/bin/*.ts
 obj/
 .vs/
 .vite/
@@ -17,6 +19,9 @@ obj/
 .env.*
 !.env.example
 cdk.out/
+.deployment/
+.test-dist/
+.cdk-dist/
 *.user
 *.suo
 .DS_Store
