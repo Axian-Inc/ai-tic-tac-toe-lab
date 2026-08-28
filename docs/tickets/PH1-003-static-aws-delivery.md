@@ -51,7 +51,13 @@ reported the misleading generic message that no usable lockfile existed.
 No build, deployment, or AWS mutation ran.
 
 The repair was to regenerate `package-lock.json` from the combined manifests
-and prove it with a clean `npm ci`. For future dependent agent PRs:
+and prove it with a clean `npm ci`. A subsequent Ubuntu run exposed npm's
+platform-specific optional-dependency lockfile bug: regeneration on Windows
+retained only the Windows Rollup and esbuild binaries. The root manifest now
+declares the matching Linux x64 packages as optional dependencies so clean
+installs remain reproducible on both development and CI platforms.
+
+For future dependent agent PRs:
 
 1. Refresh the branch after prerequisite PRs merge.
 2. Resolve `package.json` and workspace membership intentionally.
@@ -59,6 +65,8 @@ and prove it with a clean `npm ci`. For future dependent agent PRs:
    lockfile from the resolved manifests.
 4. Run a clean install and the full non-deployment verification gate before
    pushing the refreshed branch.
+5. When a lockfile is generated on a different OS than CI, verify that native
+   optional packages required by the CI platform remain represented.
 
 ## Risks/follow-ups
 

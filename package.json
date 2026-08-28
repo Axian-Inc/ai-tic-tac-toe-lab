@@ -12,6 +12,10 @@
     "tests/e2e",
     "infra/cdk"
   ],
+  "optionalDependencies": {
+    "@esbuild/linux-x64": "0.28.2",
+    "@rollup/rollup-linux-x64-gnu": "4.63.0"
+  },
   "scripts": {
     "lint": "npm run lint --workspaces --if-present",
     "test:unit": "npm run test:unit --workspaces --if-present",
