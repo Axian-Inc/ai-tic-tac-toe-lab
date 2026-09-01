@@ -20,6 +20,11 @@ button {
   font: inherit;
 }
 
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
 .app-shell {
   position: relative;
   display: grid;
@@ -49,6 +54,16 @@ button {
   display: grid;
   gap: 1rem;
   text-align: center;
+}
+
+.landing-actions {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.config-note {
+  color: #6a4c19;
+  font-size: 0.85rem;
 }
 
 .eyebrow {
@@ -128,6 +143,42 @@ h1 {
   text-align: center;
 }
 
+.game-id,
+.sequence-marker {
+  color: #52617f;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.game-id code {
+  overflow-wrap: anywhere;
+}
+
+.connection {
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  color: #415173;
+  background: #e8edf7;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.connection--live {
+  color: #155a42;
+  background: #dff5ec;
+}
+
+.connection--offline {
+  color: #8a2637;
+  background: #ffe5e9;
+}
+
+.connection--recovering {
+  color: #765211;
+  background: #fff2d3;
+}
+
 .board-help,
 .feedback {
   color: #52617f;
@@ -187,6 +238,79 @@ h1 {
 
 .actions {
   justify-content: center;
+  flex-wrap: wrap;
+}
+
+.danger-action {
+  color: #8a2637;
+  border-color: #dc9eaa;
+}
+
+.multiplayer-shell {
+  align-items: start;
+  padding-block: clamp(1.5rem, 8vh, 5rem);
+}
+
+.lobby-card {
+  display: grid;
+  gap: 1rem;
+}
+
+.lobby-card h1 {
+  font-size: clamp(2rem, 7vw, 3rem);
+}
+
+.lobby-card h2 {
+  margin-bottom: 0.75rem;
+  color: #25365e;
+  font-size: 1.1rem;
+}
+
+.error-banner {
+  padding: 0.75rem 1rem;
+  border: 1px solid #e6a8b2;
+  border-radius: 0.75rem;
+  color: #842638;
+  background: #fff0f2;
+}
+
+.game-list {
+  display: grid;
+  max-height: 20rem;
+  padding: 0;
+  margin: 0;
+  gap: 0.55rem;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.game-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem;
+  border: 1px solid #d5ddf0;
+  border-radius: 0.8rem;
+  background: #f8faff;
+}
+
+.game-list span {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.game-list small {
+  color: #64718c;
+}
+
+.text-action {
+  justify-self: center;
+  border: 0;
+  color: #3158d5;
+  background: transparent;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 .move-history {

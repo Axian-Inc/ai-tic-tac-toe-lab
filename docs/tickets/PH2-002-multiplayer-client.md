@@ -1,18 +1,18 @@
 # PH2-002: Add multiplayer client flows
 
-- Status: planned
+- Status: review
 - Owner: application
-- Branch: `application/phase-2-client`
+- Branch: `client/phase-2-multiplayer`
 - Dependencies: PH2-001
 - Requirement source: `docs/requirements/phase-2.md`
 
 ## Acceptance criteria
 
-- [ ] Create and join waiting games.
-- [ ] Apply authoritative WebSocket updates asynchronously.
-- [ ] Reconnect and catch up without duplicating moves.
-- [ ] Resign and display shared terminal results.
-- [ ] Preserve all Phase 1 behavior.
+- [x] Create and join waiting games.
+- [x] Apply authoritative WebSocket updates asynchronously.
+- [x] Reconnect and catch up without duplicating moves.
+- [x] Resign and display shared terminal results.
+- [x] Preserve all Phase 1 behavior.
 
 ## Implementation notes
 
@@ -21,11 +21,16 @@ state.
 
 ## Automated/manual evidence
 
-- Pending: component and multiplayer Playwright results.
+- Web workspace TypeScript lint passes.
+- Focused API and sequence-reconciliation Vitest coverage is included.
+- Full Vitest and Vite execution is pending unrestricted Linux CI because the
+  local managed Windows sandbox rejects the esbuild child process with
+  `spawn EPERM` before test discovery.
 
 ## Documentation impact
 
-Multiplayer user journey, recovery, and error feedback.
+`apps/web/README.md` documents the multiplayer user journey, in-memory seat
+capabilities, reconnect/replay behavior, and the exact deployment variables.
 
 ## Commit or PR
 
@@ -33,4 +38,5 @@ Pending.
 
 ## Risks/follow-ups
 
-- Duplicate and out-of-order WebSocket messages require reconciliation.
+- CI must confirm the production bundle and focused Vitest cases.
+- End-to-end multiplayer acceptance remains owned by PH2-003.
