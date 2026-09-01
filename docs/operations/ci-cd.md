@@ -48,15 +48,22 @@ for 7 days. Neither output belongs in Git.
 ## Delivery contract
 
 `npm run infra:deploy` verifies the current AWS account, then deploys the
-already-built application and CDK stacks
-for `DEPLOY_ENVIRONMENT=lnd`, surface stack names and URLs, and fail rather than
-partially reporting success. Infrastructure implementation must document its
-own bootstrap, diff, rollback, recovery, and teardown procedures before
-delivery is enabled.
+application and CDK stacks for `DEPLOY_ENVIRONMENT=lnd`, surfaces stack names
+and URLs, and fails rather than partially reporting success. Phase 2 delivery
+first deploys the backend, captures the HTTP/WebSocket outputs, rebuilds the
+Vite workspace using the application-approved `VITE_` variable names, and then
+deploys the web stack. The protected environment must configure the approved
+Lambda artifact/handler seams, explicit allowed origins, and exact client
+variable names described in the Phase 2 backend runbook; synthesis-only
+placeholders are rejected by the deploy guard.
 
 Before approving a run, confirm the commit, intended AWS account, region,
 change set, and rollback owner. Afterward, record the workflow URL and deployed
 URL on the applicable ticket.
+
+See [Phase 2 AWS multiplayer backend](phase-2-aws-backend.md) for backend
+access patterns, security, first-deploy sequencing, recovery, capacity
+reconciliation, and teardown.
 
 ## Recovery
 

@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc --noEmit",
     "lint": "tsc --noEmit",
-    "test:unit": "tsc --noEmit false --outDir .test-dist && node .test-dist/test/static-web-stack.test.js",
+    "test:unit": "tsc --noEmit false --outDir .test-dist && node .test-dist/test/static-web-stack.test.js && node .test-dist/test/multiplayer-backend-stack.test.js",
     "compile": "tsc --noEmit false --outDir .cdk-dist",
     "synth": "npm run compile && node .cdk-dist/bin/app.js",
     "deploy": "npm run compile && node scripts/deploy.mjs"

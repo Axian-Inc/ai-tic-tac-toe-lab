@@ -117,5 +117,12 @@ jobs:
           CONFIRM_AWS_DEPLOYMENT: "true"
           DEPLOY_ENVIRONMENT: lnd
           ENABLE_AWS_DEPLOYMENT: "true"
+          API_PUBLISH_PATH: ${{ vars.API_PUBLISH_PATH }}
+          HTTP_LAMBDA_HANDLER: ${{ vars.HTTP_LAMBDA_HANDLER }}
+          WEBSOCKET_LAMBDA_HANDLER: ${{ vars.WEBSOCKET_LAMBDA_HANDLER }}
+          ALLOWED_WEB_ORIGINS: ${{ vars.ALLOWED_WEB_ORIGINS }}
+          WEB_HTTP_URL_ENV_NAME: ${{ vars.WEB_HTTP_URL_ENV_NAME }}
+          WEB_WEBSOCKET_URL_ENV_NAME: ${{ vars.WEB_WEBSOCKET_URL_ENV_NAME }}
+          LOG_RETENTION_DAYS: ${{ vars.LOG_RETENTION_DAYS || '14' }}
           RETAIN_DATA: ${{ vars.RETAIN_DATA || 'true' }}
           SOURCE_COMMIT: ${{ github.sha }}
