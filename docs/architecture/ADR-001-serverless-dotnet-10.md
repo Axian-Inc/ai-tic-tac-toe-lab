@@ -16,7 +16,8 @@ continuously running compute would add idle cost and operational work.
 Target .NET 10 Lambda application services behind API Gateway HTTP and
 WebSocket APIs, with DynamoDB persistence. Phase 1 static assets use private S3
 behind CloudFront. CDK in TypeScript defines all resources. Exact HTTP routes,
-event schemas, and game vocabulary are pending coordinator approval.
+event schemas, and game vocabulary are frozen in the Phase 2 contract
+documents under `contracts/`.
 
 ## Alternatives considered
 

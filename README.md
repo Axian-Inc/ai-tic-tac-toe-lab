@@ -32,7 +32,8 @@ docs                     Requirements, ADRs, tickets, and operations
 
 Phase 1 uses private S3 behind CloudFront. The accepted Phase 2 hosting
 direction uses API Gateway HTTP/WebSocket APIs, .NET 10 Lambda, and DynamoDB.
-Exact public schemas and game vocabulary remain pending coordinator approval.
+The Phase 2 public schemas and multiplayer vocabulary are versioned under
+`contracts/`.
 
 ## Prerequisites
 
