@@ -2,6 +2,17 @@
 
 Executable tests must not guess the following public decisions.
 
+## Phase 2 resolution
+
+Questions 7 through 21 were resolved by coordinator contract commit
+`69183ff`. Executable Phase 2 tests use
+[`multiplayer-domain.md`](../contracts/multiplayer-domain.md),
+[`openapi.yaml`](../contracts/openapi.yaml), and
+[`websocket-events.md`](../contracts/websocket-events.md) as their sources of
+truth. The questions remain below as decision history; they are no longer
+implementation blockers. Questions 22 through 25 remain coordinator/delivery
+evidence decisions.
+
 ## Game and CPU
 
 1. What coordinate names/order and player marks are canonical?
