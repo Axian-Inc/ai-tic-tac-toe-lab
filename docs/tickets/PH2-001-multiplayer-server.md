@@ -1,6 +1,6 @@
 # PH2-001: Implement authoritative multiplayer server
 
-- Status: planned
+- Status: ready
 - Owner: application
 - Branch: `application/phase-2-server`
 - Dependencies: FND-001, FND-003, PH1-001
@@ -16,7 +16,8 @@
 
 ## Implementation notes
 
-Do not implement candidate routes until FND-001 approves them.
+Implement version 1 exactly as frozen in `contracts/multiplayer-domain.md`,
+`contracts/openapi.yaml`, and `contracts/websocket-events.md`.
 
 ## Automated/manual evidence
 

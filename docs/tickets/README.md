@@ -8,7 +8,7 @@ evidence and remaining phase gate items.
 
 ## Foundation
 
-- [FND-001](FND-001-contract-foundation.md) — coordinator contracts (`in-progress`; Phase 1 frozen, Phase 2 API/event contracts pending)
+- [FND-001](FND-001-contract-foundation.md) — coordinator contracts (`done`)
 - [FND-002](FND-002-documentation-delivery-foundation.md) — documentation/delivery foundation (`done`)
 - [FND-003](FND-003-application-scaffold.md) — application scaffold (`done`)
 - [FND-004](FND-004-quality-harness.md) — independent quality harness (`done`)
@@ -21,7 +21,7 @@ evidence and remaining phase gate items.
 
 ## Phase 2
 
-- [PH2-001](PH2-001-multiplayer-server.md) — multiplayer server
+- [PH2-001](PH2-001-multiplayer-server.md) — multiplayer server (`ready`)
 - [PH2-002](PH2-002-multiplayer-client.md) — multiplayer client
 - [PH2-003](PH2-003-multiplayer-acceptance.md) — multiplayer acceptance
 - [PH2-004](PH2-004-backend-infrastructure.md) — backend infrastructure
