@@ -33,7 +33,10 @@ docs                     Requirements, ADRs, tickets, and operations
 Phase 1 uses private S3 behind CloudFront. The accepted Phase 2 hosting
 direction uses API Gateway HTTP/WebSocket APIs, .NET 10 Lambda, and DynamoDB.
 The Phase 2 public schemas and multiplayer vocabulary are versioned under
-`contracts/`.
+`contracts/`. PH2-004 implements the separate low-cost backend stack and its
+guarded two-stage delivery procedure; it remains undeployed and uses explicit
+synthesis-only handler/artifact placeholders until PH2-001 hands off the
+publish metadata.
 
 ## Prerequisites
 
@@ -192,6 +195,9 @@ aws configure get region
 
 Phase 1 deployment and recovery procedures are in the
 [static-hosting runbook](docs/operations/phase-1-aws-static-hosting.md).
+Phase 2 backend access patterns, delivery, rollback, recovery, reconciliation,
+and teardown are in the [multiplayer backend
+runbook](docs/operations/phase-2-aws-backend.md).
 Primary cost drivers are CloudFront requests/transfer, S3 storage, API Gateway
 HTTP/WebSocket use, Lambda invocations/duration, DynamoDB requests/storage, and
 CloudWatch logs/alarms. Detailed deployment, rollback, teardown, and estimates

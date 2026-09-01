@@ -24,7 +24,7 @@ evidence and remaining phase gate items.
 - [PH2-001](PH2-001-multiplayer-server.md) — multiplayer server (`ready`)
 - [PH2-002](PH2-002-multiplayer-client.md) — multiplayer client
 - [PH2-003](PH2-003-multiplayer-acceptance.md) — multiplayer acceptance
-- [PH2-004](PH2-004-backend-infrastructure.md) — backend infrastructure
+- [PH2-004](PH2-004-backend-infrastructure.md) — backend infrastructure (`review`; application seams and deployment evidence pending)
 
 ## Phase 3
 
