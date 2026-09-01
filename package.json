@@ -20,6 +20,7 @@
     "lint": "npm run lint --workspaces --if-present",
     "test:unit": "npm run test:unit --workspaces --if-present",
     "test:server": "dotnet test apps/api/TicTacToe.Api.sln --configuration Release",
+    "publish:server": "dotnet publish apps/api/src/TicTacToe.Api/TicTacToe.Api.csproj --configuration Release --self-contained false --output artifacts/lambda",
     "test:e2e": "npm run test:e2e --workspaces --if-present",
     "coverage": "npm run coverage --workspaces --if-present",
     "build": "npm run build --workspaces --if-present && dotnet build apps/api/TicTacToe.Api.sln --configuration Release",
