@@ -94,6 +94,7 @@ describe('Phase 2 frozen contracts', () => {
 
   it('P2-CONTRACT-DOMAIN-001: freezes concurrency, idempotency, time, and capacity semantics', async () => {
     const source = await contract('contracts/multiplayer-domain.md');
+    const normalizedSource = source.replace(/\s+/g, ' ');
     for (const fragment of [
       'Receipt lookup happens before sequence validation.',
       'Sequence is per game, starts at `1`, and never repeats.',
@@ -105,7 +106,7 @@ describe('Phase 2 frozen contracts', () => {
       'All timestamps are RFC 3339 UTC with millisecond precision.',
       'applies only contiguous server sequences',
     ]) {
-      expect(source).toContain(fragment);
+      expect(normalizedSource).toContain(fragment);
     }
   });
 });
